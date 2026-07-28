@@ -84,6 +84,22 @@ dialect แม้ SQL ภายในต่างกันได้ migration co
 `MigrationCatalogChecksum` ใช้ SHA-256 ของ catalog และ exact file bytes ที่เรียงแบบ
 deterministic เพื่อตรวจ artifact drift
 
+### Transaction boundary
+
+Application use case ให้พึ่ง `database.Transactor` และส่ง `context.Context` เดิมลงไปยัง
+repository ส่วน repository ให้พึ่ง `database.ConnectionProvider` เพื่อรับ root connection
+หรือ transaction connection ที่ผูกกับ context โดยไม่ต้องรู้ว่า caller เปิด transaction อยู่หรือไม่
+
+`TransactionManager` ควบคุม `Begin`, `Commit` และ `Rollback` โดยตรง nested call ของ
+manager instance เดียวกันจะ reuse transaction เดิมโดยไม่สร้าง savepoint หาก nested error
+หรือ panic ถูก caller จับกลืน outer transaction จะกลายเป็น rollback-only เพื่อป้องกัน partial
+commit ส่วน context จาก manager คนละ instance หรือ context ที่หลุดออกมาใช้หลัง transaction
+สิ้นสุดแล้วจะถูกปฏิเสธแบบ fail closed callback จึงต้องทำงานให้เสร็จภายใน boundary เท่านั้น
+
+manager จะคืน stable infrastructure errors โดยไม่เปิดเผย raw driver detail แต่ callback error
+จะถูก preserve ไว้ ดังนั้น persistence adapter ต้อง map SQL/driver errors เป็น stable
+repository หรือ domain errors ก่อนคืนออกจาก callback
+
 TLS เป็นแบบ fail closed:
 
 - PostgreSQL: `disable`, `require`, `verify-ca`, `verify-full`

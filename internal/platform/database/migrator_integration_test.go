@@ -18,6 +18,7 @@ func TestD3ProductionMigratorIntegration(t *testing.T) {
 	}
 
 	cfg := databaseIntegrationConfig(t)
+	requireDisposableIntegrationDatabase(t, cfg)
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 

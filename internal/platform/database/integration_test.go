@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/korwlik23/go-api-starter/internal/platform/config"
+	"github.com/korwlik23/go-api-starter/tests/testsupport"
 	"github.com/stretchr/testify/require"
 )
 
@@ -98,6 +99,23 @@ func databaseIntegrationConfig(t *testing.T) config.DatabaseConfig {
 		MaxIdleConnections:    maxIdleConnections,
 		ConnectionMaxLifetime: connectionMaxLifetime,
 	}
+}
+
+func requireDisposableIntegrationDatabase(
+	t *testing.T,
+	databaseConfig config.DatabaseConfig,
+) {
+	t.Helper()
+
+	require.NoError(t, testsupport.RequireDisposableDatabase(
+		config.Config{
+			App: config.AppConfig{
+				Environment: config.Environment(os.Getenv("APP_ENV")),
+			},
+			Database: databaseConfig,
+		},
+		os.Getenv("ALLOW_TEST_DATABASE_RESET"),
+	))
 }
 
 func requiredIntegrationEnvironment(t *testing.T, key string) string {
