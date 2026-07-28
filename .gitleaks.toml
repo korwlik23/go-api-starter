@@ -1,0 +1,17 @@
+title = "go-api-starter Gitleaks configuration"
+
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "Ignore the literal TOTP environment key in its typed config mapping."
+targetRules = ["generic-api-key"]
+condition = "AND"
+regexTarget = "line"
+regexes = [
+  '''^\s*\{?key:\s*"TOTP_ENCRYPTION_KEY_B64",\s*value:\s*cfg\.Session\.TOTPEncryptionKey\},?\s*$''',
+  '''^\s*key:\s*"TOTP_ENCRYPTION_KEY_B64",\s*$''',
+]
+paths = [
+  '''internal/platform/config/(security|validate_test)\.go$''',
+]
