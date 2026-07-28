@@ -24,6 +24,9 @@ go.work
 go.work.sum
 vendor/
 
+# Database test runner locks
+.go-api-starter-test-db-*.lock
+
 # Logs, editors, and operating systems
 *.log
 .idea/

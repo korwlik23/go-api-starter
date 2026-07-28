@@ -61,10 +61,40 @@ services:
     networks:
       - database_test
 
+  go-test:
+    profiles:
+      - go-test
+    image: docker.io/library/golang:1.26.5-bookworm@sha256:1ecb7edf62a0408027bd5729dfd6b1b8766e578e8df93995b225dfd0944eb651
+    init: true
+    read_only: true
+    working_dir: /workspace
+    entrypoint:
+      - go
+    command:
+      - version
+    environment:
+      GOCACHE: /root/.cache/go-build
+      GOTMPDIR: /root/.cache/go-build
+      GOTOOLCHAIN: local
+    security_opt:
+      - no-new-privileges:true
+    tmpfs:
+      - /tmp:size=512m,mode=1777
+    volumes:
+      - .:/workspace:ro
+      - go_module_cache:/go/pkg/mod
+      - go_build_cache:/root/.cache/go-build
+    networks:
+      - database_test
+      - test_egress
+
 networks:
   database_test:
     internal: true
+  test_egress:
 
 volumes:
+  go_build_cache:
+  go_module_cache:
   mariadb_test_data:
   postgres_test_data:
