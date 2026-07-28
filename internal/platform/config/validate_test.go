@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/base64"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 )
@@ -191,6 +192,12 @@ func validSecurityConfig() Config {
 		Database: DatabaseConfig{
 			Driver:   "postgres",
 			Password: "database-password",
+		},
+		RateLimits: RateLimitsConfig{
+			Baseline: RateLimitConfig{Capacity: 120, Window: time.Minute},
+			Login:    RateLimitConfig{Capacity: 5, Window: time.Minute},
+			Recovery: RateLimitConfig{Capacity: 3, Window: 15 * time.Minute},
+			MFA:      RateLimitConfig{Capacity: 5, Window: 5 * time.Minute},
 		},
 	}
 }

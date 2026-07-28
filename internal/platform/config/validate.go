@@ -6,5 +6,8 @@ func Validate(cfg Config) error {
 	if err := validateSecrets(cfg); err != nil {
 		return err
 	}
-	return validateDatabase(cfg)
+	if err := validateDatabase(cfg); err != nil {
+		return err
+	}
+	return validateRateLimits(cfg)
 }
