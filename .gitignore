@@ -1,0 +1,34 @@
+# Environment and secrets
+.env
+.env.*
+!.env.example
+!.env.*.example
+*.key
+*.pem
+*.p12
+*.pfx
+secrets/
+
+# Go build and test output
+/bin/
+/build/
+/coverage/
+/tmp/
+*.out
+*.test
+coverage.*
+
+# Local Go workspace and vendoring
+go.work
+go.work.sum
+vendor/
+
+# Logs, editors, and operating systems
+*.log
+.idea/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+.DS_Store
+Thumbs.db
+Desktop.ini
