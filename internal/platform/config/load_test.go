@@ -82,4 +82,18 @@ func TestA2(t *testing.T) {
 	require.Equal(t, time.Minute, cfg.RateLimits.Baseline.Window)
 	require.False(t, cfg.Redis.Enabled)
 	require.Equal(t, 0, cfg.Redis.Database)
+
+	values["SESSION_TOKEN_PEPPER"] = ""
+	values["CSRF_TOKEN_PEPPER"] = "  csrf-token-pepper  "
+	values["TOTP_ENCRYPTION_KEY_B64"] = "  totp-encryption-key  "
+	values["DB_PASSWORD"] = "  database-password  "
+	values["REDIS_PASSWORD"] = "  redis-password  "
+
+	cfg, err = Load(lookup)
+	require.NoError(t, err)
+	require.Empty(t, cfg.Session.TokenPepper)
+	require.Equal(t, "  csrf-token-pepper  ", cfg.Session.CSRFTokenPepper)
+	require.Equal(t, "  totp-encryption-key  ", cfg.Session.TOTPEncryptionKey)
+	require.Equal(t, "  database-password  ", cfg.Database.Password)
+	require.Equal(t, "  redis-password  ", cfg.Redis.Password)
 }

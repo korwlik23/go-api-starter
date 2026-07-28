@@ -71,13 +71,13 @@ func Load(lookup LookupFunc) (Config, error) {
 	if cfg.Session.AbsoluteTimeout, err = durationValue(lookup, "SESSION_ABSOLUTE_TIMEOUT"); err != nil {
 		return Config{}, err
 	}
-	if cfg.Session.TokenPepper, err = stringValue(lookup, "SESSION_TOKEN_PEPPER"); err != nil {
+	if cfg.Session.TokenPepper, err = rawValue(lookup, "SESSION_TOKEN_PEPPER"); err != nil {
 		return Config{}, err
 	}
-	if cfg.Session.CSRFTokenPepper, err = stringValue(lookup, "CSRF_TOKEN_PEPPER"); err != nil {
+	if cfg.Session.CSRFTokenPepper, err = rawValue(lookup, "CSRF_TOKEN_PEPPER"); err != nil {
 		return Config{}, err
 	}
-	if cfg.Session.TOTPEncryptionKey, err = stringValue(lookup, "TOTP_ENCRYPTION_KEY_B64"); err != nil {
+	if cfg.Session.TOTPEncryptionKey, err = rawValue(lookup, "TOTP_ENCRYPTION_KEY_B64"); err != nil {
 		return Config{}, err
 	}
 	if cfg.Database.Driver, err = stringValue(lookup, "DB_DRIVER"); err != nil {
@@ -98,7 +98,7 @@ func Load(lookup LookupFunc) (Config, error) {
 	if cfg.Database.User, err = stringValue(lookup, "DB_USER"); err != nil {
 		return Config{}, err
 	}
-	if cfg.Database.Password, err = stringValue(lookup, "DB_PASSWORD"); err != nil {
+	if cfg.Database.Password, err = rawValue(lookup, "DB_PASSWORD"); err != nil {
 		return Config{}, err
 	}
 	if cfg.Database.TLSMode, err = stringValue(lookup, "DB_TLS_MODE"); err != nil {
@@ -140,7 +140,7 @@ func Load(lookup LookupFunc) (Config, error) {
 	if cfg.Redis.Address, err = stringValue(lookup, "REDIS_ADDRESS"); err != nil {
 		return Config{}, err
 	}
-	if cfg.Redis.Password, err = optionalStringValue(lookup, "REDIS_PASSWORD"); err != nil {
+	if cfg.Redis.Password, err = rawValue(lookup, "REDIS_PASSWORD"); err != nil {
 		return Config{}, err
 	}
 	if cfg.Redis.Database, err = intValue(lookup, "REDIS_DATABASE"); err != nil {
@@ -173,6 +173,14 @@ func optionalStringValue(lookup LookupFunc, key string) (string, error) {
 		return "", missingKeyError(key)
 	}
 	return strings.TrimSpace(value), nil
+}
+
+func rawValue(lookup LookupFunc, key string) (string, error) {
+	value, ok := lookup(key)
+	if !ok {
+		return "", missingKeyError(key)
+	}
+	return value, nil
 }
 
 func boolValue(lookup LookupFunc, key string) (bool, error) {
