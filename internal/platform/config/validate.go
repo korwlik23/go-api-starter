@@ -9,5 +9,9 @@ func Validate(cfg Config) error {
 	if err := validateDatabase(cfg); err != nil {
 		return err
 	}
-	return validateRateLimits(cfg)
+	if err := validateRateLimits(cfg); err != nil {
+		return err
+	}
+	_, err := ParseTrustedProxyCIDRs(cfg.HTTP.TrustedProxyCIDRs)
+	return err
 }
