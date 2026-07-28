@@ -77,6 +77,13 @@ Advisory lock นี้เป็น session-level coordination สำหรั�
 transaction pooling, multi-primary หรือ topology ที่ lock ไม่ครอบทั้งระบบ ต้องเปลี่ยน
 เป็น distributed migration coordinator ก่อน deploy
 
+Migration ของแต่ละ module ต้องมี bundle ครบใน `postgres`, `mariadb` และ `mysql`
+ชื่อไฟล์ใช้รูปแบบ `000001_descriptive_name.sql` และต้องมี version/basename ตรงกันทุก
+dialect แม้ SQL ภายในต่างกันได้ migration composition ต้องเรียก
+`ValidateMigrationDialectParity` ก่อนเชื่อมต่อฐานข้อมูล ส่วน
+`MigrationCatalogChecksum` ใช้ SHA-256 ของ catalog และ exact file bytes ที่เรียงแบบ
+deterministic เพื่อตรวจ artifact drift
+
 TLS เป็นแบบ fail closed:
 
 - PostgreSQL: `disable`, `require`, `verify-ca`, `verify-full`

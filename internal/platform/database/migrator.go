@@ -195,7 +195,7 @@ func orderMigrationModules(
 ) ([]MigrationModule, error) {
 	byID := make(map[string]MigrationModule, len(modules))
 	for _, module := range modules {
-		if !validMigrationModuleID(module.ID) {
+		if !ValidMigrationModuleID(module.ID) {
 			return nil, ErrInvalidMigrationPlan
 		}
 		if _, exists := byID[module.ID]; exists {
@@ -208,7 +208,7 @@ func orderMigrationModules(
 		dependencies := append([]string(nil), module.Dependencies...)
 		seenDependencies := make(map[string]struct{}, len(dependencies))
 		for _, dependency := range dependencies {
-			if !validMigrationModuleID(dependency) ||
+			if !ValidMigrationModuleID(dependency) ||
 				dependency == module.ID {
 				return nil, ErrInvalidMigrationPlan
 			}
@@ -272,7 +272,9 @@ func orderMigrationModules(
 	return ordered, nil
 }
 
-func validMigrationModuleID(id string) bool {
+// ValidMigrationModuleID reports whether id is safe for module-owned SQL
+// identifiers and logical migration paths.
+func ValidMigrationModuleID(id string) bool {
 	return len(id) <= maximumMigrationModuleIDLength &&
 		migrationModuleIDPattern.MatchString(id)
 }
