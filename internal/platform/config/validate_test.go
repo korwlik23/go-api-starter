@@ -199,6 +199,7 @@ func validSecurityConfig() Config {
 			TLSMode:               "disable",
 			TimeZone:              "UTC",
 			ConnectTimeout:        5 * time.Second,
+			MigrationLockTimeout:  2 * time.Minute,
 			MaxOpenConnections:    20,
 			MaxIdleConnections:    5,
 			ConnectionMaxLifetime: 30 * time.Minute,

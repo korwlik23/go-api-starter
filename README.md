@@ -68,6 +68,15 @@ dependencies เข้ากับ application composition
 `DB_CONNECT_TIMEOUT` ต้องมากกว่าศูนย์ ระบบจะใช้ deadline ที่สั้นกว่าระหว่างค่านี้กับ
 deadline ของ request/caller
 
+`DB_MIGRATION_LOCK_TIMEOUT` คือเวลาสูงสุดที่ migration runner รอ advisory lock
+ก่อนหยุดแบบ fail closed ค่านี้ต้องมากกว่าศูนย์ และ starter กำหนดค่าเริ่มต้นไว้ที่ `2m`
+เพื่อป้องกันหลาย deployment รัน schema migration พร้อมกัน
+
+Advisory lock นี้เป็น session-level coordination สำหรับ database primary/server เดียว
+จึงต้องใช้ session pooling และให้ migration runners ชี้ primary เดียวกัน หากใช้
+transaction pooling, multi-primary หรือ topology ที่ lock ไม่ครอบทั้งระบบ ต้องเปลี่ยน
+เป็น distributed migration coordinator ก่อน deploy
+
 TLS เป็นแบบ fail closed:
 
 - PostgreSQL: `disable`, `require`, `verify-ca`, `verify-full`

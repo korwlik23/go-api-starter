@@ -68,6 +68,7 @@ type DatabaseConfig struct {
 	TLSMode               string
 	TimeZone              string
 	ConnectTimeout        time.Duration
+	MigrationLockTimeout  time.Duration
 	MaxOpenConnections    int
 	MaxIdleConnections    int
 	ConnectionMaxLifetime time.Duration

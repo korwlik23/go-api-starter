@@ -187,6 +187,7 @@ if ($isXampp) {
         DB_TLS_MODE = 'disable'
         DB_TIME_ZONE = 'UTC'
         DB_CONNECT_TIMEOUT = '5s'
+        DB_MIGRATION_LOCK_TIMEOUT = '2m'
         DB_MAX_OPEN_CONNECTIONS = '10'
         DB_MAX_IDLE_CONNECTIONS = '5'
         DB_CONNECTION_MAX_LIFETIME = '5m'
@@ -255,6 +256,7 @@ $runnerEnvironment = @(
     '-e', 'DB_TLS_MODE=disable',
     '-e', 'DB_TIME_ZONE=UTC',
     '-e', 'DB_CONNECT_TIMEOUT=5s',
+    '-e', 'DB_MIGRATION_LOCK_TIMEOUT=2m',
     '-e', 'DB_MAX_OPEN_CONNECTIONS=10',
     '-e', 'DB_MAX_IDLE_CONNECTIONS=5',
     '-e', 'DB_CONNECTION_MAX_LIFETIME=5m'

@@ -179,6 +179,13 @@ func TestD2DatabaseConfigurationInvariants(t *testing.T) {
 			expectedError: "config: DB_CONNECT_TIMEOUT must be greater than zero",
 		},
 		{
+			name: "zero migration lock timeout",
+			mutate: func(cfg *DatabaseConfig) {
+				cfg.MigrationLockTimeout = 0
+			},
+			expectedError: "config: DB_MIGRATION_LOCK_TIMEOUT must be greater than zero",
+		},
+		{
 			name: "zero maximum open connections",
 			mutate: func(cfg *DatabaseConfig) {
 				cfg.MaxOpenConnections = 0

@@ -202,6 +202,7 @@ if [[ "$is_xampp" == true ]]; then
     export DB_TLS_MODE="disable"
     export DB_TIME_ZONE="UTC"
     export DB_CONNECT_TIMEOUT="5s"
+    export DB_MIGRATION_LOCK_TIMEOUT="2m"
     export DB_MAX_OPEN_CONNECTIONS="10"
     export DB_MAX_IDLE_CONNECTIONS="5"
     export DB_CONNECTION_MAX_LIFETIME="5m"
@@ -255,6 +256,7 @@ runner_environment=(
   -e DB_TLS_MODE=disable
   -e DB_TIME_ZONE=UTC
   -e DB_CONNECT_TIMEOUT=5s
+  -e DB_MIGRATION_LOCK_TIMEOUT=2m
   -e DB_MAX_OPEN_CONNECTIONS=10
   -e DB_MAX_IDLE_CONNECTIONS=5
   -e DB_CONNECTION_MAX_LIFETIME=5m

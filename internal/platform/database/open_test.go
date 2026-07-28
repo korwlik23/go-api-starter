@@ -229,6 +229,7 @@ func d1DatabaseConfig(driver string, flavor string) config.DatabaseConfig {
 		TLSMode:               "disable",
 		TimeZone:              "UTC",
 		ConnectTimeout:        5 * time.Second,
+		MigrationLockTimeout:  2 * time.Minute,
 		MaxOpenConnections:    11,
 		MaxIdleConnections:    5,
 		ConnectionMaxLifetime: 5 * time.Minute,

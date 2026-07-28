@@ -1,10 +1,35 @@
 package scripts_test
 
 import (
+	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 	"testing"
 )
+
+func TestPowerShellRunnerPropagatesMigrationLockTimeout(t *testing.T) {
+	workingDirectory, err := os.Getwd()
+	if err != nil {
+		t.Fatalf("get working directory: %v", err)
+	}
+	content, err := os.ReadFile(
+		filepath.Join(workingDirectory, "test-db.ps1"),
+	)
+	if err != nil {
+		t.Fatalf("read PowerShell runner: %v", err)
+	}
+	script := string(content)
+
+	for _, expected := range []string{
+		"DB_MIGRATION_LOCK_TIMEOUT = '2m'",
+		"'DB_MIGRATION_LOCK_TIMEOUT=2m'",
+	} {
+		if !strings.Contains(script, expected) {
+			t.Fatalf("PowerShell runner is missing %q", expected)
+		}
+	}
+}
 
 func TestPowerShellRunnerStopsDatabaseAfterFailedStart(t *testing.T) {
 	powerShell := findPowerShell(t)

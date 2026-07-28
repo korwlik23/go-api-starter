@@ -51,6 +51,12 @@ func ValidateDatabase(cfg DatabaseConfig) error {
 	if cfg.ConnectTimeout <= 0 {
 		return invalidKeyError("DB_CONNECT_TIMEOUT", "must be greater than zero")
 	}
+	if cfg.MigrationLockTimeout <= 0 {
+		return invalidKeyError(
+			"DB_MIGRATION_LOCK_TIMEOUT",
+			"must be greater than zero",
+		)
+	}
 	if cfg.MaxOpenConnections <= 0 {
 		return invalidKeyError("DB_MAX_OPEN_CONNECTIONS", "must be greater than zero")
 	}

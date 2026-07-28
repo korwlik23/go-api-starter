@@ -12,7 +12,7 @@ import (
 )
 
 func TestD2DatabaseIntegration(t *testing.T) {
-	if os.Getenv("RUN_DATABASE_INTEGRATION_TESTS") != "1" {
+	if !databaseIntegrationEnabled() {
 		t.Skip("database integration test is disabled")
 	}
 
@@ -52,6 +52,10 @@ func TestD2DatabaseIntegration(t *testing.T) {
 	require.Equal(t, cfg.TimeZone, timestamp.Location().String())
 }
 
+func databaseIntegrationEnabled() bool {
+	return os.Getenv("RUN_DATABASE_INTEGRATION_TESTS") == "1"
+}
+
 func databaseIntegrationConfig(t *testing.T) config.DatabaseConfig {
 	t.Helper()
 
@@ -61,6 +65,10 @@ func databaseIntegrationConfig(t *testing.T) config.DatabaseConfig {
 		requiredIntegrationEnvironment(t, "DB_CONNECT_TIMEOUT"),
 	)
 	require.NoError(t, err, "DB_CONNECT_TIMEOUT must be a duration")
+	migrationLockTimeout, err := time.ParseDuration(
+		requiredIntegrationEnvironment(t, "DB_MIGRATION_LOCK_TIMEOUT"),
+	)
+	require.NoError(t, err, "DB_MIGRATION_LOCK_TIMEOUT must be a duration")
 	connectionMaxLifetime, err := time.ParseDuration(
 		requiredIntegrationEnvironment(t, "DB_CONNECTION_MAX_LIFETIME"),
 	)
@@ -85,6 +93,7 @@ func databaseIntegrationConfig(t *testing.T) config.DatabaseConfig {
 		TLSMode:               requiredIntegrationEnvironment(t, "DB_TLS_MODE"),
 		TimeZone:              requiredIntegrationEnvironment(t, "DB_TIME_ZONE"),
 		ConnectTimeout:        connectTimeout,
+		MigrationLockTimeout:  migrationLockTimeout,
 		MaxOpenConnections:    maxOpenConnections,
 		MaxIdleConnections:    maxIdleConnections,
 		ConnectionMaxLifetime: connectionMaxLifetime,

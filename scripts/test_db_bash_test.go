@@ -1,10 +1,35 @@
 package scripts_test
 
 import (
+	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 	"testing"
 )
+
+func TestBashRunnerPropagatesMigrationLockTimeout(t *testing.T) {
+	workingDirectory, err := os.Getwd()
+	if err != nil {
+		t.Fatalf("get working directory: %v", err)
+	}
+	content, err := os.ReadFile(
+		filepath.Join(workingDirectory, "test-db.sh"),
+	)
+	if err != nil {
+		t.Fatalf("read Bash runner: %v", err)
+	}
+	script := string(content)
+
+	for _, expected := range []string{
+		`export DB_MIGRATION_LOCK_TIMEOUT="2m"`,
+		"DB_MIGRATION_LOCK_TIMEOUT=2m",
+	} {
+		if !strings.Contains(script, expected) {
+			t.Fatalf("Bash runner is missing %q", expected)
+		}
+	}
+}
 
 func TestBashRunnerStopsDatabaseAfterFailedStart(t *testing.T) {
 	bash := findBash(t)
