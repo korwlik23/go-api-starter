@@ -61,6 +61,56 @@ func migrationTestFileBundle(
 	return fstest.MapFS{filename: &fstest.MapFile{Data: content}}
 }
 
+func migrationTestFilesBundle(
+	t *testing.T,
+	module string,
+	dialect string,
+	filenames ...string,
+) fs.FS {
+	t.Helper()
+
+	require.NotEmpty(t, filenames, "at least one migration filename is required")
+	bundle := make(fstest.MapFS, len(filenames))
+	for _, filename := range filenames {
+		content, err := os.ReadFile(filepath.Join(
+			migrationTestBundlePath(t, module, dialect),
+			filename,
+		))
+		require.NoError(t, err)
+		bundle[filename] = &fstest.MapFile{Data: content}
+	}
+	return bundle
+}
+
+func exactMigrationTestBundles(
+	t *testing.T,
+	module string,
+	filenames ...string,
+) map[database.MigrationDialect]fs.FS {
+	t.Helper()
+
+	return map[database.MigrationDialect]fs.FS{
+		database.MigrationDialectPostgres: migrationTestFilesBundle(
+			t,
+			module,
+			"postgres",
+			filenames...,
+		),
+		database.MigrationDialectMariaDB: migrationTestFilesBundle(
+			t,
+			module,
+			"mariadb",
+			filenames...,
+		),
+		database.MigrationDialectMySQL: migrationTestFilesBundle(
+			t,
+			module,
+			"mysql",
+			filenames...,
+		),
+	}
+}
+
 func strictMigrationTestBundles(
 	t *testing.T,
 	module string,
