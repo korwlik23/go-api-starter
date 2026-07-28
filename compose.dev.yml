@@ -16,6 +16,7 @@ services:
       test:
         - CMD
         - pg_isready
+        - --host=127.0.0.1
         - --username=go_lang_starter_test
         - --dbname=go_lang_starter_test_postgres
       interval: 2s
