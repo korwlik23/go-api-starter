@@ -2,8 +2,8 @@
 
 Go + Gin API starter และ OpenAPI source of truth สำหรับ `go-lang-starter` suite
 
-> สถานะปัจจุบัน: เริ่ม API foundation แล้ว แต่ application server, migrations และ
-> feature modules ยังอยู่ระหว่างพัฒนา
+> สถานะปัจจุบัน: มี API process/config/HTTP/database foundation แล้ว แต่ dependency
+> composition, migrations และ feature modules ยังอยู่ระหว่างพัฒนา
 
 ## Stack
 
@@ -44,7 +44,7 @@ go mod download
 go mod verify
 ```
 
-เมื่อ application bootstrap พร้อมแล้ว คำสั่งมาตรฐานจะเป็น:
+คำสั่งมาตรฐาน:
 
 ```powershell
 go test ./...
@@ -52,8 +52,41 @@ go build ./cmd/api
 go run ./cmd/api
 ```
 
-ระหว่างสถานะ foundation ให้ยึดคำสั่ง verification ที่ระบุใน commit/plan ของ task
-ปัจจุบัน เพราะ `cmd/api` ยังไม่ถูกสร้าง
+ขณะนี้ `cmd/api` เป็น process-lifecycle entry point และยังไม่ได้เชื่อม HTTP/database
+dependencies เข้ากับ application composition
+
+## Database profiles
+
+เลือก config เริ่มต้นจาก `.env.postgres.example`, `.env.mariadb-xampp.example` หรือ
+`.env.mysql.example` โดยรองรับ profile ต่อไปนี้:
+
+- `DB_DRIVER=postgres`, `DB_FLAVOR=` สำหรับ PostgreSQL
+- `DB_DRIVER=mysql`, `DB_FLAVOR=mariadb` สำหรับ MariaDB และ dedicated XAMPP database
+- `DB_DRIVER=mysql`, `DB_FLAVOR=mysql` เป็น Oracle MySQL compatibility profile
+
+`DB_HOST` รับ hostname, IPv4 หรือ IPv6 แบบไม่ใส่ `[]` และไม่รวม port ส่วน
+`DB_CONNECT_TIMEOUT` ต้องมากกว่าศูนย์ ระบบจะใช้ deadline ที่สั้นกว่าระหว่างค่านี้กับ
+deadline ของ request/caller
+
+TLS เป็นแบบ fail closed:
+
+- PostgreSQL: `disable`, `require`, `verify-ca`, `verify-full`
+- MariaDB/MySQL: `disable`, `require`, `verify-full`
+
+`DB_TIME_ZONE` ต้องเป็น IANA timezone ที่ถูกต้อง สำหรับ PostgreSQL ค่านี้กำหนดทั้ง
+session timezone และตำแหน่งเวลาที่ใช้ scan `timestamp` ส่วน MariaDB/MySQL บังคับค่า
+เป็น `UTC` และตั้ง session `time_zone=+00:00` เพื่อให้ `TIMESTAMP` มีความหมายตรงกัน
+ทุก environment การแสดง timezone ของผู้ใช้ให้ทำใน application/presentation layer
+
+ทดสอบกับ disposable databases ผ่าน Docker:
+
+```powershell
+.\scripts\test-db.ps1 -Profile postgres
+.\scripts\test-db.ps1 -Profile mariadb
+```
+
+runner จะสร้าง/ใช้เฉพาะฐานข้อมูลชื่อ `go_lang_starter_test_*`, ตรวจ destructive guard,
+รัน integration tests และหยุดเฉพาะ service ที่ runner เป็นผู้เปิด โดยไม่ลบ volume
 
 ## Configuration and secrets
 

@@ -14,9 +14,42 @@ import (
 func newMySQLConnection(
 	cfg config.DatabaseConfig,
 ) (connection, error) {
-	location, err := time.LoadLocation(cfg.TimeZone)
+	driverConfig, err := newMySQLDriverConfig(cfg)
 	if err != nil {
 		return connection{}, err
+	}
+
+	connector, err := mysqldriver.NewConnector(driverConfig)
+	if err != nil {
+		return connection{}, err
+	}
+	pool := sql.OpenDB(connector)
+	dialectorConfig := mysqlgorm.Config{
+		Conn:                      pool,
+		SkipInitializeWithVersion: true,
+	}
+	if cfg.Flavor == "mariadb" {
+		dialectorConfig.DontSupportRenameIndex = true
+		dialectorConfig.DontSupportRenameColumn = true
+		dialectorConfig.DontSupportForShareClause = true
+		dialectorConfig.DontSupportNullAsDefaultValue = true
+	}
+	return connection{
+		pool:      pool,
+		dialector: mysqlgorm.New(dialectorConfig),
+	}, nil
+}
+
+func newMySQLDriverConfig(
+	cfg config.DatabaseConfig,
+) (*mysqldriver.Config, error) {
+	if err := config.ValidateDatabase(cfg); err != nil {
+		return nil, err
+	}
+
+	location, err := time.LoadLocation(cfg.TimeZone)
+	if err != nil {
+		return nil, err
 	}
 
 	driverConfig := mysqldriver.NewConfig()
@@ -27,20 +60,16 @@ func newMySQLConnection(
 	driverConfig.DBName = cfg.Name
 	driverConfig.ParseTime = true
 	driverConfig.Loc = location
-	if cfg.TLSMode != "" && cfg.TLSMode != "disable" {
-		driverConfig.TLSConfig = cfg.TLSMode
+	driverConfig.Params = map[string]string{
+		"time_zone": "'+00:00'",
 	}
-
-	connector, err := mysqldriver.NewConnector(driverConfig)
-	if err != nil {
-		return connection{}, err
+	driverConfig.Timeout = cfg.ConnectTimeout
+	switch cfg.TLSMode {
+	case "require":
+		driverConfig.TLSConfig = "skip-verify"
+	case "verify-full":
+		driverConfig.TLSConfig = "true"
 	}
-	pool := sql.OpenDB(connector)
-	return connection{
-		pool: pool,
-		dialector: mysqlgorm.New(mysqlgorm.Config{
-			Conn:                      pool,
-			SkipInitializeWithVersion: true,
-		}),
-	}, nil
+	driverConfig.AllowFallbackToPlaintext = false
+	return driverConfig, nil
 }

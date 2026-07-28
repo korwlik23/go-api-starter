@@ -201,9 +201,11 @@ if [[ "$is_xampp" == true ]]; then
     export DB_PASSWORD="$xampp_password"
     export DB_TLS_MODE="disable"
     export DB_TIME_ZONE="UTC"
+    export DB_CONNECT_TIMEOUT="5s"
     export DB_MAX_OPEN_CONNECTIONS="10"
     export DB_MAX_IDLE_CONNECTIONS="5"
     export DB_CONNECTION_MAX_LIFETIME="5m"
+    export RUN_DATABASE_INTEGRATION_TESTS="1"
 
     cd -- "$repository_root" || exit 1
     "$go_executable" run ./tests/testsupport/cmd/database-guard || exit $?
@@ -252,9 +254,11 @@ runner_environment=(
   -e DB_PASSWORD=development-only-test-database-password
   -e DB_TLS_MODE=disable
   -e DB_TIME_ZONE=UTC
+  -e DB_CONNECT_TIMEOUT=5s
   -e DB_MAX_OPEN_CONNECTIONS=10
   -e DB_MAX_IDLE_CONNECTIONS=5
   -e DB_CONNECTION_MAX_LIFETIME=5m
+  -e RUN_DATABASE_INTEGRATION_TESTS=1
 )
 
 started_by_script=false

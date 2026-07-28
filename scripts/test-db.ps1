@@ -186,9 +186,11 @@ if ($isXampp) {
         DB_PASSWORD = $xamppPassword
         DB_TLS_MODE = 'disable'
         DB_TIME_ZONE = 'UTC'
+        DB_CONNECT_TIMEOUT = '5s'
         DB_MAX_OPEN_CONNECTIONS = '10'
         DB_MAX_IDLE_CONNECTIONS = '5'
         DB_CONNECTION_MAX_LIFETIME = '5m'
+        RUN_DATABASE_INTEGRATION_TESTS = '1'
     }
     $lockPath = Join-Path $repositoryRoot ".go-api-starter-test-db-$Profile.lock"
     $lockHandle = New-TestRunLock -LockPath $lockPath -ProfileName $Profile
@@ -252,9 +254,11 @@ $runnerEnvironment = @(
     '-e', "DB_PASSWORD=$password",
     '-e', 'DB_TLS_MODE=disable',
     '-e', 'DB_TIME_ZONE=UTC',
+    '-e', 'DB_CONNECT_TIMEOUT=5s',
     '-e', 'DB_MAX_OPEN_CONNECTIONS=10',
     '-e', 'DB_MAX_IDLE_CONNECTIONS=5',
     '-e', 'DB_CONNECTION_MAX_LIFETIME=5m'
+    '-e', 'RUN_DATABASE_INTEGRATION_TESTS=1'
 )
 
 $lockPath = Join-Path $repositoryRoot ".go-api-starter-test-db-$Profile.lock"

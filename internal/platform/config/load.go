@@ -107,6 +107,9 @@ func Load(lookup LookupFunc) (Config, error) {
 	if cfg.Database.TimeZone, err = stringValue(lookup, "DB_TIME_ZONE"); err != nil {
 		return Config{}, err
 	}
+	if cfg.Database.ConnectTimeout, err = durationValue(lookup, "DB_CONNECT_TIMEOUT"); err != nil {
+		return Config{}, err
+	}
 	if cfg.Database.MaxOpenConnections, err = intValue(lookup, "DB_MAX_OPEN_CONNECTIONS"); err != nil {
 		return Config{}, err
 	}

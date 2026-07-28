@@ -40,6 +40,7 @@ func TestA2(t *testing.T) {
 		"DB_PASSWORD":                  "test-password",
 		"DB_TLS_MODE":                  "disable",
 		"DB_TIME_ZONE":                 "UTC",
+		"DB_CONNECT_TIMEOUT":           "5s",
 		"DB_MAX_OPEN_CONNECTIONS":      "20",
 		"DB_MAX_IDLE_CONNECTIONS":      "5",
 		"DB_CONNECTION_MAX_LIFETIME":   "30m",
@@ -76,6 +77,7 @@ func TestA2(t *testing.T) {
 	require.Equal(t, 30*time.Minute, cfg.Session.IdleTimeout)
 	require.Equal(t, "postgres", cfg.Database.Driver)
 	require.Empty(t, cfg.Database.Flavor)
+	require.Equal(t, 5*time.Second, cfg.Database.ConnectTimeout)
 	require.Equal(t, []string{"th", "en", "ja"}, cfg.Localization.InitialLocales)
 	require.Equal(t, "th", cfg.Localization.DefaultLocale)
 	require.Equal(t, 120, cfg.RateLimits.Baseline.Capacity)

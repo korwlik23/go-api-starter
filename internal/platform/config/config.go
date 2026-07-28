@@ -67,6 +67,7 @@ type DatabaseConfig struct {
 	Password              string
 	TLSMode               string
 	TimeZone              string
+	ConnectTimeout        time.Duration
 	MaxOpenConnections    int
 	MaxIdleConnections    int
 	ConnectionMaxLifetime time.Duration

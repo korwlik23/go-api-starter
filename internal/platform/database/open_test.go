@@ -228,6 +228,7 @@ func d1DatabaseConfig(driver string, flavor string) config.DatabaseConfig {
 		Password:              "database-password",
 		TLSMode:               "disable",
 		TimeZone:              "UTC",
+		ConnectTimeout:        5 * time.Second,
 		MaxOpenConnections:    11,
 		MaxIdleConnections:    5,
 		ConnectionMaxLifetime: 5 * time.Minute,
@@ -239,8 +240,11 @@ type recordingPool struct {
 	maxIdleConnections    int
 	connectionMaxLifetime time.Duration
 	pingError             error
+	pingFunc              func(context.Context) error
 	pingCalls             int
 	closeCalls            int
+	pingDeadline          time.Time
+	pingHasDeadline       bool
 }
 
 func (pool *recordingPool) SetMaxOpenConns(value int) {
@@ -255,8 +259,12 @@ func (pool *recordingPool) SetConnMaxLifetime(value time.Duration) {
 	pool.connectionMaxLifetime = value
 }
 
-func (pool *recordingPool) PingContext(context.Context) error {
+func (pool *recordingPool) PingContext(ctx context.Context) error {
 	pool.pingCalls++
+	pool.pingDeadline, pool.pingHasDeadline = ctx.Deadline()
+	if pool.pingFunc != nil {
+		return pool.pingFunc(ctx)
+	}
 	return pool.pingError
 }
 

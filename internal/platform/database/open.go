@@ -58,6 +58,9 @@ func openWithFactories(
 	if err != nil {
 		return nil, err
 	}
+	if err := config.ValidateDatabase(cfg); err != nil {
+		return nil, ErrInvalidConfiguration
+	}
 	candidate, err := factory(cfg)
 	if err != nil || candidate.pool == nil || candidate.dialector == nil {
 		if candidate.pool != nil {
@@ -78,7 +81,9 @@ func openWithFactories(
 		_ = candidate.pool.Close()
 		return nil, ErrUnavailable
 	}
-	if err := candidate.pool.PingContext(ctx); err != nil {
+	pingContext, cancelPing := context.WithTimeout(ctx, cfg.ConnectTimeout)
+	defer cancelPing()
+	if err := candidate.pool.PingContext(pingContext); err != nil {
 		_ = candidate.pool.Close()
 		if ctxErr := ctx.Err(); ctxErr != nil {
 			return nil, ctxErr
