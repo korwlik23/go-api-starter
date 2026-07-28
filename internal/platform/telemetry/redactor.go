@@ -15,7 +15,11 @@ func redactAttribute(attribute slog.Attr) slog.Attr {
 }
 
 func isSensitiveKey(key string) bool {
-	normalized := strings.ToLower(key)
+	normalized := strings.NewReplacer(
+		"-", "_",
+		".", "_",
+		" ", "_",
+	).Replace(strings.ToLower(key))
 
 	for _, fragment := range []string{
 		"password",
@@ -32,6 +36,8 @@ func isSensitiveKey(key string) bool {
 		"sessionid",
 		"session_key",
 		"sessionkey",
+		"signed_url",
+		"signedurl",
 	} {
 		if strings.Contains(normalized, fragment) {
 			return true
