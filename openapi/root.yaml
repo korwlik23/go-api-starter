@@ -44,6 +44,18 @@ paths:
     $ref: ./modules/authorization/permissions.yaml#/paths/~1authorization~1roles~1{role_id}~1assignments
   /authorization/assignments/{assignment_id}:
     $ref: ./modules/authorization/permissions.yaml#/paths/~1authorization~1assignments~1{assignment_id}
+  /locales:
+    $ref: ./modules/localization/locales.yaml#/paths/~1locales
+  /locales/{locale_id}:
+    $ref: ./modules/localization/locales.yaml#/paths/~1locales~1{locale_id}
+  /locales/{locale_id}/status:
+    $ref: ./modules/localization/locales.yaml#/paths/~1locales~1{locale_id}~1status
+  /locales/{locale_id}/default:
+    $ref: ./modules/localization/locales.yaml#/paths/~1locales~1{locale_id}~1default
+  /locales/preferences:
+    $ref: ./modules/localization/preferences.yaml#/paths/~1locales~1preferences
+  /localization/catalog:
+    $ref: ./modules/localization/catalog.yaml#/paths/~1localization~1catalog
 components:
   schemas:
     Problem:

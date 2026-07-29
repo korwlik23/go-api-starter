@@ -1,0 +1,112 @@
+paths:
+  /localization/catalog:
+    get:
+      tags: [Localization]
+      summary: Read a versioned translation category for an enabled locale.
+      operationId: getTranslationCatalog
+      x-surfaces: [admin, public, site-server]
+      security: []
+      parameters:
+        - name: locale
+          in: query
+          required: true
+          schema:
+            type: string
+            minLength: 2
+        - name: category
+          in: query
+          required: true
+          schema:
+            type: string
+            minLength: 1
+      responses:
+        '200':
+          description: Merged translation entries and their catalog version.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TranslationCatalogResponse'
+        '404':
+          $ref: ../../common/errors.yaml#/components/responses/NotFound
+        '429':
+          $ref: ../../common/errors.yaml#/components/responses/TooManyRequests
+    put:
+      tags: [Localization]
+      summary: Replace translation overrides for one locale category using optimistic concurrency.
+      operationId: updateTranslationCatalog
+      x-surfaces: [admin]
+      x-required-permission: localization.catalog.update
+      security:
+        - SessionCookie: []
+          CSRFToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TranslationCatalogUpdateRequest'
+      responses:
+        '200':
+          description: The catalog category was stored at a new version.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TranslationCatalogUpdateResponse'
+        '401':
+          $ref: ../../common/errors.yaml#/components/responses/Unauthorized
+        '403':
+          $ref: ../../common/errors.yaml#/components/responses/Forbidden
+        '409':
+          $ref: ../../common/errors.yaml#/components/responses/Conflict
+components:
+  schemas:
+    TranslationCatalogResponse:
+      type: object
+      additionalProperties: false
+      required: [locale, category, version, entries]
+      properties:
+        locale:
+          type: string
+          minLength: 2
+        category:
+          type: string
+          minLength: 1
+        version:
+          type: integer
+          minimum: 1
+        entries:
+          type: object
+          additionalProperties:
+            type: string
+    TranslationCatalogUpdateRequest:
+      type: object
+      additionalProperties: false
+      required: [locale, category, entries, expected_version]
+      properties:
+        locale:
+          type: string
+          minLength: 2
+        category:
+          type: string
+          minLength: 1
+        entries:
+          type: object
+          additionalProperties:
+            type: string
+        expected_version:
+          type: integer
+          minimum: 0
+    TranslationCatalogUpdateResponse:
+      type: object
+      additionalProperties: false
+      required: [locale, category, version]
+      properties:
+        locale:
+          type: string
+          minLength: 2
+        category:
+          type: string
+          minLength: 1
+        version:
+          type: integer
+          minimum: 1

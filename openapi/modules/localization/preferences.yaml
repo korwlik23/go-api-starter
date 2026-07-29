@@ -1,0 +1,65 @@
+paths:
+  /locales/preferences:
+    put:
+      tags: [Localization]
+      summary: Select all enabled locales or an explicit eligible subset for the current user.
+      operationId: updateLocalePreferences
+      x-surfaces: [admin]
+      x-max-body-bytes: 32768
+      security:
+        - SessionCookie: []
+          CSRFToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LocalePreferenceRequest'
+      responses:
+        '200':
+          description: The locale preference was stored at a new version.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LocalePreferenceResponse'
+        '401':
+          $ref: ../../common/errors.yaml#/components/responses/Unauthorized
+        '409':
+          $ref: ../../common/errors.yaml#/components/responses/Conflict
+components:
+  schemas:
+    LocalePreferenceRequest:
+      type: object
+      additionalProperties: false
+      required: [all_languages, locale_ids, expected_version]
+      properties:
+        all_languages:
+          type: boolean
+        locale_ids:
+          type: array
+          maxItems: 256
+          uniqueItems: true
+          items:
+            type: string
+            minLength: 1
+        expected_version:
+          type: integer
+          minimum: 0
+          description: Use zero for the first write; later writes use the last observed version.
+    LocalePreferenceResponse:
+      type: object
+      additionalProperties: false
+      required: [all_languages, locale_ids, version]
+      properties:
+        all_languages:
+          type: boolean
+        locale_ids:
+          type: array
+          maxItems: 256
+          uniqueItems: true
+          items:
+            type: string
+            minLength: 1
+        version:
+          type: integer
+          minimum: 1

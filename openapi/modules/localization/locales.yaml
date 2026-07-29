@@ -1,0 +1,281 @@
+paths:
+  /locales:
+    get:
+      tags: [Localization]
+      summary: List locales visible to public and administrative consumers.
+      operationId: listLocales
+      x-surfaces: [admin, public, site-server]
+      security: []
+      responses:
+        '200':
+          description: Locale registry ordered by canonical locale code.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LocaleListResponse'
+        '429':
+          $ref: ../../common/errors.yaml#/components/responses/TooManyRequests
+    post:
+      tags: [Localization]
+      summary: Create a locale using a system-scoped permission.
+      operationId: createLocale
+      x-surfaces: [admin]
+      x-required-permission: localization.locales.create
+      security:
+        - SessionCookie: []
+          CSRFToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LocaleCreateRequest'
+      responses:
+        '201':
+          description: The locale was created in a disabled, non-selectable state.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Locale'
+        '401':
+          $ref: ../../common/errors.yaml#/components/responses/Unauthorized
+        '403':
+          $ref: ../../common/errors.yaml#/components/responses/Forbidden
+        '409':
+          $ref: ../../common/errors.yaml#/components/responses/Conflict
+  /locales/{locale_id}:
+    patch:
+      tags: [Localization]
+      summary: Update locale display metadata using optimistic concurrency.
+      operationId: updateLocale
+      x-surfaces: [admin]
+      x-required-permission: localization.locales.update
+      security:
+        - SessionCookie: []
+          CSRFToken: []
+      parameters:
+        - name: locale_id
+          in: path
+          required: true
+          schema:
+            type: string
+            minLength: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LocaleUpdateRequest'
+      responses:
+        '200':
+          description: The locale metadata was updated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LocaleUpdateResponse'
+        '401':
+          $ref: ../../common/errors.yaml#/components/responses/Unauthorized
+        '403':
+          $ref: ../../common/errors.yaml#/components/responses/Forbidden
+        '409':
+          $ref: ../../common/errors.yaml#/components/responses/Conflict
+  /locales/{locale_id}/status:
+    patch:
+      tags: [Localization]
+      summary: Change locale enabled and selectable state while enforcing registry invariants.
+      operationId: updateLocaleStatus
+      x-surfaces: [admin]
+      x-required-permission: localization.locales.update
+      security:
+        - SessionCookie: []
+          CSRFToken: []
+      parameters:
+        - name: locale_id
+          in: path
+          required: true
+          schema:
+            type: string
+            minLength: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LocaleStatusRequest'
+      responses:
+        '200':
+          description: The locale status was updated transactionally.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LocaleStatusResponse'
+        '401':
+          $ref: ../../common/errors.yaml#/components/responses/Unauthorized
+        '403':
+          $ref: ../../common/errors.yaml#/components/responses/Forbidden
+        '409':
+          $ref: ../../common/errors.yaml#/components/responses/Conflict
+  /locales/{locale_id}/default:
+    put:
+      tags: [Localization]
+      summary: Set the single enabled and selectable default locale transactionally.
+      operationId: setDefaultLocale
+      x-surfaces: [admin]
+      x-required-permission: localization.locales.set-default
+      security:
+        - SessionCookie: []
+          CSRFToken: []
+      parameters:
+        - name: locale_id
+          in: path
+          required: true
+          schema:
+            type: string
+            minLength: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SetDefaultLocaleRequest'
+      responses:
+        '200':
+          description: The default locale changed atomically.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SetDefaultLocaleResponse'
+        '401':
+          $ref: ../../common/errors.yaml#/components/responses/Unauthorized
+        '403':
+          $ref: ../../common/errors.yaml#/components/responses/Forbidden
+        '409':
+          $ref: ../../common/errors.yaml#/components/responses/Conflict
+components:
+  schemas:
+    LocaleListResponse:
+      type: object
+      additionalProperties: false
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Locale'
+    Locale:
+      type: object
+      additionalProperties: false
+      required: [id, code, name, direction, enabled, selectable, default]
+      properties:
+        id:
+          type: string
+          minLength: 1
+        code:
+          type: string
+          minLength: 2
+        name:
+          type: string
+          minLength: 1
+        direction:
+          type: string
+          enum: [ltr, rtl]
+        enabled:
+          type: boolean
+        selectable:
+          type: boolean
+        default:
+          type: boolean
+    LocaleCreateRequest:
+      type: object
+      additionalProperties: false
+      required: [code, name, direction]
+      properties:
+        code:
+          type: string
+          minLength: 2
+        name:
+          type: string
+          minLength: 1
+        direction:
+          type: string
+          enum: [ltr, rtl]
+    LocaleUpdateRequest:
+      type: object
+      additionalProperties: false
+      required: [name, direction, expected_version]
+      properties:
+        name:
+          type: string
+          minLength: 1
+        direction:
+          type: string
+          enum: [ltr, rtl]
+        expected_version:
+          type: integer
+          minimum: 1
+    LocaleUpdateResponse:
+      type: object
+      additionalProperties: false
+      required: [id, name, direction, version]
+      properties:
+        id:
+          type: string
+          minLength: 1
+        name:
+          type: string
+          minLength: 1
+        direction:
+          type: string
+          enum: [ltr, rtl]
+        version:
+          type: integer
+          minimum: 1
+    LocaleStatusRequest:
+      type: object
+      additionalProperties: false
+      required: [enabled, selectable, expected_version]
+      properties:
+        enabled:
+          type: boolean
+        selectable:
+          type: boolean
+        expected_version:
+          type: integer
+          minimum: 1
+    LocaleStatusResponse:
+      type: object
+      additionalProperties: false
+      required: [id, enabled, selectable, version]
+      properties:
+        id:
+          type: string
+          minLength: 1
+        enabled:
+          type: boolean
+        selectable:
+          type: boolean
+        version:
+          type: integer
+          minimum: 1
+    SetDefaultLocaleRequest:
+      type: object
+      additionalProperties: false
+      required: [expected_version]
+      properties:
+        expected_version:
+          type: integer
+          minimum: 1
+    SetDefaultLocaleResponse:
+      type: object
+      additionalProperties: false
+      required: [locale_id, previous_default_locale_id, version]
+      properties:
+        locale_id:
+          type: string
+          minLength: 1
+        previous_default_locale_id:
+          type: string
+          minLength: 1
+        version:
+          type: integer
+          minimum: 1
