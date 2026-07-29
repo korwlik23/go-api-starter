@@ -75,6 +75,31 @@ paths:
           $ref: ../../common/errors.yaml#/components/responses/Unauthorized
         '429':
           $ref: ../../common/errors.yaml#/components/responses/TooManyRequests
+  /auth/mfa/enrollment:
+    post:
+      tags: [Identity]
+      summary: Create a pending MFA enrollment for the authenticated session.
+      operationId: enrollMFA
+      security:
+        - SessionCookie: []
+          CSRFToken: []
+      responses:
+        '201':
+          description: Pending enrollment with a one-time provisioning URI.
+          headers:
+            Cache-Control:
+              description: Authentication state must never be stored by shared caches.
+              schema:
+                type: string
+                enum: [no-store]
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MFAEnrollmentResponse'
+        '401':
+          $ref: ../../common/errors.yaml#/components/responses/Unauthorized
+        '429':
+          $ref: ../../common/errors.yaml#/components/responses/TooManyRequests
 components:
   schemas:
     CSRFTokenResponse:
@@ -124,3 +149,17 @@ components:
           type: string
           minLength: 1
           description: Opaque identifier for the pending MFA challenge.
+    MFAEnrollmentResponse:
+      type: object
+      additionalProperties: false
+      required: [enrollment_id, provisioning_uri]
+      properties:
+        enrollment_id:
+          type: string
+          minLength: 1
+          description: Opaque identifier used only to confirm this enrollment.
+        provisioning_uri:
+          type: string
+          format: uri
+          minLength: 1
+          description: One-time URI for the authenticator application; server storage encrypts its TOTP secret.

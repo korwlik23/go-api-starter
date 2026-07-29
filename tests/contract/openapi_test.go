@@ -134,3 +134,26 @@ func TestLoginContract(t *testing.T) {
 	require.NotContains(t, mfaPending.Properties, "totp_secret")
 	require.NotContains(t, mfaPending.Properties, "recovery_code")
 }
+
+func TestMFAEnrollmentContract(t *testing.T) {
+	loader := openapi3.NewLoader()
+	loader.IsExternalRefsAllowed = true
+	document, err := loader.LoadFromFile(filepath.Join("..", "..", "openapi", "root.yaml"))
+	require.NoError(t, err)
+	require.NoError(t, document.Validate(context.Background()))
+
+	pathItem := document.Paths.Find("/auth/mfa/enrollment")
+	require.NotNil(t, pathItem)
+	require.NotNil(t, pathItem.Post)
+	require.Equal(t, "enrollMFA", pathItem.Post.OperationID)
+	require.Contains(t, (*pathItem.Post.Security)[0], "SessionCookie")
+	require.Contains(t, (*pathItem.Post.Security)[0], "CSRFToken")
+
+	response := pathItem.Post.Responses.Value("201")
+	require.NotNil(t, response)
+	require.Equal(t, []interface{}{"no-store"}, response.Value.Headers["Cache-Control"].Value.Schema.Value.Enum)
+	schema := response.Value.Content.Get("application/json").Schema.Value
+	require.ElementsMatch(t, []string{"enrollment_id", "provisioning_uri"}, schema.Required)
+	require.NotContains(t, schema.Properties, "encrypted_secret")
+	require.NotContains(t, schema.Properties, "secret_ciphertext")
+}

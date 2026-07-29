@@ -16,6 +16,8 @@ paths:
     $ref: ./modules/identity/auth.yaml#/paths/~1auth~1csrf
   /auth/login:
     $ref: ./modules/identity/auth.yaml#/paths/~1auth~1login
+  /auth/mfa/enrollment:
+    $ref: ./modules/identity/auth.yaml#/paths/~1auth~1mfa~1enrollment
 components:
   schemas:
     Problem:
