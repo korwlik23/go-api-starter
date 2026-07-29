@@ -41,5 +41,33 @@ CREATE INDEX one_time_tokens_expiry_idx
 CREATE INDEX one_time_tokens_key_expiry_idx
     ON one_time_tokens (hash_key_version, expires_at);
 
+CREATE TABLE one_time_token_deliveries (
+    token_id BINARY(16) NOT NULL,
+    envelope_version SMALLINT NOT NULL,
+    key_version BIGINT NOT NULL,
+    nonce VARBINARY(64) NOT NULL,
+    ciphertext VARBINARY(2048) NOT NULL,
+    expires_at DATETIME(6) NOT NULL,
+    delivered_at DATETIME(6) NULL,
+    created_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+    CONSTRAINT one_time_token_deliveries_primary_key PRIMARY KEY (token_id),
+    CONSTRAINT one_time_token_deliveries_token_fk FOREIGN KEY (token_id)
+        REFERENCES one_time_tokens (id) ON UPDATE RESTRICT ON DELETE CASCADE,
+    CONSTRAINT one_time_token_deliveries_envelope_version_valid
+        CHECK (envelope_version = 1 AND key_version > 0),
+    CONSTRAINT one_time_token_deliveries_envelope_lengths_valid CHECK (
+        OCTET_LENGTH(nonce) = 12
+        AND OCTET_LENGTH(ciphertext) BETWEEN 17 AND 2048
+    ),
+    CONSTRAINT one_time_token_deliveries_lifetime_valid
+        CHECK (expires_at > created_at),
+    CONSTRAINT one_time_token_deliveries_delivery_time_valid
+        CHECK (delivered_at IS NULL OR (delivered_at >= created_at AND delivered_at < expires_at))
+) ENGINE=InnoDB DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+CREATE INDEX one_time_token_deliveries_expiry_idx
+    ON one_time_token_deliveries (expires_at);
+
 -- +goose Down
+DROP TABLE one_time_token_deliveries;
 DROP TABLE one_time_tokens;

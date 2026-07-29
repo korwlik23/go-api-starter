@@ -22,11 +22,9 @@ type OneTimeToken struct {
 
 type EncryptedTokenDelivery struct {
 	TokenID    string
-	UserID     string
-	Recipient  string
-	Purpose    OneTimeTokenPurpose
 	KeyVersion int64
 	Nonce      []byte
 	Ciphertext []byte
+	ExpiresAt  time.Time
 	CreatedAt  time.Time
 }

@@ -2,9 +2,15 @@ package ports
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"github.com/korwlik23/go-api-starter/internal/modules/identity/domain"
+)
+
+var (
+	ErrOneTimeTokenNotFound = errors.New("one-time token not found")
+	ErrOneTimeTokenConflict = errors.New("one-time token conflict")
 )
 
 type OneTimeTokenIssuer interface {

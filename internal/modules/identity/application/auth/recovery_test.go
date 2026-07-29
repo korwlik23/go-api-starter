@@ -58,7 +58,8 @@ func TestRequestRecoveryIssuesHashOnlyTokenAndEncryptedDelivery(t *testing.T) {
 	require.Equal(t, "password_reset", tokens.purpose)
 	require.Equal(t, "token-id", tokens.tokenID)
 	require.Equal(t, user.ID, tokens.userID)
-	require.Equal(t, []byte("token-id.raw-secret"), encrypter.plaintext)
+	require.Contains(t, string(encrypter.plaintext), "token-id.raw-secret")
+	require.Contains(t, string(encrypter.plaintext), "person@example.com")
 	require.NotContains(t, string(encrypter.associatedData), "raw-secret")
 	require.Equal(t, identitydomain.TokenHash{0x42}, repository.token.TokenHash)
 	require.Equal(t, int16(1), repository.token.HashVersion)
@@ -66,6 +67,7 @@ func TestRequestRecoveryIssuesHashOnlyTokenAndEncryptedDelivery(t *testing.T) {
 	require.Equal(t, now.Add(30*time.Minute), repository.token.ExpiresAt)
 	require.Equal(t, []byte("encrypted-delivery"), repository.delivery.Ciphertext)
 	require.NotContains(t, repository.serialized(), "raw-secret")
+	require.NotContains(t, repository.serialized(), "person@example.com")
 }
 
 func TestRequestRecoveryUsesGenericSuccessAndDummyHMACForUnknownOrDisabledUser(

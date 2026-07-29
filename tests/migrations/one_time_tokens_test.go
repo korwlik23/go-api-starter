@@ -14,8 +14,9 @@ import (
 )
 
 const (
-	m8TokensTable       = "one_time_tokens"
-	m8MigrationFilename = "000006_create_one_time_tokens.sql"
+	m8TokensTable          = "one_time_tokens"
+	m8TokenDeliveriesTable = "one_time_token_deliveries"
+	m8MigrationFilename    = "000006_create_one_time_tokens.sql"
 )
 
 func TestM8(t *testing.T) {
@@ -39,12 +40,14 @@ func TestM8(t *testing.T) {
 	_, err := provider.UpTo(ctx, 6)
 	require.NoError(t, err)
 	m8AssertTokenSchema(t, ctx, sqlDB, cfg)
+	m8AssertTokenDeliverySchema(t, ctx, sqlDB, cfg)
 	m8AssertVersion(t, ctx, provider, 6)
 	m8AssertTokenBehavior(t, ctx, sqlDB, cfg, 0)
 
 	_, err = provider.DownTo(ctx, 5)
 	require.NoError(t, err)
 	require.False(t, migrationTableExists(t, ctx, sqlDB, cfg, m8TokensTable))
+	require.False(t, migrationTableExists(t, ctx, sqlDB, cfg, m8TokenDeliveriesTable))
 	require.True(t, migrationTableExists(t, ctx, sqlDB, cfg, m7RecoveryCodesTable))
 	require.True(t, migrationTableExists(t, ctx, sqlDB, cfg, m7TOTPTable))
 	require.True(t, migrationTableExists(t, ctx, sqlDB, cfg, m6AuthAttemptsTable))
@@ -56,8 +59,49 @@ func TestM8(t *testing.T) {
 	_, err = provider.UpTo(ctx, 6)
 	require.NoError(t, err)
 	m8AssertTokenSchema(t, ctx, sqlDB, cfg)
+	m8AssertTokenDeliverySchema(t, ctx, sqlDB, cfg)
 	m8AssertVersion(t, ctx, provider, 6)
 	m8AssertTokenBehavior(t, ctx, sqlDB, cfg, 100)
+}
+
+func m8AssertTokenDeliverySchema(
+	t *testing.T,
+	ctx context.Context,
+	db *sql.DB,
+	cfg config.DatabaseConfig,
+) {
+	t.Helper()
+
+	columns := migrationColumns(t, ctx, db, cfg, m8TokenDeliveriesTable)
+	require.Len(t, columns, 8, "M8 delivery outbox must persist only encrypted payload state")
+	m8AssertColumn(t, columns, "token_id", m3ExpectedIDType(t, cfg), "NO", false)
+	m8AssertColumn(t, columns, "envelope_version", "smallint", "NO", false)
+	m8AssertColumn(t, columns, "key_version", "bigint", "NO", false)
+	m8AssertColumn(t, columns, "nonce", m8ExpectedHashType(t, cfg), "NO", false)
+	m8AssertColumn(t, columns, "ciphertext", m8ExpectedHashType(t, cfg), "NO", false)
+	m8AssertColumn(t, columns, "expires_at", m3ExpectedTimestampType(t, cfg), "NO", false)
+	m8AssertColumn(t, columns, "delivered_at", m3ExpectedTimestampType(t, cfg), "YES", false)
+	m8AssertColumn(t, columns, "created_at", m3ExpectedTimestampType(t, cfg), "NO", true)
+	require.True(t, migrationHasExactConstraintColumns(
+		t, ctx, db, cfg, m8TokenDeliveriesTable, "PRIMARY KEY", []string{"token_id"},
+	))
+	require.True(t, migrationHasExactForeignKey(
+		t,
+		ctx,
+		db,
+		cfg,
+		m8TokenDeliveriesTable,
+		migrationForeignKey{
+			localColumns:      []string{"token_id"},
+			referencedTable:   m8TokensTable,
+			referencedColumns: []string{"id"},
+			updateRule:        "RESTRICT",
+			deleteRule:        "CASCADE",
+		},
+	))
+	require.True(t, migrationHasExactIndexColumns(
+		t, ctx, db, cfg, m8TokenDeliveriesTable, false, []string{"expires_at"},
+	))
 }
 
 func TestM8Parity(t *testing.T) {

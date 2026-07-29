@@ -2,6 +2,7 @@ package auth
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"strings"
 	"time"
@@ -88,8 +89,18 @@ func (useCase *RequestRecovery) Execute(ctx context.Context, email string) error
 
 	now := useCase.dependencies.Now()
 	associatedData := recoveryDeliveryAssociatedData(tokenID, user.ID)
+	payload, err := json.Marshal(struct {
+		Recipient string `json:"recipient"`
+		Token     string `json:"token"`
+	}{
+		Recipient: user.Email,
+		Token:     token.Raw,
+	})
+	if err != nil {
+		return err
+	}
 	envelope, err := useCase.dependencies.Delivery.Encrypt(
-		[]byte(token.Raw),
+		payload,
 		associatedData,
 	)
 	if err != nil {
@@ -108,12 +119,10 @@ func (useCase *RequestRecovery) Execute(ctx context.Context, email string) error
 	}
 	delivery := identitydomain.EncryptedTokenDelivery{
 		TokenID:    tokenID,
-		UserID:     user.ID,
-		Recipient:  user.Email,
-		Purpose:    identitydomain.OneTimeTokenPurposePasswordReset,
 		KeyVersion: envelope.KeyVersion,
 		Nonce:      append([]byte(nil), envelope.Nonce...),
 		Ciphertext: append([]byte(nil), envelope.Ciphertext...),
+		ExpiresAt:  now.Add(useCase.dependencies.TTL),
 		CreatedAt:  now,
 	}
 	return useCase.dependencies.Repository.Issue(ctx, record, delivery)
