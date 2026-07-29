@@ -1,0 +1,110 @@
+paths:
+  /auth/password/recovery:
+    post:
+      tags: [Identity]
+      summary: Request password recovery without revealing whether the account exists.
+      operationId: requestPasswordRecovery
+      security:
+        - SessionCookie: []
+          CSRFToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RecoveryRequest'
+      responses:
+        '202':
+          description: The request was accepted regardless of account existence or status.
+          headers:
+            Cache-Control:
+              description: Recovery state must never be stored by shared caches.
+              schema:
+                type: string
+                enum: [no-store]
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecoveryAcceptedResponse'
+        '429':
+          $ref: ../../common/errors.yaml#/components/responses/TooManyRequests
+  /auth/password/reset:
+    post:
+      tags: [Identity]
+      summary: Consume a one-time recovery token, reset the password, and rotate session state.
+      operationId: resetPassword
+      security:
+        - SessionCookie: []
+          CSRFToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasswordResetRequest'
+      responses:
+        '200':
+          description: The password was reset, existing sessions revoked, and pre-auth state rotated.
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                enum: [no-store]
+            Referrer-Policy:
+              schema:
+                type: string
+                enum: [no-referrer]
+            Set-Cookie:
+              description: Rotated opaque pre-auth session cookie with secure attributes.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PasswordResetResponse'
+        '400':
+          $ref: ../../common/errors.yaml#/components/responses/BadRequest
+        '429':
+          $ref: ../../common/errors.yaml#/components/responses/TooManyRequests
+components:
+  schemas:
+    RecoveryRequest:
+      type: object
+      additionalProperties: false
+      required: [email]
+      properties:
+        email:
+          type: string
+          format: email
+    RecoveryAcceptedResponse:
+      type: object
+      additionalProperties: false
+      required: [status]
+      properties:
+        status:
+          type: string
+          enum: [accepted]
+    PasswordResetRequest:
+      type: object
+      additionalProperties: false
+      required: [token, new_password]
+      properties:
+        token:
+          type: string
+          minLength: 1
+          writeOnly: true
+        new_password:
+          type: string
+          minLength: 1
+          writeOnly: true
+    PasswordResetResponse:
+      type: object
+      additionalProperties: false
+      required: [status, csrf_token]
+      properties:
+        status:
+          type: string
+          enum: [password_reset]
+        csrf_token:
+          type: string
+          minLength: 1

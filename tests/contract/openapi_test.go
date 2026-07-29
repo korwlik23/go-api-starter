@@ -296,3 +296,63 @@ func TestLogoutContract(t *testing.T) {
 	require.Equal(t, []interface{}{"no-store"}, response.Value.Headers["Cache-Control"].Value.Schema.Value.Enum)
 	require.NotNil(t, response.Value.Headers["Set-Cookie"])
 }
+
+func TestRecoveryRequestContract(t *testing.T) {
+	loader := openapi3.NewLoader()
+	loader.IsExternalRefsAllowed = true
+	document, err := loader.LoadFromFile(filepath.Join("..", "..", "openapi", "root.yaml"))
+	require.NoError(t, err)
+	require.NoError(t, document.Validate(context.Background()))
+
+	pathItem := document.Paths.Find("/auth/password/recovery")
+	require.NotNil(t, pathItem)
+	operation := pathItem.Post
+	require.NotNil(t, operation)
+	require.Equal(t, "requestPasswordRecovery", operation.OperationID)
+	require.Contains(t, (*operation.Security)[0], "SessionCookie")
+	require.Contains(t, (*operation.Security)[0], "CSRFToken")
+
+	request := operation.RequestBody.Value.Content.Get("application/json").Schema.Value
+	require.ElementsMatch(t, []string{"email"}, request.Required)
+	require.NotContains(t, request.Properties, "token")
+
+	response := operation.Responses.Value("202")
+	require.NotNil(t, response)
+	require.Equal(t, []interface{}{"no-store"}, response.Value.Headers["Cache-Control"].Value.Schema.Value.Enum)
+	schema := response.Value.Content.Get("application/json").Schema.Value
+	require.ElementsMatch(t, []string{"status"}, schema.Required)
+	require.Equal(t, []interface{}{"accepted"}, schema.Properties["status"].Value.Enum)
+	require.NotContains(t, schema.Properties, "user_exists")
+	require.NotContains(t, schema.Properties, "token")
+}
+
+func TestPasswordResetContract(t *testing.T) {
+	loader := openapi3.NewLoader()
+	loader.IsExternalRefsAllowed = true
+	document, err := loader.LoadFromFile(filepath.Join("..", "..", "openapi", "root.yaml"))
+	require.NoError(t, err)
+	require.NoError(t, document.Validate(context.Background()))
+
+	pathItem := document.Paths.Find("/auth/password/reset")
+	require.NotNil(t, pathItem)
+	operation := pathItem.Post
+	require.NotNil(t, operation)
+	require.Equal(t, "resetPassword", operation.OperationID)
+	require.Contains(t, (*operation.Security)[0], "SessionCookie")
+	require.Contains(t, (*operation.Security)[0], "CSRFToken")
+
+	request := operation.RequestBody.Value.Content.Get("application/json").Schema.Value
+	require.ElementsMatch(t, []string{"token", "new_password"}, request.Required)
+	require.True(t, request.Properties["token"].Value.WriteOnly)
+	require.True(t, request.Properties["new_password"].Value.WriteOnly)
+
+	response := operation.Responses.Value("200")
+	require.NotNil(t, response)
+	require.Equal(t, []interface{}{"no-store"}, response.Value.Headers["Cache-Control"].Value.Schema.Value.Enum)
+	require.Equal(t, []interface{}{"no-referrer"}, response.Value.Headers["Referrer-Policy"].Value.Schema.Value.Enum)
+	require.NotNil(t, response.Value.Headers["Set-Cookie"])
+	require.NotNil(t, operation.Responses.Value("400"))
+	require.Nil(t, operation.Responses.Value("404"))
+	responseSchema := response.Value.Content.Get("application/json").Schema.Value
+	require.NotContains(t, responseSchema.Properties, "token_status")
+}

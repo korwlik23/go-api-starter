@@ -30,6 +30,10 @@ paths:
     $ref: ./modules/identity/auth.yaml#/paths/~1auth~1sessions~1{session_id}
   /auth/logout:
     $ref: ./modules/identity/auth.yaml#/paths/~1auth~1logout
+  /auth/password/recovery:
+    $ref: ./modules/identity/recovery.yaml#/paths/~1auth~1password~1recovery
+  /auth/password/reset:
+    $ref: ./modules/identity/recovery.yaml#/paths/~1auth~1password~1reset
 components:
   schemas:
     Problem:
