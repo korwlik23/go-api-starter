@@ -62,6 +62,14 @@ type SessionConfig struct {
 type AuthenticationConfig struct {
 	Attempts              AuthAttemptConfig
 	AttemptFingerprintKey string
+	Recovery              RecoveryConfig
+}
+
+type RecoveryConfig struct {
+	TokenActiveKeyVersion    int64
+	TokenHMACKeys            string
+	DeliveryActiveKeyVersion int64
+	DeliveryEncryptionKeys   string
 }
 
 type DatabaseConfig struct {

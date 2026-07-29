@@ -98,6 +98,18 @@ func Load(lookup LookupFunc) (Config, error) {
 	if cfg.Authentication.AttemptFingerprintKey, err = rawValue(lookup, "AUTH_ATTEMPT_FINGERPRINT_KEY"); err != nil {
 		return Config{}, err
 	}
+	if cfg.Authentication.Recovery.TokenActiveKeyVersion, err = int64Value(lookup, "RECOVERY_TOKEN_HMAC_ACTIVE_VERSION"); err != nil {
+		return Config{}, err
+	}
+	if cfg.Authentication.Recovery.TokenHMACKeys, err = rawValue(lookup, "RECOVERY_TOKEN_HMAC_KEYS_B64"); err != nil {
+		return Config{}, err
+	}
+	if cfg.Authentication.Recovery.DeliveryActiveKeyVersion, err = int64Value(lookup, "RECOVERY_DELIVERY_ENCRYPTION_ACTIVE_VERSION"); err != nil {
+		return Config{}, err
+	}
+	if cfg.Authentication.Recovery.DeliveryEncryptionKeys, err = rawValue(lookup, "RECOVERY_DELIVERY_ENCRYPTION_KEYS_B64"); err != nil {
+		return Config{}, err
+	}
 	if cfg.Database.Driver, err = stringValue(lookup, "DB_DRIVER"); err != nil {
 		return Config{}, err
 	}

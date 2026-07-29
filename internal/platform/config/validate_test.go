@@ -220,6 +220,12 @@ func validSecurityConfig() Config {
 				CleanupBatch: 500,
 			},
 			AttemptFingerprintKey: "auth-attempt-fingerprint-key",
+			Recovery: RecoveryConfig{
+				TokenActiveKeyVersion:    1,
+				TokenHMACKeys:            "1:" + recoveryKeyFixture(0x52),
+				DeliveryActiveKeyVersion: 1,
+				DeliveryEncryptionKeys:   "1:" + recoveryKeyFixture(0x53),
+			},
 		},
 		Database: DatabaseConfig{
 			Driver:                "postgres",
@@ -251,4 +257,8 @@ func bundledTOTPFixture() string {
 
 func validTOTPFixture() string {
 	return base64.StdEncoding.EncodeToString(bytes.Repeat([]byte{0x44}, 32))
+}
+
+func recoveryKeyFixture(value byte) string {
+	return base64.StdEncoding.EncodeToString(bytes.Repeat([]byte{value}, 32))
 }
