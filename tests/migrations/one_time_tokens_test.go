@@ -259,6 +259,7 @@ func m8CleanupSchema(t *testing.T, db *sql.DB) {
 	cleanupContext, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	for _, table := range []string{
+		m8TokenDeliveriesTable,
 		m8TokensTable,
 		m7RecoveryCodesTable,
 		m7TOTPTable,

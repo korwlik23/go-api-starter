@@ -29,13 +29,14 @@ func m7AssertMFABehavior(
 	nonce := bytes.Repeat([]byte{31 + seedOffset}, 12)
 	rawSecretMarker := []byte("JBSWY3DPEHPK3PXP")
 	insertCredentialSQL := "INSERT INTO mfa_totp_credentials (" +
-		"user_id, secret_envelope_version, secret_key_version, secret_nonce, " +
+		"user_id, enrollment_id, secret_envelope_version, secret_key_version, secret_nonce, " +
 		"secret_ciphertext, enrollment_expires_at" +
-		") VALUES (" + migrationPlaceholders(cfg, 6) + ")"
+		") VALUES (" + migrationPlaceholders(cfg, 7) + ")"
 	_, err := db.ExecContext(
 		ctx,
 		insertCredentialSQL,
 		userID,
+		m7EnrollmentID(t, cfg, 1+seedOffset),
 		1,
 		1,
 		nonce,
@@ -49,6 +50,7 @@ func m7AssertMFABehavior(
 		ctx,
 		insertCredentialSQL,
 		userID,
+		m7EnrollmentID(t, cfg, 2+seedOffset),
 		1,
 		1,
 		bytes.Repeat([]byte{32 + seedOffset}, 12),
@@ -60,6 +62,7 @@ func m7AssertMFABehavior(
 		ctx,
 		insertCredentialSQL,
 		m3UserID(t, cfg, 99+seedOffset),
+		m7EnrollmentID(t, cfg, 3+seedOffset),
 		1,
 		1,
 		bytes.Repeat([]byte{34 + seedOffset}, 12),
@@ -297,6 +300,7 @@ func m7AssertInvalidMFAState(
 			ctx,
 			insertCredentialSQL,
 			userID,
+			m7EnrollmentID(t, cfg, byte(10+index)+seedOffset),
 			test.envelopeVersion,
 			test.keyVersion,
 			test.nonce,
@@ -312,6 +316,7 @@ func m7AssertInvalidMFAState(
 		ctx,
 		insertCredentialSQL,
 		duplicateNonceUserID,
+		m7EnrollmentID(t, cfg, 20+seedOffset),
 		1,
 		1,
 		bytes.Repeat([]byte{31 + seedOffset}, 12),
@@ -338,11 +343,12 @@ func m7AssertInvalidMFAState(
 		m2InsertUser(t, ctx, db, cfg, userID, fmt.Sprintf("invalid-mfa-state-%d-%d@example.test", seedOffset, index))
 		_, err := db.ExecContext(
 			ctx,
-			"INSERT INTO mfa_totp_credentials (user_id, secret_envelope_version, "+
+			"INSERT INTO mfa_totp_credentials (user_id, enrollment_id, secret_envelope_version, "+
 				"secret_key_version, secret_nonce, secret_ciphertext, enrollment_expires_at, "+
 				"confirmed_at, last_used_step, created_at, updated_at) VALUES ("+
-				migrationPlaceholders(cfg, 10)+")",
+				migrationPlaceholders(cfg, 11)+")",
 			userID,
+			m7EnrollmentID(t, cfg, byte(30+index)+seedOffset),
 			1,
 			2,
 			bytes.Repeat([]byte{90 + byte(index) + seedOffset}, 12),
@@ -359,4 +365,10 @@ func m7AssertInvalidMFAState(
 
 func m7RecoveryCodeHash(seed byte) []byte {
 	return bytes.Repeat([]byte{seed}, 32)
+}
+
+func m7EnrollmentID(t *testing.T, cfg config.DatabaseConfig, seed byte) any {
+	t.Helper()
+
+	return m3UserID(t, cfg, seed)
 }
