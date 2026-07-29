@@ -21,13 +21,15 @@ func TestSessionAuthenticationAddsActiveSessionToRequestContext(t *testing.T) {
 
 	now := time.Date(2026, time.July, 30, 3, 0, 0, 0, time.UTC)
 	userID := "018f1f64-7b2a-7c10-8bf2-3c40d5f67586"
+	authorizationVersion := int64(7)
 	repository := &sessionAuthenticationReader{
 		session: identitydomain.Session{
-			ID:                "018f1f64-7b2a-7c10-8bf2-3c40d5f67585",
-			State:             identitydomain.SessionStateAuthenticated,
-			UserID:            &userID,
-			IdleExpiresAt:     now.Add(time.Minute),
-			AbsoluteExpiresAt: now.Add(time.Hour),
+			ID:                   "018f1f64-7b2a-7c10-8bf2-3c40d5f67585",
+			State:                identitydomain.SessionStateAuthenticated,
+			UserID:               &userID,
+			AuthorizationVersion: &authorizationVersion,
+			IdleExpiresAt:        now.Add(time.Minute),
+			AbsoluteExpiresAt:    now.Add(time.Hour),
 		},
 	}
 	router, codec := sessionAuthenticationTestRouter(t, now, repository)
@@ -43,6 +45,32 @@ func TestSessionAuthenticationAddsActiveSessionToRequestContext(t *testing.T) {
 		identitydomain.TokenHash(codec.Hash("raw-session-token")),
 		repository.requestedHash,
 	)
+}
+
+func TestSessionAuthenticationRejectsStaleAuthorizationVersion(t *testing.T) {
+	t.Parallel()
+
+	now := time.Date(2026, time.July, 30, 3, 0, 0, 0, time.UTC)
+	userID := "user-id"
+	snapshot := int64(6)
+	repository := &sessionAuthenticationReader{
+		session: identitydomain.Session{
+			State:                identitydomain.SessionStateAuthenticated,
+			UserID:               &userID,
+			AuthorizationVersion: &snapshot,
+			IdleExpiresAt:        now.Add(time.Minute),
+			AbsoluteExpiresAt:    now.Add(time.Hour),
+		},
+	}
+	router, _ := sessionAuthenticationTestRouter(t, now, repository)
+	request := httptest.NewRequest(nethttp.MethodGet, "/session", nil)
+	request.AddCookie(&nethttp.Cookie{Name: "session", Value: "stale-token"})
+	response := httptest.NewRecorder()
+
+	router.ServeHTTP(response, request)
+
+	require.Equal(t, nethttp.StatusUnauthorized, response.Code)
+	require.Contains(t, response.Body.String(), `"code":"authentication_required"`)
 }
 
 func TestSessionAuthenticationDoesNotReuseRevokedOrExpiredSession(t *testing.T) {
@@ -168,8 +196,11 @@ func sessionAuthenticationTestRouter(
 	)
 	require.NoError(t, err)
 	authentication, err := NewSessionAuthentication(SessionAuthenticationConfig{
-		CookieName:    "session",
-		Sessions:      repository,
+		CookieName: "session",
+		Sessions:   repository,
+		AuthorizationVersions: &authorizationVersionReaderStub{
+			version: authorizationVersionForSession(repository.session),
+		},
 		SessionTokens: codec,
 		Now:           func() time.Time { return now },
 	})
@@ -189,6 +220,28 @@ func sessionAuthenticationTestRouter(
 		ctx.Status(nethttp.StatusNoContent)
 	})
 	return router, codec
+}
+
+func authorizationVersionForSession(session identitydomain.Session) int64 {
+	if session.AuthorizationVersion == nil {
+		return 1
+	}
+	if *session.AuthorizationVersion == 6 {
+		return 7
+	}
+	return *session.AuthorizationVersion
+}
+
+type authorizationVersionReaderStub struct {
+	version int64
+	err     error
+}
+
+func (stub *authorizationVersionReaderStub) CurrentAuthorizationVersion(
+	_ context.Context,
+	_ string,
+) (int64, error) {
+	return stub.version, stub.err
 }
 
 type sessionAuthenticationReader struct {

@@ -29,10 +29,11 @@ type sessionAuthenticationTokenCodec interface {
 }
 
 type SessionAuthenticationConfig struct {
-	CookieName    string
-	Sessions      sessionAuthenticationStore
-	SessionTokens sessionAuthenticationTokenCodec
-	Now           func() time.Time
+	CookieName            string
+	Sessions              sessionAuthenticationStore
+	AuthorizationVersions ports.AuthorizationVersionReader
+	SessionTokens         sessionAuthenticationTokenCodec
+	Now                   func() time.Time
 }
 
 type sessionContextKey struct{}
@@ -42,6 +43,7 @@ func NewSessionAuthentication(
 ) (gin.HandlerFunc, error) {
 	if strings.TrimSpace(config.CookieName) == "" ||
 		config.Sessions == nil ||
+		config.AuthorizationVersions == nil ||
 		config.SessionTokens == nil ||
 		config.Now == nil {
 		return nil, ErrInvalidSessionAuthenticationConfig
@@ -81,6 +83,29 @@ func NewSessionAuthentication(
 			ctx.Next()
 			return
 		}
+		current, err := currentAuthorizationVersion(ctx, config, session)
+		if err != nil {
+			response.WriteProblem(
+				ctx,
+				nethttp.StatusInternalServerError,
+				RequestIDFromContext(ctx.Request.Context()),
+				response.NewProblem(
+					"session_lookup_failed",
+					"The session could not be checked.",
+					nil,
+					err,
+				),
+			)
+			return
+		}
+		if current != nil &&
+			(*current < 1 ||
+				session.AuthorizationVersion == nil ||
+				*session.AuthorizationVersion < 1 ||
+				*session.AuthorizationVersion != *current) {
+			ctx.Next()
+			return
+		}
 
 		requestContext := context.WithValue(
 			ctx.Request.Context(),
@@ -90,6 +115,28 @@ func NewSessionAuthentication(
 		ctx.Request = ctx.Request.WithContext(requestContext)
 		ctx.Next()
 	}, nil
+}
+
+func currentAuthorizationVersion(
+	ctx *gin.Context,
+	config SessionAuthenticationConfig,
+	session identitydomain.Session,
+) (*int64, error) {
+	if session.State == identitydomain.SessionStateAnonymous {
+		return nil, nil
+	}
+	if session.UserID == nil || *session.UserID == "" {
+		invalid := int64(-1)
+		return &invalid, nil
+	}
+	version, err := config.AuthorizationVersions.CurrentAuthorizationVersion(
+		ctx.Request.Context(),
+		*session.UserID,
+	)
+	if err != nil {
+		return nil, err
+	}
+	return &version, nil
 }
 
 func SessionFromContext(ctx context.Context) (identitydomain.Session, bool) {
