@@ -39,6 +39,13 @@ func TestA3(t *testing.T) {
 			},
 		},
 		{
+			name: "auth attempt fingerprint key",
+			key:  "AUTH_ATTEMPT_FINGERPRINT_KEY",
+			clear: func(cfg *Config) {
+				cfg.Authentication.AttemptFingerprintKey = ""
+			},
+		},
+		{
 			name: "database password",
 			key:  "DB_PASSWORD",
 			clear: func(cfg *Config) {
@@ -84,6 +91,13 @@ func TestA3(t *testing.T) {
 			key:  "TOTP_ENCRYPTION_KEY_B64",
 			set: func(cfg *Config, value string) {
 				cfg.Session.TOTPEncryptionKey = value
+			},
+		},
+		{
+			name: "auth attempt fingerprint key",
+			key:  "AUTH_ATTEMPT_FINGERPRINT_KEY",
+			set: func(cfg *Config, value string) {
+				cfg.Authentication.AttemptFingerprintKey = value
 			},
 		},
 		{
@@ -141,6 +155,14 @@ func TestA3(t *testing.T) {
 			},
 		},
 		{
+			name:  "auth attempt fingerprint key",
+			key:   "AUTH_ATTEMPT_FINGERPRINT_KEY",
+			value: "development-only-auth-attempt-fingerprint-key-not-for-production",
+			set: func(cfg *Config, value string) {
+				cfg.Authentication.AttemptFingerprintKey = value
+			},
+		},
+		{
 			name:  "database password",
 			key:   "DB_PASSWORD",
 			value: "development-only-database-password",
@@ -188,6 +210,15 @@ func validSecurityConfig() Config {
 			TokenPepper:       "session-token-pepper",
 			CSRFTokenPepper:   "csrf-token-pepper",
 			TOTPEncryptionKey: "totp-encryption-key",
+		},
+		Authentication: AuthenticationConfig{
+			Attempts: AuthAttemptConfig{
+				Threshold:    5,
+				Window:       15 * time.Minute,
+				LockDuration: 30 * time.Minute,
+				CleanupBatch: 500,
+			},
+			AttemptFingerprintKey: "auth-attempt-fingerprint-key",
 		},
 		Database: DatabaseConfig{
 			Driver:                "postgres",

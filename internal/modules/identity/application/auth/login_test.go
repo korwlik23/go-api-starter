@@ -19,10 +19,12 @@ func TestPasswordLoginAuthenticatesActiveUser(t *testing.T) {
 	users := &userRepositoryStub{user: user}
 	passwords := &passwordRepositoryStub{hash: "stored-hash"}
 	verifier := &passwordVerifierStub{matches: true}
+	attempts := &loginAttemptPolicyStub{}
 	login, err := NewPasswordLogin(PasswordLoginDependencies{
 		Users:     users,
 		Passwords: passwords,
 		Verifier:  verifier,
+		Attempts:  attempts,
 		DummyHash: "dummy-hash",
 	})
 	require.NoError(t, err)
@@ -31,6 +33,7 @@ func TestPasswordLoginAuthenticatesActiveUser(t *testing.T) {
 		context.Background(),
 		"  USER@Example.COM ",
 		"correct password",
+		"192.0.2.1",
 	)
 	require.NoError(t, err)
 	require.Equal(t, user, result)
@@ -38,6 +41,9 @@ func TestPasswordLoginAuthenticatesActiveUser(t *testing.T) {
 	require.Equal(t, user.ID, passwords.userID)
 	require.Equal(t, "correct password", verifier.password)
 	require.Equal(t, "stored-hash", verifier.hash)
+	require.Equal(t, 1, attempts.checkCalls)
+	require.Equal(t, 1, attempts.successCalls)
+	require.Equal(t, 0, attempts.failureCalls)
 }
 
 func TestPasswordLoginUsesGenericFailureAndDummyVerification(t *testing.T) {
@@ -79,10 +85,12 @@ func TestPasswordLoginUsesGenericFailureAndDummyVerification(t *testing.T) {
 
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
+			attempts := &loginAttemptPolicyStub{}
 			login, err := NewPasswordLogin(PasswordLoginDependencies{
 				Users:     testCase.users,
 				Passwords: testCase.passwords,
 				Verifier:  testCase.verifier,
+				Attempts:  attempts,
 				DummyHash: "dummy-hash",
 			})
 			require.NoError(t, err)
@@ -91,12 +99,15 @@ func TestPasswordLoginUsesGenericFailureAndDummyVerification(t *testing.T) {
 				context.Background(),
 				"user@example.com",
 				"candidate",
+				"192.0.2.1",
 			)
 
 			require.Equal(t, ErrInvalidCredentials, err)
 			require.Empty(t, result)
 			require.Equal(t, 1, testCase.verifier.calls)
 			require.Equal(t, testCase.expectedHash, testCase.verifier.hash)
+			require.Equal(t, 1, attempts.failureCalls)
+			require.Equal(t, 0, attempts.successCalls)
 		})
 	}
 }
@@ -107,13 +118,44 @@ func TestPasswordLoginFailsClosedOnRepositoryError(t *testing.T) {
 		Users:     &userRepositoryStub{err: repositoryErr},
 		Passwords: &passwordRepositoryStub{},
 		Verifier:  &passwordVerifierStub{},
+		Attempts:  &loginAttemptPolicyStub{},
 		DummyHash: "dummy-hash",
 	})
 	require.NoError(t, err)
 
-	_, err = login.Authenticate(context.Background(), "user@example.com", "candidate")
+	_, err = login.Authenticate(
+		context.Background(),
+		"user@example.com",
+		"candidate",
+		"192.0.2.1",
+	)
 	require.ErrorIs(t, err, repositoryErr)
 	require.NotEqual(t, ErrInvalidCredentials, err)
+}
+
+func TestPasswordLoginHidesTemporaryLockAndPerformsDummyVerification(t *testing.T) {
+	attempts := &loginAttemptPolicyStub{checkErr: ErrAuthenticationTemporarilyLocked}
+	verifier := &passwordVerifierStub{}
+	login, err := NewPasswordLogin(PasswordLoginDependencies{
+		Users:     &userRepositoryStub{},
+		Passwords: &passwordRepositoryStub{},
+		Verifier:  verifier,
+		Attempts:  attempts,
+		DummyHash: "dummy-hash",
+	})
+	require.NoError(t, err)
+
+	_, err = login.Authenticate(
+		context.Background(),
+		"user@example.com",
+		"candidate",
+		"192.0.2.1",
+	)
+
+	require.Equal(t, ErrInvalidCredentials, err)
+	require.Equal(t, 1, verifier.calls)
+	require.Equal(t, "dummy-hash", verifier.hash)
+	require.Equal(t, 0, attempts.failureCalls)
 }
 
 type userRepositoryStub struct {
@@ -157,4 +199,45 @@ func (verifier *passwordVerifierStub) Verify(password, hash string) (bool, error
 	verifier.password = password
 	verifier.hash = hash
 	return verifier.matches, verifier.err
+}
+
+type loginAttemptPolicyStub struct {
+	keys         []ports.AuthAttemptKey
+	checkErr     error
+	failureErr   error
+	successErr   error
+	checkCalls   int
+	failureCalls int
+	successCalls int
+}
+
+func (policy *loginAttemptPolicyStub) Check(
+	context.Context,
+	string,
+	string,
+) ([]ports.AuthAttemptKey, error) {
+	policy.checkCalls++
+	if policy.keys == nil {
+		policy.keys = []ports.AuthAttemptKey{
+			{Type: ports.AuthAttemptKeySubject},
+			{Type: ports.AuthAttemptKeyIP},
+		}
+	}
+	return policy.keys, policy.checkErr
+}
+
+func (policy *loginAttemptPolicyStub) RecordFailure(
+	context.Context,
+	[]ports.AuthAttemptKey,
+) error {
+	policy.failureCalls++
+	return policy.failureErr
+}
+
+func (policy *loginAttemptPolicyStub) RecordSuccess(
+	context.Context,
+	[]ports.AuthAttemptKey,
+) error {
+	policy.successCalls++
+	return policy.successErr
 }

@@ -11,15 +11,16 @@ type Environment string
 // Config contains the application configuration after environment values have
 // been converted to their runtime types.
 type Config struct {
-	App          AppConfig
-	HTTP         HTTPConfig
-	Log          LogConfig
-	Origins      OriginsConfig
-	Session      SessionConfig
-	Database     DatabaseConfig
-	Localization LocalizationConfig
-	RateLimits   RateLimitsConfig
-	Redis        RedisConfig
+	App            AppConfig
+	HTTP           HTTPConfig
+	Log            LogConfig
+	Origins        OriginsConfig
+	Session        SessionConfig
+	Authentication AuthenticationConfig
+	Database       DatabaseConfig
+	Localization   LocalizationConfig
+	RateLimits     RateLimitsConfig
+	Redis          RedisConfig
 }
 
 type AppConfig struct {
@@ -55,6 +56,11 @@ type SessionConfig struct {
 	TokenPepper       string
 	CSRFTokenPepper   string
 	TOTPEncryptionKey string
+}
+
+type AuthenticationConfig struct {
+	Attempts              AuthAttemptConfig
+	AttemptFingerprintKey string
 }
 
 type DatabaseConfig struct {

@@ -80,6 +80,21 @@ func Load(lookup LookupFunc) (Config, error) {
 	if cfg.Session.TOTPEncryptionKey, err = rawValue(lookup, "TOTP_ENCRYPTION_KEY_B64"); err != nil {
 		return Config{}, err
 	}
+	if cfg.Authentication.Attempts.Threshold, err = uint64Value(lookup, "AUTH_ATTEMPT_THRESHOLD"); err != nil {
+		return Config{}, err
+	}
+	if cfg.Authentication.Attempts.Window, err = durationValue(lookup, "AUTH_ATTEMPT_WINDOW"); err != nil {
+		return Config{}, err
+	}
+	if cfg.Authentication.Attempts.LockDuration, err = durationValue(lookup, "AUTH_ATTEMPT_LOCK_DURATION"); err != nil {
+		return Config{}, err
+	}
+	if cfg.Authentication.Attempts.CleanupBatch, err = intValue(lookup, "AUTH_ATTEMPT_CLEANUP_BATCH"); err != nil {
+		return Config{}, err
+	}
+	if cfg.Authentication.AttemptFingerprintKey, err = rawValue(lookup, "AUTH_ATTEMPT_FINGERPRINT_KEY"); err != nil {
+		return Config{}, err
+	}
 	if cfg.Database.Driver, err = stringValue(lookup, "DB_DRIVER"); err != nil {
 		return Config{}, err
 	}
@@ -209,6 +224,18 @@ func intValue(lookup LookupFunc, key string) (int, error) {
 	parsed, parseErr := strconv.Atoi(value)
 	if parseErr != nil {
 		return 0, invalidKeyError(key, "must be an integer")
+	}
+	return parsed, nil
+}
+
+func uint64Value(lookup LookupFunc, key string) (uint64, error) {
+	value, err := stringValue(lookup, key)
+	if err != nil {
+		return 0, err
+	}
+	parsed, parseErr := strconv.ParseUint(value, 10, 64)
+	if parseErr != nil {
+		return 0, invalidKeyError(key, "must be a non-negative integer")
 	}
 	return parsed, nil
 }

@@ -31,6 +31,11 @@ func TestA2(t *testing.T) {
 		"SESSION_TOKEN_PEPPER":         "test-session-pepper",
 		"CSRF_TOKEN_PEPPER":            "test-csrf-pepper",
 		"TOTP_ENCRYPTION_KEY_B64":      "test-totp-key",
+		"AUTH_ATTEMPT_THRESHOLD":       "5",
+		"AUTH_ATTEMPT_WINDOW":          "15m",
+		"AUTH_ATTEMPT_LOCK_DURATION":   "30m",
+		"AUTH_ATTEMPT_CLEANUP_BATCH":   "500",
+		"AUTH_ATTEMPT_FINGERPRINT_KEY": "test-auth-attempt-fingerprint-key",
 		"DB_DRIVER":                    "postgres",
 		"DB_FLAVOR":                    "",
 		"DB_HOST":                      "127.0.0.1",
@@ -76,6 +81,14 @@ func TestA2(t *testing.T) {
 	require.Empty(t, cfg.HTTP.TrustedProxyCIDRs)
 	require.False(t, cfg.Session.CookieSecure)
 	require.Equal(t, 30*time.Minute, cfg.Session.IdleTimeout)
+	require.Equal(t, uint64(5), cfg.Authentication.Attempts.Threshold)
+	require.Equal(t, 30*time.Minute, cfg.Authentication.Attempts.LockDuration)
+	require.Equal(t, 500, cfg.Authentication.Attempts.CleanupBatch)
+	require.Equal(
+		t,
+		"test-auth-attempt-fingerprint-key",
+		cfg.Authentication.AttemptFingerprintKey,
+	)
 	require.Equal(t, "postgres", cfg.Database.Driver)
 	require.Empty(t, cfg.Database.Flavor)
 	require.Equal(t, 5*time.Second, cfg.Database.ConnectTimeout)

@@ -12,6 +12,9 @@ func Validate(cfg Config) error {
 	if err := validateRateLimits(cfg); err != nil {
 		return err
 	}
+	if err := ValidateAuthAttemptConfig(cfg.Authentication.Attempts); err != nil {
+		return err
+	}
 	_, err := ParseTrustedProxyCIDRs(cfg.HTTP.TrustedProxyCIDRs)
 	return err
 }

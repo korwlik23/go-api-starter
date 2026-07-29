@@ -15,6 +15,10 @@ func validateSecrets(cfg Config) error {
 		{key: "SESSION_TOKEN_PEPPER", value: cfg.Session.TokenPepper},
 		{key: "CSRF_TOKEN_PEPPER", value: cfg.Session.CSRFTokenPepper},
 		{key: "TOTP_ENCRYPTION_KEY_B64", value: cfg.Session.TOTPEncryptionKey},
+		{
+			key:   "AUTH_ATTEMPT_FINGERPRINT_KEY",
+			value: cfg.Authentication.AttemptFingerprintKey,
+		},
 		{key: "DB_PASSWORD", value: cfg.Database.Password},
 	}
 
