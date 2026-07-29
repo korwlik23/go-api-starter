@@ -1,0 +1,22 @@
+package app
+
+import (
+	"github.com/korwlik23/go-api-starter/internal/modular"
+	accountsmodule "github.com/korwlik23/go-api-starter/internal/modules/accounts"
+	auditmodule "github.com/korwlik23/go-api-starter/internal/modules/audit"
+	authorizationmodule "github.com/korwlik23/go-api-starter/internal/modules/authorization"
+	identitymodule "github.com/korwlik23/go-api-starter/internal/modules/identity"
+	localizationmodule "github.com/korwlik23/go-api-starter/internal/modules/localization"
+	operationsmodule "github.com/korwlik23/go-api-starter/internal/modules/operations"
+)
+
+func Modules() (*modular.Registry, error) {
+	return modular.NewRegistry([]modular.Manifest{
+		identitymodule.Manifest(),
+		accountsmodule.Manifest(),
+		authorizationmodule.Manifest(),
+		localizationmodule.Manifest(),
+		auditmodule.Manifest(),
+		operationsmodule.Manifest(),
+	})
+}
