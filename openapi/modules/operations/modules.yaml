@@ -1,0 +1,47 @@
+paths:
+  /operations/modules:
+    get:
+      tags: [Operations]
+      summary: List the runtime module activation projection.
+      operationId: listEnabledModules
+      x-surfaces: [admin]
+      security:
+        - SessionCookie: []
+      responses:
+        '200':
+          description: Safe runtime module state without configuration or checksums.
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                enum: [no-store]
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ModuleListResponse'
+        '401':
+          $ref: ../../common/errors.yaml#/components/responses/Unauthorized
+components:
+  schemas:
+    ModuleListResponse:
+      type: object
+      additionalProperties: false
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ModuleState'
+    ModuleState:
+      type: object
+      additionalProperties: false
+      required: [id, enabled, reconcile_revision]
+      properties:
+        id:
+          type: string
+          minLength: 1
+        enabled:
+          type: boolean
+        reconcile_revision:
+          type: integer
+          minimum: 1

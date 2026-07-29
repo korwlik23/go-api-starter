@@ -56,6 +56,12 @@ paths:
     $ref: ./modules/localization/preferences.yaml#/paths/~1locales~1preferences
   /localization/catalog:
     $ref: ./modules/localization/catalog.yaml#/paths/~1localization~1catalog
+  /operations/modules:
+    $ref: ./modules/operations/modules.yaml#/paths/~1operations~1modules
+  /livez:
+    $ref: ./modules/system/health.yaml#/paths/~1livez
+  /readyz:
+    $ref: ./modules/system/health.yaml#/paths/~1readyz
 components:
   schemas:
     Problem:

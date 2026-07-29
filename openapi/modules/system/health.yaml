@@ -1,0 +1,92 @@
+paths:
+  /livez:
+    get:
+      tags: [System]
+      summary: Report process liveness without probing dependencies.
+      operationId: getLiveness
+      x-surfaces: [site-server]
+      security: []
+      servers:
+        - url: "{scheme}://{host}"
+          variables:
+            scheme:
+              default: https
+              enum: [https, http]
+            host:
+              default: api.tewarach-dev.me
+      responses:
+        '200':
+          description: The API process is alive.
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                enum: [no-store]
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LivenessResponse'
+  /readyz:
+    get:
+      tags: [System]
+      summary: Report bounded readiness without exposing dependency detail.
+      operationId: getReadiness
+      x-surfaces: [site-server]
+      security: []
+      servers:
+        - url: "{scheme}://{host}"
+          variables:
+            scheme:
+              default: https
+              enum: [https, http]
+            host:
+              default: api.tewarach-dev.me
+      responses:
+        '200':
+          description: All critical dependencies and module state are ready.
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                enum: [no-store]
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReadinessResponse'
+        '503':
+          description: One or more critical readiness conditions are unavailable.
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                enum: [no-store]
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReadinessUnavailableResponse'
+components:
+  schemas:
+    LivenessResponse:
+      type: object
+      additionalProperties: false
+      required: [status]
+      properties:
+        status:
+          type: string
+          enum: [ok]
+    ReadinessResponse:
+      type: object
+      additionalProperties: false
+      required: [status]
+      properties:
+        status:
+          type: string
+          enum: [ready]
+    ReadinessUnavailableResponse:
+      type: object
+      additionalProperties: false
+      required: [status]
+      properties:
+        status:
+          type: string
+          enum: [unavailable]
