@@ -2,6 +2,7 @@ package gorm
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -14,6 +15,28 @@ import (
 )
 
 const maximumFallbackDepth = 32
+
+func (repository *LocaleRepository) FindByTag(
+	ctx context.Context,
+	tag string,
+) (localizationdomain.Locale, error) {
+	normalized, err := localizationdomain.NormalizeLocaleTag(tag)
+	if err != nil || normalized != tag {
+		return localizationdomain.Locale{}, ports.ErrLocaleNotFound
+	}
+	var record localeRecord
+	err = repository.db.WithContext(ctx).
+		Where("tag = ?", normalized).
+		First(&record).
+		Error
+	if errors.Is(err, gormdb.ErrRecordNotFound) {
+		return localizationdomain.Locale{}, ports.ErrLocaleNotFound
+	}
+	if err != nil {
+		return localizationdomain.Locale{}, fmt.Errorf("find locale by tag: %w", err)
+	}
+	return localeFromRecord(record)
+}
 
 func (repository *LocaleRepository) FindByID(
 	ctx context.Context,
@@ -31,7 +54,7 @@ func (repository *LocaleRepository) FindByID(
 		Where("id = ?", encodedID).
 		First(&record).
 		Error
-	if err == gormdb.ErrRecordNotFound {
+	if errors.Is(err, gormdb.ErrRecordNotFound) {
 		return localizationdomain.Locale{}, ports.ErrLocaleNotFound
 	}
 	if err != nil {

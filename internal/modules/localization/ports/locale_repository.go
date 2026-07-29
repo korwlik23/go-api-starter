@@ -33,6 +33,10 @@ type UpdateLocaleCommand struct {
 }
 
 type LocaleManagementRepository interface {
+	FindByTag(
+		ctx context.Context,
+		tag string,
+	) (localizationdomain.Locale, error)
 	FindByID(
 		ctx context.Context,
 		localeID string,

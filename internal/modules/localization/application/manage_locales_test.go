@@ -107,9 +107,21 @@ func (stub localeAuthorizerStub) Allowed(
 }
 
 type localeManagementRepositoryStub struct {
+	byTag   map[string]localizationdomain.Locale
 	found   localizationdomain.Locale
 	created ports.CreateLocaleCommand
 	updated ports.UpdateLocaleCommand
+}
+
+func (stub *localeManagementRepositoryStub) FindByTag(
+	_ context.Context,
+	tag string,
+) (localizationdomain.Locale, error) {
+	locale, ok := stub.byTag[tag]
+	if !ok {
+		return localizationdomain.Locale{}, ports.ErrLocaleNotFound
+	}
+	return locale, nil
 }
 
 func (stub *localeManagementRepositoryStub) FindByID(
