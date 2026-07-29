@@ -35,7 +35,7 @@ func NormalizeLocaleTag(value string) (string, error) {
 	value = strings.TrimSpace(value)
 	if value == "" ||
 		strings.Contains(value, "_") ||
-		len(value) > 63 {
+		len(value) > 255 {
 		return "", ErrInvalidLocaleTag
 	}
 	tag, err := language.Parse(value)
