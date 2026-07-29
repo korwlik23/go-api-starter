@@ -157,3 +157,25 @@ func TestMFAEnrollmentContract(t *testing.T) {
 	require.NotContains(t, schema.Properties, "encrypted_secret")
 	require.NotContains(t, schema.Properties, "secret_ciphertext")
 }
+
+func TestMFAChallengeContract(t *testing.T) {
+	loader := openapi3.NewLoader()
+	loader.IsExternalRefsAllowed = true
+	document, err := loader.LoadFromFile(filepath.Join("..", "..", "openapi", "root.yaml"))
+	require.NoError(t, err)
+	require.NoError(t, document.Validate(context.Background()))
+
+	pathItem := document.Paths.Find("/auth/mfa/challenge")
+	require.NotNil(t, pathItem)
+	require.NotNil(t, pathItem.Get)
+	require.Equal(t, "getMFAChallenge", pathItem.Get.OperationID)
+	require.Contains(t, (*pathItem.Get.Security)[0], "SessionCookie")
+
+	response := pathItem.Get.Responses.Value("200")
+	require.NotNil(t, response)
+	schema := response.Value.Content.Get("application/json").Schema.Value
+	require.ElementsMatch(t, []string{"status", "challenge_id", "methods"}, schema.Required)
+	require.Equal(t, []interface{}{"mfa_pending"}, schema.Properties["status"].Value.Enum)
+	require.NotContains(t, schema.Properties, "totp_secret")
+	require.NotContains(t, schema.Properties, "verification_code")
+}

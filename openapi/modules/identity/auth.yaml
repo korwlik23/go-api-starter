@@ -100,6 +100,30 @@ paths:
           $ref: ../../common/errors.yaml#/components/responses/Unauthorized
         '429':
           $ref: ../../common/errors.yaml#/components/responses/TooManyRequests
+  /auth/mfa/challenge:
+    get:
+      tags: [Identity]
+      summary: Read the safe projection of the current MFA-pending challenge.
+      operationId: getMFAChallenge
+      security:
+        - SessionCookie: []
+      responses:
+        '200':
+          description: The pending-only MFA challenge without secret or verification-code material.
+          headers:
+            Cache-Control:
+              description: Authentication state must never be stored by shared caches.
+              schema:
+                type: string
+                enum: [no-store]
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MFAChallengeResponse'
+        '401':
+          $ref: ../../common/errors.yaml#/components/responses/Unauthorized
+        '403':
+          $ref: ../../common/errors.yaml#/components/responses/Forbidden
 components:
   schemas:
     CSRFTokenResponse:
@@ -163,3 +187,21 @@ components:
           format: uri
           minLength: 1
           description: One-time URI for the authenticator application; server storage encrypts its TOTP secret.
+    MFAChallengeResponse:
+      type: object
+      additionalProperties: false
+      required: [status, challenge_id, methods]
+      properties:
+        status:
+          type: string
+          enum: [mfa_pending]
+        challenge_id:
+          type: string
+          minLength: 1
+        methods:
+          type: array
+          minItems: 1
+          uniqueItems: true
+          items:
+            type: string
+            enum: [totp, recovery_code]
