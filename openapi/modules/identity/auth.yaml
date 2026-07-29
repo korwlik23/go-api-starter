@@ -1,0 +1,37 @@
+paths:
+  /auth/csrf:
+    get:
+      tags: [Identity]
+      summary: Create or rotate an anonymous pre-auth session and issue a CSRF token.
+      operationId: getCSRFToken
+      security: []
+      responses:
+        '200':
+          description: A short-lived pre-auth session and its session-bound CSRF token.
+          headers:
+            Cache-Control:
+              description: Authentication state must never be stored by shared caches.
+              schema:
+                type: string
+                enum: [no-store]
+            Set-Cookie:
+              description: Opaque pre-auth session cookie; attributes are environment-configured.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CSRFTokenResponse'
+        '429':
+          $ref: ../../common/errors.yaml#/components/responses/TooManyRequests
+components:
+  schemas:
+    CSRFTokenResponse:
+      type: object
+      additionalProperties: false
+      required: [csrf_token]
+      properties:
+        csrf_token:
+          type: string
+          minLength: 1
+          description: Session-bound CSRF token for the immediately following unsafe request.

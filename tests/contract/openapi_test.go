@@ -69,3 +69,29 @@ func TestCommonOpenAPIContract(t *testing.T) {
 	require.True(t, pageInfo.Value.Properties["page"].Value.Type.Is("integer"))
 	require.Equal(t, float64(100), *document.Components.Parameters["PerPage"].Value.Schema.Value.Max)
 }
+
+func TestPreAuthCSRFContract(t *testing.T) {
+	loader := openapi3.NewLoader()
+	loader.IsExternalRefsAllowed = true
+
+	document, err := loader.LoadFromFile(filepath.Join("..", "..", "openapi", "root.yaml"))
+	require.NoError(t, err)
+	require.NoError(t, document.Validate(context.Background()))
+
+	pathItem := document.Paths.Find("/auth/csrf")
+	require.NotNil(t, pathItem)
+	require.NotNil(t, pathItem.Get)
+	require.Equal(t, "getCSRFToken", pathItem.Get.OperationID)
+
+	response := pathItem.Get.Responses.Value("200")
+	require.NotNil(t, response)
+	require.NotNil(t, response.Value)
+	require.Equal(t, []interface{}{"no-store"}, response.Value.Headers["Cache-Control"].Value.Schema.Value.Enum)
+	require.NotNil(t, response.Value.Headers["Set-Cookie"])
+
+	schema := response.Value.Content.Get("application/json").Schema
+	require.NotNil(t, schema)
+	require.NotNil(t, schema.Value)
+	require.ElementsMatch(t, []string{"csrf_token"}, schema.Value.Required)
+	require.True(t, schema.Value.Properties["csrf_token"].Value.Type.Is("string"))
+}

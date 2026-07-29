@@ -11,7 +11,9 @@ servers:
         enum: [https, http]
       host:
         default: api.tewarach-dev.me
-paths: {}
+paths:
+  /auth/csrf:
+    $ref: ./modules/identity/auth.yaml#/paths/~1auth~1csrf
 components:
   schemas:
     Problem:
