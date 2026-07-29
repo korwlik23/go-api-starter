@@ -17,7 +17,7 @@ type tokenGenerator interface {
 }
 
 type CreateAnonymousDependencies struct {
-	Repository    ports.SessionRepository
+	Repository    ports.SessionCreator
 	SessionTokens tokenGenerator
 	CSRFTokens    tokenGenerator
 	NewID         func() (string, error)

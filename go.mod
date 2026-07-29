@@ -3,6 +3,7 @@ module github.com/korwlik23/go-api-starter
 go 1.26.5
 
 require (
+	github.com/DATA-DOG/go-sqlmock v1.5.2
 	github.com/getkin/kin-openapi v0.145.0
 	github.com/gin-gonic/gin v1.12.0
 	github.com/go-sql-driver/mysql v1.10.0
