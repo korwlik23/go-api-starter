@@ -39,6 +39,7 @@ func TestCSRFRejectsMissingOrIncorrectMutationTokens(t *testing.T) {
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
 			request := httptest.NewRequest(nethttp.MethodPost, "/mutation", nil)
+			request.Header.Set("Origin", "https://admin.example.com")
 			if testCase.withCookie {
 				request.AddCookie(&nethttp.Cookie{Name: "session", Value: sessionToken})
 			}
@@ -72,6 +73,7 @@ func TestCSRFAcceptsSessionBoundTokenAndHashesCookieBeforeLookup(t *testing.T) {
 	router := csrfTestRouter(t, repository, sessionCodec, csrfCodec)
 
 	request := httptest.NewRequest(nethttp.MethodPost, "/mutation", nil)
+	request.Header.Set("Origin", "https://admin.example.com")
 	request.AddCookie(&nethttp.Cookie{Name: "session", Value: sessionToken})
 	request.Header.Set(CSRFTokenHeader, "correct-csrf")
 	response := httptest.NewRecorder()
@@ -87,6 +89,7 @@ func TestCSRFFailsClosedWhenSessionLookupFails(t *testing.T) {
 	router := csrfTestRouter(t, repository, sessionCodec, csrfCodec)
 
 	request := httptest.NewRequest(nethttp.MethodPost, "/mutation", nil)
+	request.Header.Set("Origin", "https://admin.example.com")
 	request.AddCookie(&nethttp.Cookie{Name: "session", Value: "session-token"})
 	request.Header.Set(CSRFTokenHeader, "csrf-token")
 	response := httptest.NewRecorder()
@@ -108,6 +111,7 @@ func TestCSRFRejectsRevokedSession(t *testing.T) {
 	router := csrfTestRouter(t, repository, sessionCodec, csrfCodec)
 
 	request := httptest.NewRequest(nethttp.MethodPost, "/mutation", nil)
+	request.Header.Set("Origin", "https://admin.example.com")
 	request.AddCookie(&nethttp.Cookie{Name: "session", Value: "session-token"})
 	request.Header.Set(CSRFTokenHeader, "correct-csrf")
 	response := httptest.NewRecorder()
@@ -129,6 +133,82 @@ func TestCSRFAllowsSafeMethodsWithoutSessionLookup(t *testing.T) {
 	require.Equal(t, 0, repository.calls)
 }
 
+func TestCSRFRequiresExactTrustedOriginOrReferer(t *testing.T) {
+	sessionCodec, csrfCodec := csrfTestCodecs(t)
+	repository := &csrfSessionReader{
+		session: identitydomain.Session{
+			CSRFTokenHash: identitydomain.TokenHash(csrfCodec.Hash("correct-csrf")),
+		},
+	}
+	router := csrfTestRouter(t, repository, sessionCodec, csrfCodec)
+
+	testCases := []struct {
+		name     string
+		origin   string
+		referer  string
+		expected int
+	}{
+		{
+			name:     "exact origin",
+			origin:   "https://admin.example.com",
+			expected: nethttp.StatusNoContent,
+		},
+		{
+			name:     "trusted referer fallback",
+			referer:  "https://admin.example.com/settings/profile?tab=security",
+			expected: nethttp.StatusNoContent,
+		},
+		{
+			name:     "foreign origin",
+			origin:   "https://evil.example.com",
+			expected: nethttp.StatusForbidden,
+		},
+		{
+			name:     "foreign referer",
+			referer:  "https://evil.example.com/settings",
+			expected: nethttp.StatusForbidden,
+		},
+		{
+			name:     "malformed origin",
+			origin:   "://broken",
+			expected: nethttp.StatusForbidden,
+		},
+		{
+			name:     "opaque origin",
+			origin:   "null",
+			expected: nethttp.StatusForbidden,
+		},
+		{
+			name:     "missing browser source",
+			expected: nethttp.StatusForbidden,
+		},
+		{
+			name:     "foreign origin wins over trusted referer",
+			origin:   "https://evil.example.com",
+			referer:  "https://admin.example.com/settings",
+			expected: nethttp.StatusForbidden,
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			request := httptest.NewRequest(nethttp.MethodPost, "/mutation", nil)
+			request.AddCookie(&nethttp.Cookie{Name: "session", Value: "session-token"})
+			request.Header.Set(CSRFTokenHeader, "correct-csrf")
+			if testCase.origin != "" {
+				request.Header.Set("Origin", testCase.origin)
+			}
+			if testCase.referer != "" {
+				request.Header.Set("Referer", testCase.referer)
+			}
+			response := httptest.NewRecorder()
+			router.ServeHTTP(response, request)
+
+			require.Equal(t, testCase.expected, response.Code)
+		})
+	}
+}
+
 func csrfTestRouter(
 	t *testing.T,
 	repository *csrfSessionReader,
@@ -139,6 +219,7 @@ func csrfTestRouter(
 	gin.SetMode(gin.TestMode)
 
 	guard, err := NewCSRF(CSRFConfig{
+		TrustedOrigin: "https://admin.example.com",
 		CookieName:    "session",
 		Sessions:      repository,
 		SessionTokens: sessionCodec,
