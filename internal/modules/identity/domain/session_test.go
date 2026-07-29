@@ -3,6 +3,7 @@ package domain
 import (
 	"reflect"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 )
@@ -29,4 +30,54 @@ func TestTokenHashRequiresSHA256Length(t *testing.T) {
 
 	_, err = NewTokenHash(make([]byte, 31))
 	require.ErrorIs(t, err, ErrInvalidTokenHash)
+}
+
+func TestSessionValidateAtAcceptsActiveSession(t *testing.T) {
+	t.Parallel()
+
+	now := time.Date(2026, time.July, 30, 2, 0, 0, 0, time.UTC)
+	session := Session{
+		IdleExpiresAt:     now.Add(time.Minute),
+		AbsoluteExpiresAt: now.Add(time.Hour),
+	}
+
+	require.NoError(t, session.ValidateAt(now))
+}
+
+func TestSessionValidateAtRejectsRevokedSession(t *testing.T) {
+	t.Parallel()
+
+	now := time.Date(2026, time.July, 30, 2, 0, 0, 0, time.UTC)
+	revokedAt := now.Add(-time.Second)
+	session := Session{
+		RevokedAt:         &revokedAt,
+		IdleExpiresAt:     now.Add(time.Minute),
+		AbsoluteExpiresAt: now.Add(time.Hour),
+	}
+
+	require.ErrorIs(t, session.ValidateAt(now), ErrSessionRevoked)
+}
+
+func TestSessionValidateAtRejectsIdleExpiryAtBoundary(t *testing.T) {
+	t.Parallel()
+
+	now := time.Date(2026, time.July, 30, 2, 0, 0, 0, time.UTC)
+	session := Session{
+		IdleExpiresAt:     now,
+		AbsoluteExpiresAt: now.Add(time.Hour),
+	}
+
+	require.ErrorIs(t, session.ValidateAt(now), ErrSessionIdleExpired)
+}
+
+func TestSessionValidateAtRejectsAbsoluteExpiryAtBoundary(t *testing.T) {
+	t.Parallel()
+
+	now := time.Date(2026, time.July, 30, 2, 0, 0, 0, time.UTC)
+	session := Session{
+		IdleExpiresAt:     now.Add(time.Minute),
+		AbsoluteExpiresAt: now,
+	}
+
+	require.ErrorIs(t, session.ValidateAt(now), ErrSessionAbsoluteExpired)
 }
