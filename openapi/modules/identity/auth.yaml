@@ -24,6 +24,57 @@ paths:
                 $ref: '#/components/schemas/CSRFTokenResponse'
         '429':
           $ref: ../../common/errors.yaml#/components/responses/TooManyRequests
+  /auth/login:
+    post:
+      tags: [Identity]
+      summary: Authenticate with a pre-auth session and rotate its session state.
+      operationId: login
+      security:
+        - SessionCookie: []
+          CSRFToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Authentication completed and the session was rotated.
+          headers:
+            Cache-Control:
+              description: Authentication state must never be stored by shared caches.
+              schema:
+                type: string
+                enum: [no-store]
+            Set-Cookie:
+              description: Rotated opaque authenticated session cookie with secure attributes.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginAuthenticatedResponse'
+        '202':
+          description: Password authentication completed but MFA verification is pending.
+          headers:
+            Cache-Control:
+              description: Authentication state must never be stored by shared caches.
+              schema:
+                type: string
+                enum: [no-store]
+            Set-Cookie:
+              description: Rotated opaque MFA-pending session cookie with secure attributes.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginMFAPendingResponse'
+        '401':
+          $ref: ../../common/errors.yaml#/components/responses/Unauthorized
+        '429':
+          $ref: ../../common/errors.yaml#/components/responses/TooManyRequests
 components:
   schemas:
     CSRFTokenResponse:
@@ -35,3 +86,41 @@ components:
           type: string
           minLength: 1
           description: Session-bound CSRF token for the immediately following unsafe request.
+    LoginRequest:
+      type: object
+      additionalProperties: false
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 1
+          writeOnly: true
+    LoginAuthenticatedResponse:
+      type: object
+      additionalProperties: false
+      required: [status, csrf_token]
+      properties:
+        status:
+          type: string
+          enum: [authenticated]
+        csrf_token:
+          type: string
+          minLength: 1
+    LoginMFAPendingResponse:
+      type: object
+      additionalProperties: false
+      required: [status, csrf_token, challenge_id]
+      properties:
+        status:
+          type: string
+          enum: [mfa_pending]
+        csrf_token:
+          type: string
+          minLength: 1
+        challenge_id:
+          type: string
+          minLength: 1
+          description: Opaque identifier for the pending MFA challenge.

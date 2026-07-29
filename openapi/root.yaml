@@ -14,6 +14,8 @@ servers:
 paths:
   /auth/csrf:
     $ref: ./modules/identity/auth.yaml#/paths/~1auth~1csrf
+  /auth/login:
+    $ref: ./modules/identity/auth.yaml#/paths/~1auth~1login
 components:
   schemas:
     Problem:
@@ -42,3 +44,8 @@ components:
       $ref: ./common/errors.yaml#/components/responses/TooManyRequests
     InternalServerError:
       $ref: ./common/errors.yaml#/components/responses/InternalServerError
+  securitySchemes:
+    SessionCookie:
+      $ref: ./common/security.yaml#/components/securitySchemes/SessionCookie
+    CSRFToken:
+      $ref: ./common/security.yaml#/components/securitySchemes/CSRFToken

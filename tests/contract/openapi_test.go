@@ -95,3 +95,42 @@ func TestPreAuthCSRFContract(t *testing.T) {
 	require.ElementsMatch(t, []string{"csrf_token"}, schema.Value.Required)
 	require.True(t, schema.Value.Properties["csrf_token"].Value.Type.Is("string"))
 }
+
+func TestLoginContract(t *testing.T) {
+	loader := openapi3.NewLoader()
+	loader.IsExternalRefsAllowed = true
+
+	document, err := loader.LoadFromFile(filepath.Join("..", "..", "openapi", "root.yaml"))
+	require.NoError(t, err)
+	require.NoError(t, document.Validate(context.Background()))
+
+	pathItem := document.Paths.Find("/auth/login")
+	require.NotNil(t, pathItem)
+	require.NotNil(t, pathItem.Post)
+	require.Equal(t, "login", pathItem.Post.OperationID)
+	require.Len(t, *pathItem.Post.Security, 1)
+	require.Contains(t, (*pathItem.Post.Security)[0], "SessionCookie")
+	require.Contains(t, (*pathItem.Post.Security)[0], "CSRFToken")
+
+	requestSchema := pathItem.Post.RequestBody.Value.Content.Get("application/json").Schema
+	require.ElementsMatch(t, []string{"email", "password"}, requestSchema.Value.Required)
+	require.True(t, requestSchema.Value.Properties["email"].Value.Type.Is("string"))
+	require.True(t, requestSchema.Value.Properties["password"].Value.WriteOnly)
+
+	for _, status := range []string{"200", "202"} {
+		response := pathItem.Post.Responses.Value(status)
+		require.NotNil(t, response)
+		require.Equal(t, []interface{}{"no-store"}, response.Value.Headers["Cache-Control"].Value.Schema.Value.Enum)
+		require.NotNil(t, response.Value.Headers["Set-Cookie"])
+	}
+
+	authenticated := pathItem.Post.Responses.Value("200").Value.Content.Get("application/json").Schema.Value
+	require.ElementsMatch(t, []string{"status", "csrf_token"}, authenticated.Required)
+	require.Equal(t, []interface{}{"authenticated"}, authenticated.Properties["status"].Value.Enum)
+
+	mfaPending := pathItem.Post.Responses.Value("202").Value.Content.Get("application/json").Schema.Value
+	require.ElementsMatch(t, []string{"status", "csrf_token", "challenge_id"}, mfaPending.Required)
+	require.Equal(t, []interface{}{"mfa_pending"}, mfaPending.Properties["status"].Value.Enum)
+	require.NotContains(t, mfaPending.Properties, "totp_secret")
+	require.NotContains(t, mfaPending.Properties, "recovery_code")
+}
