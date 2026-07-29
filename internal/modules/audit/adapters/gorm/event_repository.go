@@ -8,6 +8,7 @@ import (
 
 	auditdomain "github.com/korwlik23/go-api-starter/internal/modules/audit/domain"
 	auditports "github.com/korwlik23/go-api-starter/internal/modules/audit/ports"
+	"github.com/korwlik23/go-api-starter/internal/platform/database"
 	"github.com/korwlik23/go-api-starter/internal/platform/databaseid"
 	gormdb "gorm.io/gorm"
 )
@@ -20,7 +21,8 @@ var (
 const maximumAuditPageSize = 200
 
 type EventRepository struct {
-	db *gormdb.DB
+	connections database.ConnectionProvider
+	dialect     string
 }
 
 type eventRecord struct {
@@ -41,7 +43,23 @@ func NewEventRepository(db *gormdb.DB) (*EventRepository, error) {
 	if db == nil {
 		return nil, ErrInvalidEventRepository
 	}
-	return &EventRepository{db: db}, nil
+	return &EventRepository{
+		connections: staticConnectionProvider{db: db},
+		dialect:     db.Dialector.Name(),
+	}, nil
+}
+
+func NewTransactionalEventRepository(
+	connections database.ConnectionProvider,
+	dialect string,
+) (*EventRepository, error) {
+	if connections == nil || (dialect != "postgres" && dialect != "mysql") {
+		return nil, ErrInvalidEventRepository
+	}
+	return &EventRepository{
+		connections: connections,
+		dialect:     dialect,
+	}, nil
 }
 
 func (repository *EventRepository) Append(
@@ -49,31 +67,35 @@ func (repository *EventRepository) Append(
 	event auditdomain.Event,
 ) error {
 	if repository == nil ||
-		repository.db == nil ||
+		repository.connections == nil ||
 		ctx == nil ||
 		!event.RecordedAt.IsZero() {
 		return ErrInvalidEventRepository
 	}
-	id, err := databaseid.Encode(repository.db.Dialector.Name(), event.ID)
+	db, err := repository.connections.Connection(ctx)
+	if err != nil {
+		return ErrEventRepositoryFailed
+	}
+	id, err := databaseid.Encode(repository.dialect, event.ID)
 	if err != nil {
 		return ErrInvalidEventRepository
 	}
 	operationID, err := databaseid.Encode(
-		repository.db.Dialector.Name(),
+		repository.dialect,
 		event.OperationID,
 	)
 	if err != nil {
 		return ErrInvalidEventRepository
 	}
 	accountID, err := optionalDatabaseID(
-		repository.db.Dialector.Name(),
+		repository.dialect,
 		event.AccountID,
 	)
 	if err != nil {
 		return ErrInvalidEventRepository
 	}
 	actorID, err := optionalDatabaseID(
-		repository.db.Dialector.Name(),
+		repository.dialect,
 		event.Actor.ID,
 	)
 	if err != nil {
@@ -91,7 +113,7 @@ func (repository *EventRepository) Append(
 		"event_data":   string(event.Data),
 		"occurred_at":  event.OccurredAt,
 	}
-	if err := repository.db.WithContext(ctx).
+	if err := db.WithContext(ctx).
 		Table("audit_events").
 		Create(values).Error; err != nil {
 		return ErrEventRepositoryFailed
@@ -105,17 +127,21 @@ func (repository *EventRepository) ListAccount(
 	cursor *auditports.Cursor,
 	limit int,
 ) (auditports.EventPage, error) {
-	if repository == nil || repository.db == nil || ctx == nil {
+	if repository == nil || repository.connections == nil || ctx == nil {
 		return auditports.EventPage{}, ErrInvalidEventRepository
 	}
+	db, connectionErr := repository.connections.Connection(ctx)
+	if connectionErr != nil {
+		return auditports.EventPage{}, ErrEventRepositoryFailed
+	}
 	encodedAccountID, err := databaseid.Encode(
-		repository.db.Dialector.Name(),
+		repository.dialect,
 		accountID,
 	)
 	if err != nil {
 		return auditports.EventPage{}, ErrInvalidEventRepository
 	}
-	query := repository.db.WithContext(ctx).
+	query := db.WithContext(ctx).
 		Table("audit_events").
 		Where("scope = ? AND account_id = ?", string(auditdomain.ScopeAccount), encodedAccountID)
 	return repository.list(ctx, query, cursor, limit)
@@ -126,10 +152,14 @@ func (repository *EventRepository) ListSystem(
 	cursor *auditports.Cursor,
 	limit int,
 ) (auditports.EventPage, error) {
-	if repository == nil || repository.db == nil || ctx == nil {
+	if repository == nil || repository.connections == nil || ctx == nil {
 		return auditports.EventPage{}, ErrInvalidEventRepository
 	}
-	query := repository.db.WithContext(ctx).
+	db, err := repository.connections.Connection(ctx)
+	if err != nil {
+		return auditports.EventPage{}, ErrEventRepositoryFailed
+	}
+	query := db.WithContext(ctx).
 		Table("audit_events").
 		Where("scope = ? AND account_id IS NULL", string(auditdomain.ScopeSystem))
 	return repository.list(ctx, query, cursor, limit)
@@ -142,7 +172,7 @@ func (repository *EventRepository) list(
 	limit int,
 ) (auditports.EventPage, error) {
 	if repository == nil ||
-		repository.db == nil ||
+		repository.connections == nil ||
 		ctx == nil ||
 		query == nil ||
 		limit < 1 ||
@@ -153,7 +183,7 @@ func (repository *EventRepository) list(
 		if cursor.RecordedAt.IsZero() || cursor.ID == "" {
 			return auditports.EventPage{}, ErrInvalidEventRepository
 		}
-		encodedID, err := databaseid.Encode(repository.db.Dialector.Name(), cursor.ID)
+		encodedID, err := databaseid.Encode(repository.dialect, cursor.ID)
 		if err != nil {
 			return auditports.EventPage{}, ErrInvalidEventRepository
 		}
@@ -250,3 +280,16 @@ func stringValue(value *string) string {
 }
 
 var _ auditports.EventRepository = (*EventRepository)(nil)
+
+type staticConnectionProvider struct {
+	db *gormdb.DB
+}
+
+func (provider staticConnectionProvider) Connection(
+	ctx context.Context,
+) (*gormdb.DB, error) {
+	if provider.db == nil || ctx == nil {
+		return nil, ErrInvalidEventRepository
+	}
+	return provider.db.WithContext(ctx), nil
+}
