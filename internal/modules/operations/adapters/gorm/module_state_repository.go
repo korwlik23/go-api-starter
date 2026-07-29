@@ -99,6 +99,34 @@ func (repository *ModuleStateRepository) WithinReconcile(
 	)
 }
 
+func (repository *ModuleStateRepository) CurrentRevision(
+	ctx context.Context,
+) (int64, error) {
+	if repository == nil || repository.db == nil || ctx == nil {
+		return 0, ErrInvalidModuleStateRepository
+	}
+	var revisions []int64
+	if err := repository.db.WithContext(ctx).
+		Table("module_states").
+		Order("module_id").
+		Pluck("reconcile_revision", &revisions).Error; err != nil {
+		return 0, ErrModuleStateRepositoryFailed
+	}
+	if len(revisions) == 0 {
+		return 0, nil
+	}
+	revision := revisions[0]
+	if revision < 1 {
+		return 0, ErrModuleStateRepositoryFailed
+	}
+	for _, candidate := range revisions[1:] {
+		if candidate != revision {
+			return 0, ErrModuleStateRepositoryFailed
+		}
+	}
+	return revision, nil
+}
+
 type moduleStateSession struct {
 	db      *gormdb.DB
 	dialect string

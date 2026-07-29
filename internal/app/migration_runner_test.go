@@ -23,6 +23,10 @@ func TestMigrationStagesStopBeforeLocaleInitializationOnSchemaFailure(t *testing
 			order = append(order, "locales")
 			return nil
 		},
+		func(context.Context) error {
+			order = append(order, "modules")
+			return nil
+		},
 	)
 
 	require.ErrorIs(t, err, schemaFailure)
@@ -43,8 +47,37 @@ func TestMigrationStagesInitializeLocalesAfterSchema(t *testing.T) {
 			order = append(order, "locales")
 			return nil
 		},
+		func(context.Context) error {
+			order = append(order, "modules")
+			return nil
+		},
 	)
 
 	require.NoError(t, err)
+	require.Equal(t, []string{"schema", "locales", "modules"}, order)
+}
+
+func TestMigrationStagesStopBeforeModuleReconcileOnLocaleFailure(t *testing.T) {
+	t.Parallel()
+
+	localeFailure := errors.New("locale initialization failed")
+	order := make([]string, 0, 3)
+	err := runMigrationStages(
+		context.Background(),
+		func(context.Context) error {
+			order = append(order, "schema")
+			return nil
+		},
+		func(context.Context) error {
+			order = append(order, "locales")
+			return localeFailure
+		},
+		func(context.Context) error {
+			order = append(order, "modules")
+			return nil
+		},
+	)
+
+	require.ErrorIs(t, err, localeFailure)
 	require.Equal(t, []string{"schema", "locales"}, order)
 }

@@ -88,6 +88,9 @@ func TestModuleStateRepositoryReconcilesAtomically(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, int64(2), second.Revision)
 	require.Equal(t, first.CatalogEpoch, second.CatalogEpoch)
+	currentRevision, err := repository.CurrentRevision(ctx)
+	require.NoError(t, err)
+	require.Equal(t, second.Revision, currentRevision)
 
 	require.Equal(t, int64(6), tableCount(t, ctx, db, "module_states"))
 	require.Equal(t, int64(9), tableCount(t, ctx, db, "permissions"))
