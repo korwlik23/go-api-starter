@@ -15,6 +15,31 @@ import (
 
 const maximumFallbackDepth = 32
 
+func (repository *LocaleRepository) FindByID(
+	ctx context.Context,
+	localeID string,
+) (localizationdomain.Locale, error) {
+	encodedID, err := databaseid.Encode(
+		repository.db.Dialector.Name(),
+		localeID,
+	)
+	if err != nil {
+		return localizationdomain.Locale{}, ports.ErrLocaleNotFound
+	}
+	var record localeRecord
+	err = repository.db.WithContext(ctx).
+		Where("id = ?", encodedID).
+		First(&record).
+		Error
+	if err == gormdb.ErrRecordNotFound {
+		return localizationdomain.Locale{}, ports.ErrLocaleNotFound
+	}
+	if err != nil {
+		return localizationdomain.Locale{}, fmt.Errorf("find locale: %w", err)
+	}
+	return localeFromRecord(record)
+}
+
 func (repository *LocaleRepository) Create(
 	ctx context.Context,
 	command ports.CreateLocaleCommand,
@@ -187,18 +212,18 @@ func (repository *LocaleRepository) SetDefault(
 	localeID string,
 	expectedVersion int64,
 	updatedAt time.Time,
-) (int64, error) {
+) (ports.DefaultLocaleResult, error) {
 	if expectedVersion < 1 || updatedAt.IsZero() {
-		return 0, ErrInvalidLocaleRepository
+		return ports.DefaultLocaleResult{}, ErrInvalidLocaleRepository
 	}
 	encodedID, err := databaseid.Encode(
 		repository.db.Dialector.Name(),
 		localeID,
 	)
 	if err != nil {
-		return 0, ports.ErrLocaleNotFound
+		return ports.DefaultLocaleResult{}, ports.ErrLocaleNotFound
 	}
-	resultVersion := expectedVersion
+	result := ports.DefaultLocaleResult{Version: expectedVersion}
 	err = repository.db.WithContext(ctx).Transaction(func(tx *gormdb.DB) error {
 		var records []localeRecord
 		if lockErr := tx.Clauses(clause.Locking{Strength: "UPDATE"}).
@@ -225,9 +250,11 @@ func (repository *LocaleRepository) SetDefault(
 			return ports.ErrLocaleConflict
 		}
 		if current != nil && current.ID == target.ID {
+			result.PreviousDefaultLocaleID = current.ID.String()
 			return nil
 		}
 		if current != nil {
+			result.PreviousDefaultLocaleID = current.ID.String()
 			encodedCurrentID, encodeErr := databaseid.Encode(
 				repository.db.Dialector.Name(),
 				current.ID.String(),
@@ -246,26 +273,26 @@ func (repository *LocaleRepository) SetDefault(
 				return ports.ErrLocaleConflict
 			}
 		}
-		result := tx.Model(&localeRecord{}).
+		updateResult := tx.Model(&localeRecord{}).
 			Where("id = ? AND version = ?", encodedID, expectedVersion).
 			Updates(map[string]any{
 				"default_slot": int16(1),
 				"version":      expectedVersion + 1,
 				"updated_at":   updatedAt,
 			})
-		if result.Error != nil {
-			return result.Error
+		if updateResult.Error != nil {
+			return updateResult.Error
 		}
-		if result.RowsAffected != 1 {
+		if updateResult.RowsAffected != 1 {
 			return ports.ErrLocaleConflict
 		}
-		resultVersion = expectedVersion + 1
+		result.Version = expectedVersion + 1
 		return nil
 	})
 	if err != nil {
-		return 0, fmt.Errorf("set default locale: %w", err)
+		return ports.DefaultLocaleResult{}, fmt.Errorf("set default locale: %w", err)
 	}
-	return resultVersion, nil
+	return result, nil
 }
 
 func validDirection(direction localizationdomain.Direction) bool {

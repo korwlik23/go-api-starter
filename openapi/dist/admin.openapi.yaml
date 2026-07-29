@@ -599,6 +599,22 @@ paths:
         - Localization
       x-required-permission: localization.locales.manage.system
   /locales/preferences:
+    get:
+      operationId: getLocalePreferences
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LocalePreferenceResponse'
+          description: The effective locale selection, including dynamic all-language expansion.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+      security:
+        - SessionCookie: []
+      summary: Read the current user's effective language selection.
+      tags:
+        - Localization
     put:
       operationId: updateLocalePreferences
       requestBody:

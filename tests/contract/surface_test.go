@@ -43,7 +43,8 @@ func TestOpenAPISurfaceIsolation(t *testing.T) {
 	require.ElementsMatch(t, []string{
 		"assignRole", "confirmMFAEnrollment", "createLocale", "enrollMFA", "getCSRFToken",
 		"getCurrentAccount", "getCurrentSession", "getEffectivePermissions",
-		"getMFAChallenge", "getTranslationCatalog", "grantRolePermission", "listEnabledModules",
+		"getLocalePreferences", "getMFAChallenge", "getTranslationCatalog",
+		"grantRolePermission", "listEnabledModules",
 		"listLocales", "listSessions", "login", "logout", "requestPasswordRecovery",
 		"resetPassword", "revokeRoleAssignment", "revokeSession", "setDefaultLocale",
 		"updateLocale", "updateLocalePreferences", "updateLocaleStatus",
@@ -60,7 +61,8 @@ func TestGeneratedSurfaceBundlesContainOnlyTheirOperations(t *testing.T) {
 		"admin": {
 			"assignRole", "confirmMFAEnrollment", "createLocale", "enrollMFA", "getCSRFToken",
 			"getCurrentAccount", "getCurrentSession", "getEffectivePermissions",
-			"getMFAChallenge", "getTranslationCatalog", "grantRolePermission", "listEnabledModules",
+			"getLocalePreferences", "getMFAChallenge", "getTranslationCatalog",
+			"grantRolePermission", "listEnabledModules",
 			"listLocales", "listSessions", "login", "logout", "requestPasswordRecovery",
 			"resetPassword", "revokeRoleAssignment", "revokeSession", "setDefaultLocale",
 			"updateLocale", "updateLocalePreferences", "updateLocaleStatus",

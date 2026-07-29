@@ -33,6 +33,10 @@ type UpdateLocaleCommand struct {
 }
 
 type LocaleManagementRepository interface {
+	FindByID(
+		ctx context.Context,
+		localeID string,
+	) (localizationdomain.Locale, error)
 	Create(ctx context.Context, command CreateLocaleCommand) error
 	Update(ctx context.Context, command UpdateLocaleCommand) (int64, error)
 	SetDefault(
@@ -40,5 +44,10 @@ type LocaleManagementRepository interface {
 		localeID string,
 		expectedVersion int64,
 		updatedAt time.Time,
-	) (int64, error)
+	) (DefaultLocaleResult, error)
+}
+
+type DefaultLocaleResult struct {
+	PreviousDefaultLocaleID string
+	Version                 int64
 }

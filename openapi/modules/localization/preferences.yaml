@@ -1,5 +1,21 @@
 paths:
   /locales/preferences:
+    get:
+      tags: [Localization]
+      summary: Read the current user's effective language selection.
+      operationId: getLocalePreferences
+      x-surfaces: [admin]
+      security:
+        - SessionCookie: []
+      responses:
+        '200':
+          description: The effective locale selection, including dynamic all-language expansion.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LocalePreferenceResponse'
+        '401':
+          $ref: ../../common/errors.yaml#/components/responses/Unauthorized
     put:
       tags: [Localization]
       summary: Select all enabled locales or an explicit eligible subset for the current user.

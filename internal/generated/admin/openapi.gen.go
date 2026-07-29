@@ -1148,6 +1148,11 @@ type ClientInterface interface {
 	// Corresponds with POST /locales (the `CreateLocale` operationId).
 	CreateLocale(ctx context.Context, body CreateLocaleJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// GetLocalePreferences Read the current user's effective language selection.
+	//
+	// Corresponds with GET /locales/preferences (the `GetLocalePreferences` operationId).
+	GetLocalePreferences(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// UpdateLocalePreferencesWithBody Select all enabled locales or an explicit eligible subset for the current user.
 	//
 	// Takes any type of body and a specified content type.
@@ -1675,6 +1680,21 @@ func (c *Client) CreateLocaleWithBody(ctx context.Context, contentType string, b
 // Corresponds with POST /locales (the `CreateLocale` operationId).
 func (c *Client) CreateLocale(ctx context.Context, body CreateLocaleJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewCreateLocaleRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// GetLocalePreferences Read the current user's effective language selection.
+//
+// Corresponds with GET /locales/preferences (the `GetLocalePreferences` operationId).
+func (c *Client) GetLocalePreferences(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetLocalePreferencesRequest(c.Server)
 	if err != nil {
 		return nil, err
 	}
@@ -2550,6 +2570,33 @@ func NewCreateLocaleRequestWithBody(server string, contentType string, body io.R
 	return req, nil
 }
 
+// NewGetLocalePreferencesRequest constructs an http.Request for the GetLocalePreferences method
+func NewGetLocalePreferencesRequest(server string) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/locales/preferences")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
 // NewUpdateLocalePreferencesRequest calls the generic UpdateLocalePreferences builder with application/json body
 func NewUpdateLocalePreferencesRequest(server string, body UpdateLocalePreferencesJSONRequestBody) (*http.Request, error) {
 	var bodyReader io.Reader
@@ -3095,6 +3142,13 @@ type ClientWithResponsesInterface interface {
 	//
 	// Corresponds with POST /locales (the `CreateLocale` operationId).
 	CreateLocaleWithResponse(ctx context.Context, body CreateLocaleJSONRequestBody, reqEditors ...RequestEditorFn) (*CreateLocaleResponse, error)
+
+	// GetLocalePreferencesWithResponse Read the current user's effective language selection.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /locales/preferences (the `GetLocalePreferences` operationId).
+	GetLocalePreferencesWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetLocalePreferencesResponse, error)
 
 	// UpdateLocalePreferencesWithBodyWithResponse Select all enabled locales or an explicit eligible subset for the current user.
 	//
@@ -4331,6 +4385,54 @@ func (r CreateLocaleResponse) ContentType() string {
 	return ""
 }
 
+type GetLocalePreferencesResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *LocalePreferenceResponse
+	// JSON401 the response for an HTTP 401 `application/json` response
+	JSON401 *Unauthorized
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r GetLocalePreferencesResponse) GetJSON200() *LocalePreferenceResponse {
+	return r.JSON200
+}
+
+// GetJSON401 returns the response for an HTTP 401 `application/json` response
+func (r GetLocalePreferencesResponse) GetJSON401() *Unauthorized {
+	return r.JSON401
+}
+
+// GetBody returns the raw response body bytes
+func (r GetLocalePreferencesResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r GetLocalePreferencesResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetLocalePreferencesResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r GetLocalePreferencesResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
 type UpdateLocalePreferencesResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -5106,6 +5208,19 @@ func (c *ClientWithResponses) CreateLocaleWithResponse(ctx context.Context, body
 		return nil, err
 	}
 	return ParseCreateLocaleResponse(rsp)
+}
+
+// GetLocalePreferencesWithResponse Read the current user's effective language selection.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /locales/preferences (the `GetLocalePreferences` operationId).
+func (c *ClientWithResponses) GetLocalePreferencesWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetLocalePreferencesResponse, error) {
+	rsp, err := c.GetLocalePreferences(ctx, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetLocalePreferencesResponse(rsp)
 }
 
 // UpdateLocalePreferencesWithBodyWithResponse Select all enabled locales or an explicit eligible subset for the current user.
@@ -6249,6 +6364,39 @@ func ParseCreateLocaleResponse(rsp *http.Response) (*CreateLocaleResponse, error
 			return nil, err
 		}
 		response.JSON409 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetLocalePreferencesResponse parses an HTTP response from a GetLocalePreferencesWithResponse call
+func ParseGetLocalePreferencesResponse(rsp *http.Response) (*GetLocalePreferencesResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetLocalePreferencesResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest LocalePreferenceResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest Unauthorized
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
 
 	}
 
