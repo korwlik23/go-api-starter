@@ -1,0 +1,41 @@
+paths:
+  /accounts/current:
+    get:
+      tags: [Accounts]
+      summary: Read the account resolved for the authenticated principal.
+      operationId: getCurrentAccount
+      x-surfaces: [admin]
+      security:
+        - SessionCookie: []
+      responses:
+        '200':
+          description: The resolved account projection.
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                enum: [no-store]
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CurrentAccountResponse'
+        '401':
+          $ref: ../../common/errors.yaml#/components/responses/Unauthorized
+        '403':
+          $ref: ../../common/errors.yaml#/components/responses/Forbidden
+components:
+  schemas:
+    CurrentAccountResponse:
+      type: object
+      additionalProperties: false
+      required: [id, name, slug]
+      properties:
+        id:
+          type: string
+          minLength: 1
+        name:
+          type: string
+          minLength: 1
+        slug:
+          type: string
+          minLength: 1

@@ -34,6 +34,10 @@ paths:
     $ref: ./modules/identity/recovery.yaml#/paths/~1auth~1password~1recovery
   /auth/password/reset:
     $ref: ./modules/identity/recovery.yaml#/paths/~1auth~1password~1reset
+  /accounts/current:
+    $ref: ./modules/accounts/accounts.yaml#/paths/~1accounts~1current
+  /authorization/effective-permissions:
+    $ref: ./modules/authorization/permissions.yaml#/paths/~1authorization~1effective-permissions
 components:
   schemas:
     Problem:

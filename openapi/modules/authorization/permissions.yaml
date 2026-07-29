@@ -1,0 +1,39 @@
+paths:
+  /authorization/effective-permissions:
+    get:
+      tags: [Authorization]
+      summary: Read active permission keys for the resolved account and principal.
+      operationId: getEffectivePermissions
+      x-surfaces: [admin]
+      security:
+        - SessionCookie: []
+      responses:
+        '200':
+          description: Effective permissions after account and session-state resolution.
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                enum: [no-store]
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EffectivePermissionsResponse'
+        '401':
+          $ref: ../../common/errors.yaml#/components/responses/Unauthorized
+components:
+  schemas:
+    EffectivePermissionsResponse:
+      type: object
+      additionalProperties: false
+      required: [account_id, permissions]
+      properties:
+        account_id:
+          type: string
+          minLength: 1
+        permissions:
+          type: array
+          uniqueItems: true
+          items:
+            type: string
+            minLength: 1
