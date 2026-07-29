@@ -153,6 +153,73 @@ func TestSessionRepositoryPurgesExpiredRowsInBoundedBatch(t *testing.T) {
 	require.ErrorIs(t, err, ports.ErrInvalidPurgeLimit)
 }
 
+func TestSessionRepositoryRotatesWithConditionalRevokeAndInsert(t *testing.T) {
+	db, mock := sessionRepositoryDatabase(t)
+	repository, err := NewSessionRepository(db)
+	require.NoError(t, err)
+	now := time.Date(2026, time.July, 30, 6, 0, 0, 0, time.UTC)
+	currentHash := identitydomain.TokenHash{0x01}
+	userID := "018f1f64-7b2a-7c10-8bf2-3c40d5f67586"
+	authorizationVersion := int64(7)
+	replacement := identitydomain.Session{
+		ID:                   "018f1f64-7b2a-7c10-8bf2-3c40d5f67587",
+		TokenHash:            identitydomain.TokenHash{0x02},
+		CSRFTokenHash:        identitydomain.TokenHash{0x03},
+		State:                identitydomain.SessionStateAuthenticated,
+		UserID:               &userID,
+		AuthorizationVersion: &authorizationVersion,
+		IdleExpiresAt:        now.Add(time.Minute),
+		AbsoluteExpiresAt:    now.Add(time.Hour),
+		CreatedAt:            now,
+	}
+
+	mock.ExpectBegin()
+	mock.ExpectExec(regexp.QuoteMeta(
+		`UPDATE "sessions" SET "revoked_at"=$1 WHERE token_hash = $2 AND revoked_at IS NULL`,
+	)).
+		WithArgs(now, currentHash[:]).
+		WillReturnResult(sqlmock.NewResult(0, 1))
+	mock.ExpectExec(`INSERT INTO "sessions"`).
+		WithArgs(
+			replacement.AbsoluteExpiresAt,
+			authorizationVersion,
+			replacement.CreatedAt,
+			replacement.CSRFTokenHash[:],
+			replacement.ID,
+			replacement.IdleExpiresAt,
+			nil,
+			string(replacement.State),
+			replacement.TokenHash[:],
+			userID,
+		).
+		WillReturnResult(sqlmock.NewResult(1, 1))
+	mock.ExpectCommit()
+
+	require.NoError(t, repository.Rotate(context.Background(), currentHash, replacement))
+	require.NoError(t, mock.ExpectationsWereMet())
+}
+
+func TestSessionRepositoryRotationRollsBackWhenPreAuthWasAlreadyConsumed(t *testing.T) {
+	db, mock := sessionRepositoryDatabase(t)
+	repository, err := NewSessionRepository(db)
+	require.NoError(t, err)
+	now := time.Date(2026, time.July, 30, 6, 0, 0, 0, time.UTC)
+	currentHash := identitydomain.TokenHash{0x01}
+
+	mock.ExpectBegin()
+	mock.ExpectExec(`UPDATE "sessions"`).
+		WithArgs(now, currentHash[:]).
+		WillReturnResult(sqlmock.NewResult(0, 0))
+	mock.ExpectRollback()
+
+	err = repository.Rotate(context.Background(), currentHash, identitydomain.Session{
+		ID:        "018f1f64-7b2a-7c10-8bf2-3c40d5f67587",
+		CreatedAt: now,
+	})
+	require.ErrorIs(t, err, ports.ErrSessionRotationConflict)
+	require.NoError(t, mock.ExpectationsWereMet())
+}
+
 func TestSessionRepositoryEncodesDatabaseUUIDsPerDialect(t *testing.T) {
 	const id = "018f1f64-7b2a-7c10-8bf2-3c40d5f67585"
 

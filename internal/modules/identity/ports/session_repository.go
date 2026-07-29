@@ -9,8 +9,9 @@ import (
 )
 
 var (
-	ErrSessionNotFound   = errors.New("session not found")
-	ErrInvalidPurgeLimit = errors.New("session purge limit must be between 1 and 10000")
+	ErrSessionNotFound         = errors.New("session not found")
+	ErrSessionRotationConflict = errors.New("session rotation conflict")
+	ErrInvalidPurgeLimit       = errors.New("session purge limit must be between 1 and 10000")
 )
 
 type SessionCreator interface {
@@ -22,4 +23,12 @@ type SessionRepository interface {
 	FindByTokenHash(ctx context.Context, hash domain.TokenHash) (domain.Session, error)
 	RevokeByTokenHash(ctx context.Context, hash domain.TokenHash, revokedAt time.Time) (bool, error)
 	PurgeExpired(ctx context.Context, now time.Time, limit int) (int64, error)
+}
+
+type SessionRotator interface {
+	Rotate(
+		ctx context.Context,
+		currentHash domain.TokenHash,
+		replacement domain.Session,
+	) error
 }

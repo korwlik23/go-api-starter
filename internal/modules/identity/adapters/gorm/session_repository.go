@@ -47,13 +47,20 @@ func (repository *SessionRepository) Create(
 	ctx context.Context,
 	session identitydomain.Session,
 ) error {
-	sessionID, err := encodeDatabaseID(repository.db.Dialector.Name(), session.ID)
+	if err := createSession(repository.db.WithContext(ctx), session); err != nil {
+		return fmt.Errorf("create session: %w", err)
+	}
+	return nil
+}
+
+func createSession(db *gormdb.DB, session identitydomain.Session) error {
+	sessionID, err := encodeDatabaseID(db.Dialector.Name(), session.ID)
 	if err != nil {
 		return fmt.Errorf("encode session ID: %w", err)
 	}
 	var userID any
 	if session.UserID != nil {
-		userID, err = encodeDatabaseID(repository.db.Dialector.Name(), *session.UserID)
+		userID, err = encodeDatabaseID(db.Dialector.Name(), *session.UserID)
 		if err != nil {
 			return fmt.Errorf("encode session user ID: %w", err)
 		}
@@ -71,10 +78,7 @@ func (repository *SessionRepository) Create(
 		"revoked_at":            session.RevokedAt,
 		"created_at":            session.CreatedAt,
 	}
-	if err := repository.db.WithContext(ctx).Table("sessions").Create(values).Error; err != nil {
-		return fmt.Errorf("create session: %w", err)
-	}
-	return nil
+	return db.Table("sessions").Create(values).Error
 }
 
 func (repository *SessionRepository) FindByTokenHash(
@@ -131,6 +135,30 @@ func (repository *SessionRepository) RevokeByTokenHash(
 	return result.RowsAffected == 1, nil
 }
 
+func (repository *SessionRepository) Rotate(
+	ctx context.Context,
+	currentHash identitydomain.TokenHash,
+	replacement identitydomain.Session,
+) error {
+	err := repository.db.WithContext(ctx).Transaction(func(tx *gormdb.DB) error {
+		result := tx.
+			Model(&sessionRecord{}).
+			Where("token_hash = ? AND revoked_at IS NULL", currentHash[:]).
+			Update("revoked_at", replacement.CreatedAt)
+		if result.Error != nil {
+			return result.Error
+		}
+		if result.RowsAffected != 1 {
+			return ports.ErrSessionRotationConflict
+		}
+		return createSession(tx, replacement)
+	})
+	if err != nil {
+		return fmt.Errorf("rotate session: %w", err)
+	}
+	return nil
+}
+
 func (repository *SessionRepository) PurgeExpired(
 	ctx context.Context,
 	now time.Time,
@@ -183,3 +211,4 @@ func databaseIDStringPointer(value *databaseID) *string {
 }
 
 var _ ports.SessionRepository = (*SessionRepository)(nil)
+var _ ports.SessionRotator = (*SessionRepository)(nil)
