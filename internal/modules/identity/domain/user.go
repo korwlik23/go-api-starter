@@ -10,9 +10,10 @@ const (
 )
 
 type User struct {
-	ID     string
-	Email  string
-	Status UserStatus
+	ID                   string
+	Email                string
+	Status               UserStatus
+	AuthorizationVersion int64
 }
 
 func NormalizeEmail(value string) string {

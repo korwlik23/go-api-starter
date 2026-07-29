@@ -12,16 +12,19 @@ import (
 var ErrInvalidSessionRotation = errors.New("invalid session rotation")
 
 type RotatorDependencies struct {
-	Repository    ports.SessionRotator
-	SessionTokens tokenGenerator
-	CSRFTokens    tokenGenerator
-	NewID         func() (string, error)
-	Now           func() time.Time
-	IdleTTL       time.Duration
-	AbsoluteTTL   time.Duration
+	Repository            ports.SessionRotator
+	SessionTokens         tokenGenerator
+	CSRFTokens            tokenGenerator
+	NewID                 func() (string, error)
+	Now                   func() time.Time
+	IdleTTL               time.Duration
+	AbsoluteTTL           time.Duration
+	MFAPendingIdleTTL     time.Duration
+	MFAPendingAbsoluteTTL time.Duration
 }
 
 type RotationResult struct {
+	SessionID    string
 	SessionToken string
 	CSRFToken    string
 }
@@ -38,7 +41,10 @@ func NewRotator(dependencies RotatorDependencies) (*Rotator, error) {
 		dependencies.Now == nil ||
 		dependencies.IdleTTL <= 0 ||
 		dependencies.AbsoluteTTL <= 0 ||
-		dependencies.IdleTTL > dependencies.AbsoluteTTL {
+		dependencies.IdleTTL > dependencies.AbsoluteTTL ||
+		dependencies.MFAPendingIdleTTL <= 0 ||
+		dependencies.MFAPendingAbsoluteTTL <= 0 ||
+		dependencies.MFAPendingIdleTTL > dependencies.MFAPendingAbsoluteTTL {
 		return nil, ErrInvalidSessionRotation
 	}
 	return &Rotator{dependencies: dependencies}, nil
@@ -49,6 +55,43 @@ func (rotator *Rotator) Authenticated(
 	currentHash identitydomain.TokenHash,
 	userID string,
 	authorizationVersion int64,
+) (RotationResult, error) {
+	return rotator.rotate(
+		ctx,
+		currentHash,
+		userID,
+		authorizationVersion,
+		identitydomain.SessionStateAuthenticated,
+		rotator.dependencies.IdleTTL,
+		rotator.dependencies.AbsoluteTTL,
+	)
+}
+
+func (rotator *Rotator) MFAPending(
+	ctx context.Context,
+	currentHash identitydomain.TokenHash,
+	userID string,
+	authorizationVersion int64,
+) (RotationResult, error) {
+	return rotator.rotate(
+		ctx,
+		currentHash,
+		userID,
+		authorizationVersion,
+		identitydomain.SessionStateMFAPending,
+		rotator.dependencies.MFAPendingIdleTTL,
+		rotator.dependencies.MFAPendingAbsoluteTTL,
+	)
+}
+
+func (rotator *Rotator) rotate(
+	ctx context.Context,
+	currentHash identitydomain.TokenHash,
+	userID string,
+	authorizationVersion int64,
+	state identitydomain.SessionState,
+	idleTTL time.Duration,
+	absoluteTTL time.Duration,
 ) (RotationResult, error) {
 	if userID == "" || authorizationVersion < 1 {
 		return RotationResult{}, ErrInvalidSessionRotation
@@ -72,11 +115,11 @@ func (rotator *Rotator) Authenticated(
 		ID:                   sessionID,
 		TokenHash:            identitydomain.TokenHash(sessionToken.Hash),
 		CSRFTokenHash:        identitydomain.TokenHash(csrfToken.Hash),
-		State:                identitydomain.SessionStateAuthenticated,
+		State:                state,
 		UserID:               stringPointerValue(userID),
 		AuthorizationVersion: int64PointerValue(authorizationVersion),
-		IdleExpiresAt:        now.Add(rotator.dependencies.IdleTTL),
-		AbsoluteExpiresAt:    now.Add(rotator.dependencies.AbsoluteTTL),
+		IdleExpiresAt:        now.Add(idleTTL),
+		AbsoluteExpiresAt:    now.Add(absoluteTTL),
 		CreatedAt:            now,
 	}
 	if err := rotator.dependencies.Repository.Rotate(ctx, currentHash, replacement); err != nil {
@@ -84,6 +127,7 @@ func (rotator *Rotator) Authenticated(
 	}
 
 	return RotationResult{
+		SessionID:    sessionID,
 		SessionToken: sessionToken.Raw,
 		CSRFToken:    csrfToken.Raw,
 	}, nil

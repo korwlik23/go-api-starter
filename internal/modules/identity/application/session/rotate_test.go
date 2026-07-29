@@ -25,10 +25,12 @@ func TestRotateAuthenticatedReplacesPreAuthSession(t *testing.T) {
 		CSRFTokens: tokenGeneratorStub{token: platformcrypto.OpaqueToken{
 			Raw: "new-csrf-token", Hash: csrfHash,
 		}},
-		NewID:       func() (string, error) { return "new-session-id", nil },
-		Now:         func() time.Time { return now },
-		IdleTTL:     30 * time.Minute,
-		AbsoluteTTL: 12 * time.Hour,
+		NewID:                 func() (string, error) { return "new-session-id", nil },
+		Now:                   func() time.Time { return now },
+		IdleTTL:               30 * time.Minute,
+		AbsoluteTTL:           12 * time.Hour,
+		MFAPendingIdleTTL:     5 * time.Minute,
+		MFAPendingAbsoluteTTL: 10 * time.Minute,
 	})
 	require.NoError(t, err)
 
@@ -59,13 +61,15 @@ func TestRotateAuthenticatedReplacesPreAuthSession(t *testing.T) {
 func TestRotateAuthenticatedReturnsNoTokensWhenConditionalRevokeLoses(t *testing.T) {
 	repository := &sessionRotatorSpy{err: ports.ErrSessionRotationConflict}
 	rotator, err := NewRotator(RotatorDependencies{
-		Repository:    repository,
-		SessionTokens: tokenGeneratorStub{token: platformcrypto.OpaqueToken{Raw: "session"}},
-		CSRFTokens:    tokenGeneratorStub{token: platformcrypto.OpaqueToken{Raw: "csrf"}},
-		NewID:         func() (string, error) { return "new-session-id", nil },
-		Now:           time.Now,
-		IdleTTL:       time.Minute,
-		AbsoluteTTL:   2 * time.Minute,
+		Repository:            repository,
+		SessionTokens:         tokenGeneratorStub{token: platformcrypto.OpaqueToken{Raw: "session"}},
+		CSRFTokens:            tokenGeneratorStub{token: platformcrypto.OpaqueToken{Raw: "csrf"}},
+		NewID:                 func() (string, error) { return "new-session-id", nil },
+		Now:                   time.Now,
+		IdleTTL:               time.Minute,
+		AbsoluteTTL:           2 * time.Minute,
+		MFAPendingIdleTTL:     time.Minute,
+		MFAPendingAbsoluteTTL: 2 * time.Minute,
 	})
 	require.NoError(t, err)
 
@@ -81,13 +85,15 @@ func TestRotateAuthenticatedReturnsNoTokensWhenConditionalRevokeLoses(t *testing
 
 func TestRotateAuthenticatedValidatesPrincipalSnapshot(t *testing.T) {
 	rotator, err := NewRotator(RotatorDependencies{
-		Repository:    &sessionRotatorSpy{},
-		SessionTokens: tokenGeneratorStub{},
-		CSRFTokens:    tokenGeneratorStub{},
-		NewID:         func() (string, error) { return "new-session-id", nil },
-		Now:           time.Now,
-		IdleTTL:       time.Minute,
-		AbsoluteTTL:   2 * time.Minute,
+		Repository:            &sessionRotatorSpy{},
+		SessionTokens:         tokenGeneratorStub{},
+		CSRFTokens:            tokenGeneratorStub{},
+		NewID:                 func() (string, error) { return "new-session-id", nil },
+		Now:                   time.Now,
+		IdleTTL:               time.Minute,
+		AbsoluteTTL:           2 * time.Minute,
+		MFAPendingIdleTTL:     time.Minute,
+		MFAPendingAbsoluteTTL: 2 * time.Minute,
 	})
 	require.NoError(t, err)
 
@@ -98,6 +104,39 @@ func TestRotateAuthenticatedValidatesPrincipalSnapshot(t *testing.T) {
 		0,
 	)
 	require.ErrorIs(t, err, ErrInvalidSessionRotation)
+}
+
+func TestRotateMFAPendingCreatesLimitedSession(t *testing.T) {
+	now := time.Date(2026, time.July, 30, 6, 0, 0, 0, time.UTC)
+	repository := &sessionRotatorSpy{}
+	rotator, err := NewRotator(RotatorDependencies{
+		Repository: repository,
+		SessionTokens: tokenGeneratorStub{token: platformcrypto.OpaqueToken{
+			Raw: "pending-session", Hash: [32]byte{0x02},
+		}},
+		CSRFTokens: tokenGeneratorStub{token: platformcrypto.OpaqueToken{
+			Raw: "pending-csrf", Hash: [32]byte{0x03},
+		}},
+		NewID:                 func() (string, error) { return "challenge-session-id", nil },
+		Now:                   func() time.Time { return now },
+		IdleTTL:               30 * time.Minute,
+		AbsoluteTTL:           12 * time.Hour,
+		MFAPendingIdleTTL:     5 * time.Minute,
+		MFAPendingAbsoluteTTL: 10 * time.Minute,
+	})
+	require.NoError(t, err)
+
+	result, err := rotator.MFAPending(
+		context.Background(),
+		identitydomain.TokenHash{0x01},
+		"user-id",
+		7,
+	)
+	require.NoError(t, err)
+	require.Equal(t, "challenge-session-id", result.SessionID)
+	require.Equal(t, identitydomain.SessionStateMFAPending, repository.replacement.State)
+	require.Equal(t, now.Add(5*time.Minute), repository.replacement.IdleExpiresAt)
+	require.Equal(t, now.Add(10*time.Minute), repository.replacement.AbsoluteExpiresAt)
 }
 
 type sessionRotatorSpy struct {
