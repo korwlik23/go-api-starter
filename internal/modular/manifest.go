@@ -74,6 +74,14 @@ type HealthContributor struct {
 	Critical bool
 }
 
+func SQLMigrations() []Migration {
+	return []Migration{
+		{Dialect: "postgres"},
+		{Dialect: "mariadb"},
+		{Dialect: "mysql"},
+	}
+}
+
 func ValidateManifest(manifest Manifest) error {
 	if !moduleIDPattern.MatchString(manifest.ID) {
 		return invalidManifest("module ID is not canonical")
