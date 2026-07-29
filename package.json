@@ -1,0 +1,19 @@
+{
+  "name": "@korwlik23/go-api-starter-contracts",
+  "version": "0.0.0",
+  "private": true,
+  "packageManager": "pnpm@11.9.0",
+  "engines": {
+    "node": ">=24.0.0 <25.0.0",
+    "pnpm": ">=11.0.0 <12.0.0"
+  },
+  "scripts": {
+    "openapi:lint": "redocly lint openapi/root.yaml",
+    "openapi:bundle": "redocly bundle openapi/root.yaml --output openapi/dist/root.yaml",
+    "openapi:generate": "go generate ./...",
+    "openapi:check": "pnpm run openapi:lint && pnpm run openapi:bundle && pnpm run openapi:generate"
+  },
+  "devDependencies": {
+    "@redocly/cli": "2.41.2"
+  }
+}
