@@ -1,6 +1,6 @@
 # Admin contracts stay isolated from public and site-server generated packages.
 package: adminapi
-output: ../../internal/generated/admin/openapi.gen.go
+output: openapi.gen.go
 generate:
   models: true
   client: true

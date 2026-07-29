@@ -144,7 +144,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/SetDefaultLocaleResponse'
+                $ref: '#/components/schemas/DefaultLocaleUpdateResult'
         '401':
           $ref: ../../common/errors.yaml#/components/responses/Unauthorized
         '403':
@@ -265,7 +265,7 @@ components:
         expected_version:
           type: integer
           minimum: 1
-    SetDefaultLocaleResponse:
+    DefaultLocaleUpdateResult:
       type: object
       additionalProperties: false
       required: [locale_id, previous_default_locale_id, version]

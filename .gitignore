@@ -26,7 +26,10 @@ vendor/
 
 # Local OpenAPI tooling
 node_modules/
-openapi/dist/
+openapi/dist/*
+!openapi/dist/admin.openapi.yaml
+!openapi/dist/public.openapi.yaml
+!openapi/dist/site-server.openapi.yaml
 
 # Database test runner locks
 .go-api-starter-test-db-*.lock

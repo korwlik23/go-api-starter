@@ -1,6 +1,6 @@
 # Public API contracts stay isolated from admin and site-server generated packages.
 package: publicapi
-output: ../../internal/generated/public/openapi.gen.go
+output: openapi.gen.go
 generate:
   models: true
   client: true

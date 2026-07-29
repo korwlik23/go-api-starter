@@ -1,0 +1,1588 @@
+openapi: 3.0.3
+info:
+  description: Versioned HTTP contract for the go-lang-starter suite.
+  title: go-api-starter API
+  version: 0.1.0
+servers:
+  - url: '{scheme}://{host}/api/v1'
+    variables:
+      host:
+        default: api.tewarach-dev.me
+      scheme:
+        default: https
+        enum:
+          - https
+          - http
+paths:
+  /accounts/current:
+    get:
+      operationId: getCurrentAccount
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CurrentAccountResponse'
+          description: The resolved account projection.
+          headers:
+            Cache-Control:
+              schema:
+                enum:
+                  - no-store
+                type: string
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+      security:
+        - SessionCookie: []
+      summary: Read the account resolved for the authenticated principal.
+      tags:
+        - Accounts
+  /auth/csrf:
+    get:
+      operationId: getCSRFToken
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CSRFTokenResponse'
+          description: A short-lived pre-auth session and its session-bound CSRF token.
+          headers:
+            Cache-Control:
+              description: Authentication state must never be stored by shared caches.
+              schema:
+                enum:
+                  - no-store
+                type: string
+            Set-Cookie:
+              description: Opaque pre-auth session cookie; attributes are environment-configured.
+              schema:
+                type: string
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+      security: []
+      summary: Create or rotate an anonymous pre-auth session and issue a CSRF token.
+      tags:
+        - Identity
+  /auth/login:
+    post:
+      operationId: login
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginAuthenticatedResponse'
+          description: Authentication completed and the session was rotated.
+          headers:
+            Cache-Control:
+              description: Authentication state must never be stored by shared caches.
+              schema:
+                enum:
+                  - no-store
+                type: string
+            Set-Cookie:
+              description: Rotated opaque authenticated session cookie with secure attributes.
+              schema:
+                type: string
+        '202':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginMFAPendingResponse'
+          description: Password authentication completed but MFA verification is pending.
+          headers:
+            Cache-Control:
+              description: Authentication state must never be stored by shared caches.
+              schema:
+                enum:
+                  - no-store
+                type: string
+            Set-Cookie:
+              description: Rotated opaque MFA-pending session cookie with secure attributes.
+              schema:
+                type: string
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+      security:
+        - CSRFToken: []
+          SessionCookie: []
+      summary: Authenticate with a pre-auth session and rotate its session state.
+      tags:
+        - Identity
+  /auth/logout:
+    post:
+      operationId: logout
+      responses:
+        '204':
+          description: The current session was revoked.
+          headers:
+            Cache-Control:
+              schema:
+                enum:
+                  - no-store
+                type: string
+            Set-Cookie:
+              description: Expired opaque session cookie with the same secure scope.
+              schema:
+                type: string
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+      security:
+        - CSRFToken: []
+          SessionCookie: []
+      summary: Revoke the current session and expire its cookie.
+      tags:
+        - Identity
+  /auth/mfa/challenge:
+    get:
+      operationId: getMFAChallenge
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MFAChallengeResponse'
+          description: The pending-only MFA challenge without secret or verification-code material.
+          headers:
+            Cache-Control:
+              description: Authentication state must never be stored by shared caches.
+              schema:
+                enum:
+                  - no-store
+                type: string
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+      security:
+        - SessionCookie: []
+      summary: Read the safe projection of the current MFA-pending challenge.
+      tags:
+        - Identity
+  /auth/mfa/enrollment:
+    post:
+      operationId: enrollMFA
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MFAEnrollmentResponse'
+          description: Pending enrollment with a one-time provisioning URI.
+          headers:
+            Cache-Control:
+              description: Authentication state must never be stored by shared caches.
+              schema:
+                enum:
+                  - no-store
+                type: string
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+      security:
+        - CSRFToken: []
+          SessionCookie: []
+      summary: Create a pending MFA enrollment for the authenticated session.
+      tags:
+        - Identity
+  /auth/mfa/verify:
+    post:
+      operationId: verifyMFA
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MFAVerificationRequest'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MFAVerificationResponse'
+          description: MFA succeeded and the pending session was rotated to authenticated.
+          headers:
+            Cache-Control:
+              description: Authentication state must never be stored by shared caches.
+              schema:
+                enum:
+                  - no-store
+                type: string
+            Set-Cookie:
+              description: Rotated opaque authenticated session cookie with secure attributes.
+              schema:
+                type: string
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+      security:
+        - CSRFToken: []
+          SessionCookie: []
+      summary: Verify a pending MFA challenge and rotate to an authenticated session.
+      tags:
+        - Identity
+  /auth/password/recovery:
+    post:
+      operationId: requestPasswordRecovery
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RecoveryRequest'
+        required: true
+      responses:
+        '202':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecoveryAcceptedResponse'
+          description: The request was accepted regardless of account existence or status.
+          headers:
+            Cache-Control:
+              description: Recovery state must never be stored by shared caches.
+              schema:
+                enum:
+                  - no-store
+                type: string
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+      security:
+        - CSRFToken: []
+          SessionCookie: []
+      summary: Request password recovery without revealing whether the account exists.
+      tags:
+        - Identity
+  /auth/password/reset:
+    post:
+      operationId: resetPassword
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasswordResetRequest'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PasswordResetResponse'
+          description: The password was reset, existing sessions revoked, and pre-auth state rotated.
+          headers:
+            Cache-Control:
+              schema:
+                enum:
+                  - no-store
+                type: string
+            Referrer-Policy:
+              schema:
+                enum:
+                  - no-referrer
+                type: string
+            Set-Cookie:
+              description: Rotated opaque pre-auth session cookie with secure attributes.
+              schema:
+                type: string
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+      security:
+        - CSRFToken: []
+          SessionCookie: []
+      summary: Consume a one-time recovery token, reset the password, and rotate session state.
+      tags:
+        - Identity
+  /auth/session:
+    get:
+      operationId: getCurrentSession
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CurrentSessionResponse'
+          description: Current authenticated session without raw token or fingerprint material.
+          headers:
+            Cache-Control:
+              description: Authentication state must never be stored by shared caches.
+              schema:
+                enum:
+                  - no-store
+                type: string
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+      security:
+        - SessionCookie: []
+      summary: Read the authenticated principal and current session projection.
+      tags:
+        - Identity
+  /auth/sessions:
+    get:
+      operationId: listSessions
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionListResponse'
+          description: Sessions without raw token or device fingerprint values.
+          headers:
+            Cache-Control:
+              schema:
+                enum:
+                  - no-store
+                type: string
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+      security:
+        - SessionCookie: []
+      summary: List safe device and session metadata for the authenticated principal.
+      tags:
+        - Identity
+  /auth/sessions/{session_id}:
+    delete:
+      operationId: revokeSession
+      parameters:
+        - in: path
+          name: session_id
+          required: true
+          schema:
+            minLength: 1
+            type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionRevocationResult'
+          description: The target session was revoked.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '409':
+          $ref: '#/components/responses/Conflict'
+      security:
+        - CSRFToken: []
+          SessionCookie: []
+      summary: Revoke another active session owned by the authenticated principal.
+      tags:
+        - Identity
+  /authorization/assignments/{assignment_id}:
+    delete:
+      operationId: revokeRoleAssignment
+      parameters:
+        - in: path
+          name: assignment_id
+          required: true
+          schema:
+            minLength: 1
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RoleRevokeRequest'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RoleRevokeResponse'
+          description: The assignment was revoked.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+      security:
+        - CSRFToken: []
+          SessionCookie: []
+      summary: Revoke a role assignment while preserving the last-manager invariant.
+      tags:
+        - Authorization
+  /authorization/effective-permissions:
+    get:
+      operationId: getEffectivePermissions
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EffectivePermissionsResponse'
+          description: Effective permissions after account and session-state resolution.
+          headers:
+            Cache-Control:
+              schema:
+                enum:
+                  - no-store
+                type: string
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+      security:
+        - SessionCookie: []
+      summary: Read active permission keys for the resolved account and principal.
+      tags:
+        - Authorization
+  /authorization/roles/{role_id}/assignments:
+    post:
+      operationId: assignRole
+      parameters:
+        - in: path
+          name: role_id
+          required: true
+          schema:
+            minLength: 1
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RoleAssignmentRequest'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RoleAssignmentResponse'
+          description: The role assignment was applied.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+      security:
+        - CSRFToken: []
+          SessionCookie: []
+      summary: Assign a role in account or system scope using optimistic concurrency.
+      tags:
+        - Authorization
+  /authorization/roles/{role_id}/permissions:
+    post:
+      operationId: grantRolePermission
+      parameters:
+        - in: path
+          name: role_id
+          required: true
+          schema:
+            minLength: 1
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PermissionGrantRequest'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PermissionGrantResponse'
+          description: The permission grant was applied.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+      security:
+        - CSRFToken: []
+          SessionCookie: []
+      summary: Grant a permission key to a role using optimistic concurrency.
+      tags:
+        - Authorization
+  /locales:
+    get:
+      operationId: listLocales
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LocaleListResponse'
+          description: Locale registry ordered by canonical locale code.
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+      security: []
+      summary: List locales visible to public and administrative consumers.
+      tags:
+        - Localization
+    post:
+      operationId: createLocale
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LocaleCreateRequest'
+        required: true
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Locale'
+          description: The locale was created in a disabled, non-selectable state.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+      security:
+        - CSRFToken: []
+          SessionCookie: []
+      summary: Create a locale using a system-scoped permission.
+      tags:
+        - Localization
+      x-required-permission: localization.locales.create
+  /locales/preferences:
+    put:
+      operationId: updateLocalePreferences
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LocalePreferenceRequest'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LocalePreferenceResponse'
+          description: The locale preference was stored at a new version.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '409':
+          $ref: '#/components/responses/Conflict'
+      security:
+        - CSRFToken: []
+          SessionCookie: []
+      summary: Select all enabled locales or an explicit eligible subset for the current user.
+      tags:
+        - Localization
+      x-max-body-bytes: 32768
+  /locales/{locale_id}:
+    patch:
+      operationId: updateLocale
+      parameters:
+        - in: path
+          name: locale_id
+          required: true
+          schema:
+            minLength: 1
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LocaleUpdateRequest'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LocaleUpdateResponse'
+          description: The locale metadata was updated.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+      security:
+        - CSRFToken: []
+          SessionCookie: []
+      summary: Update locale display metadata using optimistic concurrency.
+      tags:
+        - Localization
+      x-required-permission: localization.locales.update
+  /locales/{locale_id}/default:
+    put:
+      operationId: setDefaultLocale
+      parameters:
+        - in: path
+          name: locale_id
+          required: true
+          schema:
+            minLength: 1
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SetDefaultLocaleRequest'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DefaultLocaleUpdateResult'
+          description: The default locale changed atomically.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+      security:
+        - CSRFToken: []
+          SessionCookie: []
+      summary: Set the single enabled and selectable default locale transactionally.
+      tags:
+        - Localization
+      x-required-permission: localization.locales.set-default
+  /locales/{locale_id}/status:
+    patch:
+      operationId: updateLocaleStatus
+      parameters:
+        - in: path
+          name: locale_id
+          required: true
+          schema:
+            minLength: 1
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LocaleStatusRequest'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LocaleStatusResponse'
+          description: The locale status was updated transactionally.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+      security:
+        - CSRFToken: []
+          SessionCookie: []
+      summary: Change locale enabled and selectable state while enforcing registry invariants.
+      tags:
+        - Localization
+      x-required-permission: localization.locales.update
+  /localization/catalog:
+    get:
+      operationId: getTranslationCatalog
+      parameters:
+        - in: query
+          name: locale
+          required: true
+          schema:
+            minLength: 2
+            type: string
+        - in: query
+          name: category
+          required: true
+          schema:
+            minLength: 1
+            type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TranslationCatalogResponse'
+          description: Merged translation entries and their catalog version.
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+      security: []
+      summary: Read a versioned translation category for an enabled locale.
+      tags:
+        - Localization
+    put:
+      operationId: updateTranslationCatalog
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TranslationCatalogUpdateRequest'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TranslationCatalogUpdateResponse'
+          description: The catalog category was stored at a new version.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+      security:
+        - CSRFToken: []
+          SessionCookie: []
+      summary: Replace translation overrides for one locale category using optimistic concurrency.
+      tags:
+        - Localization
+      x-required-permission: localization.catalog.update
+  /operations/modules:
+    get:
+      operationId: listEnabledModules
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ModuleListResponse'
+          description: Safe runtime module state without configuration or checksums.
+          headers:
+            Cache-Control:
+              schema:
+                enum:
+                  - no-store
+                type: string
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+      security:
+        - SessionCookie: []
+      summary: List the runtime module activation projection.
+      tags:
+        - Operations
+components:
+  responses:
+    BadRequest:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+      description: The request could not be processed.
+    Conflict:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+      description: The request conflicts with current state or a concurrent change.
+    Forbidden:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+      description: The authenticated principal lacks the required permission.
+    NotFound:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+      description: The requested resource is not available.
+    TooManyRequests:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+      description: The request exceeded its rate limit.
+    Unauthorized:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+      description: Authentication is required or no longer valid.
+  schemas:
+    AccountRoleAssignmentRequest:
+      additionalProperties: false
+      properties:
+        account_id:
+          minLength: 1
+          type: string
+        expected_version:
+          minimum: 1
+          type: integer
+        scope:
+          enum:
+            - account
+          type: string
+        user_id:
+          minLength: 1
+          type: string
+      required:
+        - scope
+        - account_id
+        - user_id
+        - expected_version
+      type: object
+    CSRFTokenResponse:
+      additionalProperties: false
+      properties:
+        csrf_token:
+          description: Session-bound CSRF token for the immediately following unsafe request.
+          minLength: 1
+          type: string
+      required:
+        - csrf_token
+      type: object
+    CurrentAccountResponse:
+      additionalProperties: false
+      properties:
+        id:
+          minLength: 1
+          type: string
+        name:
+          minLength: 1
+          type: string
+        slug:
+          minLength: 1
+          type: string
+      required:
+        - id
+        - name
+        - slug
+      type: object
+    CurrentSessionResponse:
+      additionalProperties: false
+      properties:
+        principal:
+          additionalProperties: false
+          properties:
+            email:
+              format: email
+              type: string
+            id:
+              minLength: 1
+              type: string
+          required:
+            - id
+            - email
+          type: object
+        session_id:
+          minLength: 1
+          type: string
+        state:
+          enum:
+            - authenticated
+          type: string
+      required:
+        - session_id
+        - principal
+        - state
+      type: object
+    DefaultLocaleUpdateResult:
+      additionalProperties: false
+      properties:
+        locale_id:
+          minLength: 1
+          type: string
+        previous_default_locale_id:
+          minLength: 1
+          type: string
+        version:
+          minimum: 1
+          type: integer
+      required:
+        - locale_id
+        - previous_default_locale_id
+        - version
+      type: object
+    EffectivePermissionsResponse:
+      additionalProperties: false
+      properties:
+        account_id:
+          minLength: 1
+          type: string
+        permissions:
+          items:
+            minLength: 1
+            type: string
+          type: array
+          uniqueItems: true
+      required:
+        - account_id
+        - permissions
+      type: object
+    ErrorEnvelope:
+      additionalProperties: false
+      properties:
+        error:
+          $ref: '#/components/schemas/Problem'
+      required:
+        - error
+      type: object
+    FieldErrors:
+      additionalProperties:
+        items:
+          type: string
+        type: array
+      type: object
+    Locale:
+      additionalProperties: false
+      properties:
+        code:
+          minLength: 2
+          type: string
+        default:
+          type: boolean
+        direction:
+          enum:
+            - ltr
+            - rtl
+          type: string
+        enabled:
+          type: boolean
+        id:
+          minLength: 1
+          type: string
+        name:
+          minLength: 1
+          type: string
+        selectable:
+          type: boolean
+      required:
+        - id
+        - code
+        - name
+        - direction
+        - enabled
+        - selectable
+        - default
+      type: object
+    LocaleCreateRequest:
+      additionalProperties: false
+      properties:
+        code:
+          minLength: 2
+          type: string
+        direction:
+          enum:
+            - ltr
+            - rtl
+          type: string
+        name:
+          minLength: 1
+          type: string
+      required:
+        - code
+        - name
+        - direction
+      type: object
+    LocaleListResponse:
+      additionalProperties: false
+      properties:
+        items:
+          items:
+            $ref: '#/components/schemas/Locale'
+          type: array
+      required:
+        - items
+      type: object
+    LocalePreferenceRequest:
+      additionalProperties: false
+      properties:
+        all_languages:
+          type: boolean
+        expected_version:
+          description: Use zero for the first write; later writes use the last observed version.
+          minimum: 0
+          type: integer
+        locale_ids:
+          items:
+            minLength: 1
+            type: string
+          maxItems: 256
+          type: array
+          uniqueItems: true
+      required:
+        - all_languages
+        - locale_ids
+        - expected_version
+      type: object
+    LocalePreferenceResponse:
+      additionalProperties: false
+      properties:
+        all_languages:
+          type: boolean
+        locale_ids:
+          items:
+            minLength: 1
+            type: string
+          maxItems: 256
+          type: array
+          uniqueItems: true
+        version:
+          minimum: 1
+          type: integer
+      required:
+        - all_languages
+        - locale_ids
+        - version
+      type: object
+    LocaleStatusRequest:
+      additionalProperties: false
+      properties:
+        enabled:
+          type: boolean
+        expected_version:
+          minimum: 1
+          type: integer
+        selectable:
+          type: boolean
+      required:
+        - enabled
+        - selectable
+        - expected_version
+      type: object
+    LocaleStatusResponse:
+      additionalProperties: false
+      properties:
+        enabled:
+          type: boolean
+        id:
+          minLength: 1
+          type: string
+        selectable:
+          type: boolean
+        version:
+          minimum: 1
+          type: integer
+      required:
+        - id
+        - enabled
+        - selectable
+        - version
+      type: object
+    LocaleUpdateRequest:
+      additionalProperties: false
+      properties:
+        direction:
+          enum:
+            - ltr
+            - rtl
+          type: string
+        expected_version:
+          minimum: 1
+          type: integer
+        name:
+          minLength: 1
+          type: string
+      required:
+        - name
+        - direction
+        - expected_version
+      type: object
+    LocaleUpdateResponse:
+      additionalProperties: false
+      properties:
+        direction:
+          enum:
+            - ltr
+            - rtl
+          type: string
+        id:
+          minLength: 1
+          type: string
+        name:
+          minLength: 1
+          type: string
+        version:
+          minimum: 1
+          type: integer
+      required:
+        - id
+        - name
+        - direction
+        - version
+      type: object
+    LoginAuthenticatedResponse:
+      additionalProperties: false
+      properties:
+        csrf_token:
+          minLength: 1
+          type: string
+        status:
+          enum:
+            - authenticated
+          type: string
+      required:
+        - status
+        - csrf_token
+      type: object
+    LoginMFAPendingResponse:
+      additionalProperties: false
+      properties:
+        challenge_id:
+          description: Opaque identifier for the pending MFA challenge.
+          minLength: 1
+          type: string
+        csrf_token:
+          minLength: 1
+          type: string
+        status:
+          enum:
+            - mfa_pending
+          type: string
+      required:
+        - status
+        - csrf_token
+        - challenge_id
+      type: object
+    LoginRequest:
+      additionalProperties: false
+      properties:
+        email:
+          format: email
+          type: string
+        password:
+          minLength: 1
+          type: string
+          writeOnly: true
+      required:
+        - email
+        - password
+      type: object
+    MFAChallengeResponse:
+      additionalProperties: false
+      properties:
+        challenge_id:
+          minLength: 1
+          type: string
+        methods:
+          items:
+            enum:
+              - totp
+              - recovery_code
+            type: string
+          minItems: 1
+          type: array
+          uniqueItems: true
+        status:
+          enum:
+            - mfa_pending
+          type: string
+      required:
+        - status
+        - challenge_id
+        - methods
+      type: object
+    MFAEnrollmentResponse:
+      additionalProperties: false
+      properties:
+        enrollment_id:
+          description: Opaque identifier used only to confirm this enrollment.
+          minLength: 1
+          type: string
+        provisioning_uri:
+          description: One-time URI for the authenticator application; server storage encrypts its TOTP secret.
+          format: uri
+          minLength: 1
+          type: string
+      required:
+        - enrollment_id
+        - provisioning_uri
+      type: object
+    MFAVerificationRequest:
+      additionalProperties: false
+      properties:
+        code:
+          minLength: 1
+          type: string
+          writeOnly: true
+        method:
+          enum:
+            - totp
+            - recovery_code
+          type: string
+      required:
+        - method
+        - code
+      type: object
+    MFAVerificationResponse:
+      additionalProperties: false
+      properties:
+        csrf_token:
+          minLength: 1
+          type: string
+        status:
+          enum:
+            - authenticated
+          type: string
+      required:
+        - status
+        - csrf_token
+      type: object
+    ModuleListResponse:
+      additionalProperties: false
+      properties:
+        items:
+          items:
+            $ref: '#/components/schemas/ModuleState'
+          type: array
+      required:
+        - items
+      type: object
+    ModuleState:
+      additionalProperties: false
+      properties:
+        enabled:
+          type: boolean
+        id:
+          minLength: 1
+          type: string
+        reconcile_revision:
+          minimum: 1
+          type: integer
+      required:
+        - id
+        - enabled
+        - reconcile_revision
+      type: object
+    PasswordResetRequest:
+      additionalProperties: false
+      properties:
+        new_password:
+          minLength: 1
+          type: string
+          writeOnly: true
+        token:
+          minLength: 1
+          type: string
+          writeOnly: true
+      required:
+        - token
+        - new_password
+      type: object
+    PasswordResetResponse:
+      additionalProperties: false
+      properties:
+        csrf_token:
+          minLength: 1
+          type: string
+        status:
+          enum:
+            - password_reset
+          type: string
+      required:
+        - status
+        - csrf_token
+      type: object
+    PermissionGrantRequest:
+      additionalProperties: false
+      properties:
+        expected_version:
+          minimum: 1
+          type: integer
+        permission_key:
+          minLength: 1
+          type: string
+      required:
+        - permission_key
+        - expected_version
+      type: object
+    PermissionGrantResponse:
+      additionalProperties: false
+      properties:
+        affected_principals:
+          minimum: 0
+          type: integer
+        permission_key:
+          minLength: 1
+          type: string
+        role_id:
+          minLength: 1
+          type: string
+        session_outcome:
+          $ref: '#/components/schemas/SessionInvalidationOutcome'
+        version:
+          minimum: 1
+          type: integer
+      required:
+        - role_id
+        - permission_key
+        - version
+        - affected_principals
+        - session_outcome
+      type: object
+    Problem:
+      additionalProperties: false
+      properties:
+        code:
+          description: Stable, machine-readable error code.
+          type: string
+        fields:
+          $ref: '#/components/schemas/FieldErrors'
+        message:
+          description: Safe, translatable message for the caller.
+          type: string
+        request_id:
+          description: Opaque correlation identifier; never an authorization credential.
+          minLength: 1
+          type: string
+      required:
+        - code
+        - message
+        - fields
+        - request_id
+      type: object
+    RecoveryAcceptedResponse:
+      additionalProperties: false
+      properties:
+        status:
+          enum:
+            - accepted
+          type: string
+      required:
+        - status
+      type: object
+    RecoveryRequest:
+      additionalProperties: false
+      properties:
+        email:
+          format: email
+          type: string
+      required:
+        - email
+      type: object
+    RoleAssignmentRequest:
+      discriminator:
+        mapping:
+          account: '#/components/schemas/AccountRoleAssignmentRequest'
+          system: '#/components/schemas/SystemRoleAssignmentRequest'
+        propertyName: scope
+      oneOf:
+        - $ref: '#/components/schemas/AccountRoleAssignmentRequest'
+        - $ref: '#/components/schemas/SystemRoleAssignmentRequest'
+    RoleAssignmentResponse:
+      additionalProperties: false
+      properties:
+        affected_principals:
+          minimum: 0
+          type: integer
+        assignment_id:
+          minLength: 1
+          type: string
+        role_id:
+          minLength: 1
+          type: string
+        session_outcome:
+          $ref: '#/components/schemas/SessionInvalidationOutcome'
+        version:
+          minimum: 1
+          type: integer
+      required:
+        - assignment_id
+        - role_id
+        - version
+        - affected_principals
+        - session_outcome
+      type: object
+    RoleRevokeRequest:
+      additionalProperties: false
+      properties:
+        expected_version:
+          minimum: 1
+          type: integer
+      required:
+        - expected_version
+      type: object
+    RoleRevokeResponse:
+      additionalProperties: false
+      properties:
+        affected_principals:
+          minimum: 0
+          type: integer
+        assignment_id:
+          minLength: 1
+          type: string
+        revoked:
+          enum:
+            - true
+          type: boolean
+        session_outcome:
+          $ref: '#/components/schemas/SessionInvalidationOutcome'
+        version:
+          minimum: 1
+          type: integer
+      required:
+        - assignment_id
+        - revoked
+        - version
+        - affected_principals
+        - session_outcome
+      type: object
+    SessionInvalidationOutcome:
+      additionalProperties: false
+      properties:
+        current_principal:
+          enum:
+            - unchanged
+            - rotated
+          type: string
+        other_principals:
+          enum:
+            - unchanged
+            - invalidated
+          type: string
+      required:
+        - current_principal
+        - other_principals
+      type: object
+    SessionListResponse:
+      additionalProperties: false
+      properties:
+        items:
+          items:
+            additionalProperties: false
+            properties:
+              created_at:
+                format: date-time
+                type: string
+              current:
+                type: boolean
+              id:
+                minLength: 1
+                type: string
+              last_seen_at:
+                format: date-time
+                type: string
+            required:
+              - id
+              - created_at
+              - last_seen_at
+              - current
+            type: object
+          type: array
+      required:
+        - items
+      type: object
+    SessionRevocationResult:
+      additionalProperties: false
+      properties:
+        revoked:
+          enum:
+            - true
+          type: boolean
+        target_session_id:
+          minLength: 1
+          type: string
+      required:
+        - target_session_id
+        - revoked
+      type: object
+    SetDefaultLocaleRequest:
+      additionalProperties: false
+      properties:
+        expected_version:
+          minimum: 1
+          type: integer
+      required:
+        - expected_version
+      type: object
+    SystemRoleAssignmentRequest:
+      additionalProperties: false
+      properties:
+        expected_version:
+          minimum: 1
+          type: integer
+        scope:
+          enum:
+            - system
+          type: string
+        user_id:
+          minLength: 1
+          type: string
+      required:
+        - scope
+        - user_id
+        - expected_version
+      type: object
+    TranslationCatalogResponse:
+      additionalProperties: false
+      properties:
+        category:
+          minLength: 1
+          type: string
+        entries:
+          additionalProperties:
+            type: string
+          type: object
+        locale:
+          minLength: 2
+          type: string
+        version:
+          minimum: 1
+          type: integer
+      required:
+        - locale
+        - category
+        - version
+        - entries
+      type: object
+    TranslationCatalogUpdateRequest:
+      additionalProperties: false
+      properties:
+        category:
+          minLength: 1
+          type: string
+        entries:
+          additionalProperties:
+            type: string
+          type: object
+        expected_version:
+          minimum: 0
+          type: integer
+        locale:
+          minLength: 2
+          type: string
+      required:
+        - locale
+        - category
+        - entries
+        - expected_version
+      type: object
+    TranslationCatalogUpdateResponse:
+      additionalProperties: false
+      properties:
+        category:
+          minLength: 1
+          type: string
+        locale:
+          minLength: 2
+          type: string
+        version:
+          minimum: 1
+          type: integer
+      required:
+        - locale
+        - category
+        - version
+      type: object
+  securitySchemes:
+    CSRFToken:
+      description: Session-bound CSRF token required for every unsafe method.
+      in: header
+      name: X-CSRF-Token
+      type: apiKey
+    SessionCookie:
+      description: Opaque, server-side session cookie. Production deployments use a __Host- prefixed configured name with Secure, HttpOnly and SameSite=Lax.
+      in: cookie
+      name: go_lang_starter_session
+      type: apiKey

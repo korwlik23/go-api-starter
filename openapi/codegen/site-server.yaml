@@ -1,6 +1,6 @@
 # The public-site server contract is generated independently for Gin handlers.
 package: siteapi
-output: ../../internal/generated/site/openapi.gen.go
+output: openapi.gen.go
 generate:
   models: true
   gin-server: true

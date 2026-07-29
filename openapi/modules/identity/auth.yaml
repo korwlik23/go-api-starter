@@ -233,7 +233,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/RevokeSessionResponse'
+                $ref: '#/components/schemas/SessionRevocationResult'
         '401':
           $ref: ../../common/errors.yaml#/components/responses/Unauthorized
         '409':
@@ -410,7 +410,7 @@ components:
                 format: date-time
               current:
                 type: boolean
-    RevokeSessionResponse:
+    SessionRevocationResult:
       type: object
       additionalProperties: false
       required: [target_session_id, revoked]

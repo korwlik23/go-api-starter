@@ -1,0 +1,279 @@
+openapi: 3.0.3
+info:
+  description: Versioned HTTP contract for the go-lang-starter suite.
+  title: go-api-starter API
+  version: 0.1.0
+servers:
+  - url: '{scheme}://{host}/api/v1'
+    variables:
+      host:
+        default: api.tewarach-dev.me
+      scheme:
+        default: https
+        enum:
+          - https
+          - http
+paths:
+  /livez:
+    get:
+      operationId: getLiveness
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LivenessResponse'
+          description: The API process is alive.
+          headers:
+            Cache-Control:
+              schema:
+                enum:
+                  - no-store
+                type: string
+      security: []
+      servers:
+        - url: '{scheme}://{host}'
+          variables:
+            host:
+              default: api.tewarach-dev.me
+            scheme:
+              default: https
+              enum:
+                - https
+                - http
+      summary: Report process liveness without probing dependencies.
+      tags:
+        - System
+  /locales:
+    get:
+      operationId: listLocales
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LocaleListResponse'
+          description: Locale registry ordered by canonical locale code.
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+      security: []
+      summary: List locales visible to public and administrative consumers.
+      tags:
+        - Localization
+  /localization/catalog:
+    get:
+      operationId: getTranslationCatalog
+      parameters:
+        - in: query
+          name: locale
+          required: true
+          schema:
+            minLength: 2
+            type: string
+        - in: query
+          name: category
+          required: true
+          schema:
+            minLength: 1
+            type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TranslationCatalogResponse'
+          description: Merged translation entries and their catalog version.
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+      security: []
+      summary: Read a versioned translation category for an enabled locale.
+      tags:
+        - Localization
+  /readyz:
+    get:
+      operationId: getReadiness
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReadinessResponse'
+          description: All critical dependencies and module state are ready.
+          headers:
+            Cache-Control:
+              schema:
+                enum:
+                  - no-store
+                type: string
+        '503':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReadinessUnavailableResponse'
+          description: One or more critical readiness conditions are unavailable.
+          headers:
+            Cache-Control:
+              schema:
+                enum:
+                  - no-store
+                type: string
+      security: []
+      servers:
+        - url: '{scheme}://{host}'
+          variables:
+            host:
+              default: api.tewarach-dev.me
+            scheme:
+              default: https
+              enum:
+                - https
+                - http
+      summary: Report bounded readiness without exposing dependency detail.
+      tags:
+        - System
+components:
+  responses:
+    NotFound:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+      description: The requested resource is not available.
+    TooManyRequests:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+      description: The request exceeded its rate limit.
+  schemas:
+    ErrorEnvelope:
+      additionalProperties: false
+      properties:
+        error:
+          $ref: '#/components/schemas/Problem'
+      required:
+        - error
+      type: object
+    FieldErrors:
+      additionalProperties:
+        items:
+          type: string
+        type: array
+      type: object
+    LivenessResponse:
+      additionalProperties: false
+      properties:
+        status:
+          enum:
+            - ok
+          type: string
+      required:
+        - status
+      type: object
+    Locale:
+      additionalProperties: false
+      properties:
+        code:
+          minLength: 2
+          type: string
+        default:
+          type: boolean
+        direction:
+          enum:
+            - ltr
+            - rtl
+          type: string
+        enabled:
+          type: boolean
+        id:
+          minLength: 1
+          type: string
+        name:
+          minLength: 1
+          type: string
+        selectable:
+          type: boolean
+      required:
+        - id
+        - code
+        - name
+        - direction
+        - enabled
+        - selectable
+        - default
+      type: object
+    LocaleListResponse:
+      additionalProperties: false
+      properties:
+        items:
+          items:
+            $ref: '#/components/schemas/Locale'
+          type: array
+      required:
+        - items
+      type: object
+    Problem:
+      additionalProperties: false
+      properties:
+        code:
+          description: Stable, machine-readable error code.
+          type: string
+        fields:
+          $ref: '#/components/schemas/FieldErrors'
+        message:
+          description: Safe, translatable message for the caller.
+          type: string
+        request_id:
+          description: Opaque correlation identifier; never an authorization credential.
+          minLength: 1
+          type: string
+      required:
+        - code
+        - message
+        - fields
+        - request_id
+      type: object
+    ReadinessResponse:
+      additionalProperties: false
+      properties:
+        status:
+          enum:
+            - ready
+          type: string
+      required:
+        - status
+      type: object
+    ReadinessUnavailableResponse:
+      additionalProperties: false
+      properties:
+        status:
+          enum:
+            - unavailable
+          type: string
+      required:
+        - status
+      type: object
+    TranslationCatalogResponse:
+      additionalProperties: false
+      properties:
+        category:
+          minLength: 1
+          type: string
+        entries:
+          additionalProperties:
+            type: string
+          type: object
+        locale:
+          minLength: 2
+          type: string
+        version:
+          minimum: 1
+          type: integer
+      required:
+        - locale
+        - category
+        - version
+        - entries
+      type: object

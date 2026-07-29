@@ -9,7 +9,10 @@
   },
   "scripts": {
     "openapi:lint": "redocly lint openapi/root.yaml",
-    "openapi:bundle": "redocly bundle openapi/root.yaml --output openapi/dist/root.yaml",
+    "openapi:bundle:root": "redocly bundle openapi/root.yaml --output openapi/dist/root.json --ext json",
+    "openapi:filter": "go run ./cmd/openapi-surfaces -input openapi/dist/root.json -output-dir openapi/dist",
+    "openapi:bundle:surfaces": "redocly bundle openapi/dist/admin.source.json --remove-unused-components --output openapi/dist/admin.openapi.yaml && redocly bundle openapi/dist/public.source.json --remove-unused-components --output openapi/dist/public.openapi.yaml && redocly bundle openapi/dist/site-server.source.json --remove-unused-components --output openapi/dist/site-server.openapi.yaml",
+    "openapi:bundle": "pnpm run openapi:bundle:root && pnpm run openapi:filter && pnpm run openapi:bundle:surfaces",
     "openapi:generate": "go generate ./...",
     "openapi:check": "pnpm run openapi:lint && pnpm run openapi:bundle && pnpm run openapi:generate"
   },

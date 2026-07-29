@@ -1,10 +1,13 @@
 package contract_test
 
 import (
+	"context"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
+	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/stretchr/testify/require"
 	"gopkg.in/yaml.v3"
 )
@@ -28,7 +31,7 @@ func TestGeneratorConfigsDefineIsolatedSurfaces(t *testing.T) {
 			name:   "admin",
 			file:   "admin.yaml",
 			pkg:    "adminapi",
-			output: "../../internal/generated/admin/openapi.gen.go",
+			output: "openapi.gen.go",
 			generate: map[string]bool{
 				"models": true,
 				"client": true,
@@ -38,7 +41,7 @@ func TestGeneratorConfigsDefineIsolatedSurfaces(t *testing.T) {
 			name:   "public",
 			file:   "public.yaml",
 			pkg:    "publicapi",
-			output: "../../internal/generated/public/openapi.gen.go",
+			output: "openapi.gen.go",
 			generate: map[string]bool{
 				"models": true,
 				"client": true,
@@ -48,7 +51,7 @@ func TestGeneratorConfigsDefineIsolatedSurfaces(t *testing.T) {
 			name:   "site server",
 			file:   "site-server.yaml",
 			pkg:    "siteapi",
-			output: "../../internal/generated/site/openapi.gen.go",
+			output: "openapi.gen.go",
 			generate: map[string]bool{
 				"models":        true,
 				"gin-server":    true,
@@ -68,5 +71,34 @@ func TestGeneratorConfigsDefineIsolatedSurfaces(t *testing.T) {
 			require.Equal(t, testCase.output, config.Output)
 			require.Equal(t, testCase.generate, config.Generate)
 		})
+	}
+}
+
+func TestSchemaNamesDoNotCollideWithGeneratedResponseTypes(t *testing.T) {
+	loader := openapi3.NewLoader()
+	document, err := loader.LoadFromFile(filepath.Join(
+		"..", "..", "openapi", "dist", "admin.openapi.yaml",
+	))
+	require.NoError(t, err)
+	require.NoError(t, document.Validate(context.Background()))
+
+	for _, pathItem := range document.Paths.Map() {
+		operations := []*openapi3.Operation{
+			pathItem.Get, pathItem.Post, pathItem.Put, pathItem.Patch, pathItem.Delete,
+		}
+		for _, operation := range operations {
+			if operation == nil || operation.OperationID == "" {
+				continue
+			}
+			responseType := strings.ToUpper(operation.OperationID[:1]) + operation.OperationID[1:] + "Response"
+			_, collision := document.Components.Schemas[responseType]
+			require.Falsef(
+				t,
+				collision,
+				"schema %q collides with the generated response wrapper for operation %q",
+				responseType,
+				operation.OperationID,
+			)
+		}
 	}
 }

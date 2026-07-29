@@ -54,3 +54,46 @@ func TestOpenAPISurfaceIsolation(t *testing.T) {
 		"getLiveness", "getReadiness", "getTranslationCatalog", "listLocales",
 	}, surfaces["site-server"])
 }
+
+func TestGeneratedSurfaceBundlesContainOnlyTheirOperations(t *testing.T) {
+	expected := map[string][]string{
+		"admin": {
+			"assignRole", "createLocale", "enrollMFA", "getCSRFToken",
+			"getCurrentAccount", "getCurrentSession", "getEffectivePermissions",
+			"getMFAChallenge", "getTranslationCatalog", "grantRolePermission", "listEnabledModules",
+			"listLocales", "listSessions", "login", "logout", "requestPasswordRecovery",
+			"resetPassword", "revokeRoleAssignment", "revokeSession", "setDefaultLocale",
+			"updateLocale", "updateLocalePreferences", "updateLocaleStatus",
+			"updateTranslationCatalog", "verifyMFA",
+		},
+		"public": {"getTranslationCatalog", "listLocales"},
+		"site-server": {
+			"getLiveness", "getReadiness", "getTranslationCatalog", "listLocales",
+		},
+	}
+
+	for surface, operationIDs := range expected {
+		t.Run(surface, func(t *testing.T) {
+			loader := openapi3.NewLoader()
+			document, err := loader.LoadFromFile(filepath.Join(
+				"..", "..", "openapi", "dist", surface+".openapi.yaml",
+			))
+			require.NoError(t, err)
+			require.NoError(t, document.Validate(context.Background()))
+
+			actual := make([]string, 0, len(operationIDs))
+			for _, pathItem := range document.Paths.Map() {
+				operations := []*openapi3.Operation{
+					pathItem.Get, pathItem.Post, pathItem.Put, pathItem.Patch, pathItem.Delete,
+				}
+				for _, operation := range operations {
+					if operation != nil {
+						actual = append(actual, operation.OperationID)
+					}
+				}
+			}
+
+			require.ElementsMatch(t, operationIDs, actual)
+		})
+	}
+}
