@@ -41,6 +41,8 @@ func TestA2(t *testing.T) {
 		"RECOVERY_TOKEN_HMAC_KEYS_B64":                "1:IiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiI=",
 		"RECOVERY_DELIVERY_ENCRYPTION_ACTIVE_VERSION": "1",
 		"RECOVERY_DELIVERY_ENCRYPTION_KEYS_B64":       "1:MzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzM=",
+		"MFA_RECOVERY_CODE_HMAC_ACTIVE_VERSION":       "1",
+		"MFA_RECOVERY_CODE_HMAC_KEYS_B64":             "1:RERERERERERERERERERERERERERERERERERERERERERE=",
 		"DB_DRIVER":                                   "postgres",
 		"DB_FLAVOR":                                   "",
 		"DB_HOST":                                     "127.0.0.1",

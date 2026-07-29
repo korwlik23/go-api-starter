@@ -103,6 +103,49 @@ paths:
           $ref: ../../common/errors.yaml#/components/responses/Unauthorized
         '429':
           $ref: ../../common/errors.yaml#/components/responses/TooManyRequests
+  /auth/mfa/enrollment/{enrollment_id}/confirmation:
+    post:
+      tags: [Identity]
+      summary: Confirm a pending MFA enrollment and issue one-time recovery codes.
+      operationId: confirmMFAEnrollment
+      x-surfaces: [admin]
+      security:
+        - SessionCookie: []
+          CSRFToken: []
+      parameters:
+        - name: enrollment_id
+          in: path
+          required: true
+          schema:
+            type: string
+            minLength: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MFAEnrollmentConfirmationRequest'
+      responses:
+        '200':
+          description: Enrollment confirmed; recovery codes are returned only once.
+          headers:
+            Cache-Control:
+              description: Recovery codes must never be cached.
+              schema:
+                type: string
+                enum: [no-store]
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MFAEnrollmentConfirmationResponse'
+        '400':
+          $ref: ../../common/errors.yaml#/components/responses/BadRequest
+        '401':
+          $ref: ../../common/errors.yaml#/components/responses/Unauthorized
+        '409':
+          $ref: ../../common/errors.yaml#/components/responses/Conflict
+        '429':
+          $ref: ../../common/errors.yaml#/components/responses/TooManyRequests
   /auth/mfa/challenge:
     get:
       tags: [Identity]
@@ -324,6 +367,33 @@ components:
           format: uri
           minLength: 1
           description: One-time URI for the authenticator application; server storage encrypts its TOTP secret.
+    MFAEnrollmentConfirmationRequest:
+      type: object
+      additionalProperties: false
+      required: [code]
+      properties:
+        code:
+          type: string
+          minLength: 6
+          maxLength: 6
+          writeOnly: true
+    MFAEnrollmentConfirmationResponse:
+      type: object
+      additionalProperties: false
+      required: [status, recovery_codes]
+      properties:
+        status:
+          type: string
+          enum: [confirmed]
+        recovery_codes:
+          type: array
+          minItems: 1
+          maxItems: 20
+          uniqueItems: true
+          items:
+            type: string
+            minLength: 1
+          description: One-time recovery codes. They cannot be retrieved again.
     MFAChallengeResponse:
       type: object
       additionalProperties: false

@@ -184,6 +184,21 @@ func (e MFAChallengeResponseStatus) Valid() bool {
 	}
 }
 
+// Defines values for MFAEnrollmentConfirmationResponseStatus.
+const (
+	Confirmed MFAEnrollmentConfirmationResponseStatus = "confirmed"
+)
+
+// Valid indicates whether the value is a known member of the MFAEnrollmentConfirmationResponseStatus enum.
+func (e MFAEnrollmentConfirmationResponseStatus) Valid() bool {
+	switch e {
+	case Confirmed:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for MFAVerificationRequestMethod.
 const (
 	MFAVerificationRequestMethodRecoveryCode MFAVerificationRequestMethod = "recovery_code"
@@ -506,6 +521,21 @@ type MFAChallengeResponseMethods string
 // MFAChallengeResponseStatus defines model for MFAChallengeResponse.Status.
 type MFAChallengeResponseStatus string
 
+// MFAEnrollmentConfirmationRequest defines model for MFAEnrollmentConfirmationRequest.
+type MFAEnrollmentConfirmationRequest struct {
+	Code *string `json:"code,omitempty"`
+}
+
+// MFAEnrollmentConfirmationResponse defines model for MFAEnrollmentConfirmationResponse.
+type MFAEnrollmentConfirmationResponse struct {
+	// RecoveryCodes One-time recovery codes. They cannot be retrieved again.
+	RecoveryCodes []string                                `json:"recovery_codes"`
+	Status        MFAEnrollmentConfirmationResponseStatus `json:"status"`
+}
+
+// MFAEnrollmentConfirmationResponseStatus defines model for MFAEnrollmentConfirmationResponse.Status.
+type MFAEnrollmentConfirmationResponseStatus string
+
 // MFAEnrollmentResponse defines model for MFAEnrollmentResponse.
 type MFAEnrollmentResponse struct {
 	// EnrollmentId Opaque identifier used only to confirm this enrollment.
@@ -727,6 +757,9 @@ type GetTranslationCatalogParams struct {
 
 // LoginJSONRequestBody defines body for Login for application/json ContentType.
 type LoginJSONRequestBody = LoginRequest
+
+// ConfirmMFAEnrollmentJSONRequestBody defines body for ConfirmMFAEnrollment for application/json ContentType.
+type ConfirmMFAEnrollmentJSONRequestBody = MFAEnrollmentConfirmationRequest
 
 // VerifyMFAJSONRequestBody defines body for VerifyMFA for application/json ContentType.
 type VerifyMFAJSONRequestBody = MFAVerificationRequest
@@ -977,6 +1010,20 @@ type ClientInterface interface {
 	//
 	// Corresponds with POST /auth/mfa/enrollment (the `EnrollMFA` operationId).
 	EnrollMFA(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ConfirmMFAEnrollmentWithBody Confirm a pending MFA enrollment and issue one-time recovery codes.
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with POST /auth/mfa/enrollment/{enrollment_id}/confirmation (the `ConfirmMFAEnrollment` operationId).
+	ConfirmMFAEnrollmentWithBody(ctx context.Context, enrollmentId string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ConfirmMFAEnrollment Confirm a pending MFA enrollment and issue one-time recovery codes.
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with POST /auth/mfa/enrollment/{enrollment_id}/confirmation (the `ConfirmMFAEnrollment` operationId).
+	ConfirmMFAEnrollment(ctx context.Context, enrollmentId string, body ConfirmMFAEnrollmentJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// VerifyMFAWithBody Verify a pending MFA challenge and rotate to an authenticated session.
 	//
@@ -1281,6 +1328,40 @@ func (c *Client) GetMFAChallenge(ctx context.Context, reqEditors ...RequestEdito
 // Corresponds with POST /auth/mfa/enrollment (the `EnrollMFA` operationId).
 func (c *Client) EnrollMFA(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewEnrollMFARequest(c.Server)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// ConfirmMFAEnrollmentWithBody Confirm a pending MFA enrollment and issue one-time recovery codes.
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with POST /auth/mfa/enrollment/{enrollment_id}/confirmation (the `ConfirmMFAEnrollment` operationId).
+func (c *Client) ConfirmMFAEnrollmentWithBody(ctx context.Context, enrollmentId string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewConfirmMFAEnrollmentRequestWithBody(c.Server, enrollmentId, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// ConfirmMFAEnrollment Confirm a pending MFA enrollment and issue one-time recovery codes.
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with POST /auth/mfa/enrollment/{enrollment_id}/confirmation (the `ConfirmMFAEnrollment` operationId).
+func (c *Client) ConfirmMFAEnrollment(ctx context.Context, enrollmentId string, body ConfirmMFAEnrollmentJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewConfirmMFAEnrollmentRequest(c.Server, enrollmentId, body)
 	if err != nil {
 		return nil, err
 	}
@@ -1975,6 +2056,53 @@ func NewEnrollMFARequest(server string) (*http.Request, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	return req, nil
+}
+
+// NewConfirmMFAEnrollmentRequest calls the generic ConfirmMFAEnrollment builder with application/json body
+func NewConfirmMFAEnrollmentRequest(server string, enrollmentId string, body ConfirmMFAEnrollmentJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewConfirmMFAEnrollmentRequestWithBody(server, enrollmentId, "application/json", bodyReader)
+}
+
+// NewConfirmMFAEnrollmentRequestWithBody constructs an http.Request for the ConfirmMFAEnrollment method, with any body, and a specified content type
+func NewConfirmMFAEnrollmentRequestWithBody(server string, enrollmentId string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "enrollment_id", enrollmentId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/auth/mfa/enrollment/%s/confirmation", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPost, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
 
 	return req, nil
 }
@@ -2821,6 +2949,20 @@ type ClientWithResponsesInterface interface {
 	// Corresponds with POST /auth/mfa/enrollment (the `EnrollMFA` operationId).
 	EnrollMFAWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*EnrollMFAResponse, error)
 
+	// ConfirmMFAEnrollmentWithBodyWithResponse Confirm a pending MFA enrollment and issue one-time recovery codes.
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /auth/mfa/enrollment/{enrollment_id}/confirmation (the `ConfirmMFAEnrollment` operationId).
+	ConfirmMFAEnrollmentWithBodyWithResponse(ctx context.Context, enrollmentId string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*ConfirmMFAEnrollmentResponse, error)
+
+	// ConfirmMFAEnrollmentWithResponse Confirm a pending MFA enrollment and issue one-time recovery codes.
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /auth/mfa/enrollment/{enrollment_id}/confirmation (the `ConfirmMFAEnrollment` operationId).
+	ConfirmMFAEnrollmentWithResponse(ctx context.Context, enrollmentId string, body ConfirmMFAEnrollmentJSONRequestBody, reqEditors ...RequestEditorFn) (*ConfirmMFAEnrollmentResponse, error)
+
 	// VerifyMFAWithBodyWithResponse Verify a pending MFA challenge and rotate to an authenticated session.
 	//
 	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
@@ -3402,6 +3544,82 @@ func (r EnrollMFAResponse) StatusCode() int {
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
 func (r EnrollMFAResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+// ConfirmMFAEnrollmentResponse200Headers the declared response headers of an HTTP 200 response for ConfirmMFAEnrollment
+type ConfirmMFAEnrollmentResponse200Headers struct {
+	CacheControl *string
+}
+
+type ConfirmMFAEnrollmentResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *MFAEnrollmentConfirmationResponse
+	// JSON400 the response for an HTTP 400 `application/json` response
+	JSON400 *BadRequest
+	// JSON401 the response for an HTTP 401 `application/json` response
+	JSON401 *Unauthorized
+	// JSON409 the response for an HTTP 409 `application/json` response
+	JSON409 *Conflict
+	// JSON429 the response for an HTTP 429 `application/json` response
+	JSON429 *TooManyRequests
+	// Headers200 the parsed response headers for an HTTP 200 response
+	Headers200 *ConfirmMFAEnrollmentResponse200Headers
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r ConfirmMFAEnrollmentResponse) GetJSON200() *MFAEnrollmentConfirmationResponse {
+	return r.JSON200
+}
+
+// GetJSON400 returns the response for an HTTP 400 `application/json` response
+func (r ConfirmMFAEnrollmentResponse) GetJSON400() *BadRequest {
+	return r.JSON400
+}
+
+// GetJSON401 returns the response for an HTTP 401 `application/json` response
+func (r ConfirmMFAEnrollmentResponse) GetJSON401() *Unauthorized {
+	return r.JSON401
+}
+
+// GetJSON409 returns the response for an HTTP 409 `application/json` response
+func (r ConfirmMFAEnrollmentResponse) GetJSON409() *Conflict {
+	return r.JSON409
+}
+
+// GetJSON429 returns the response for an HTTP 429 `application/json` response
+func (r ConfirmMFAEnrollmentResponse) GetJSON429() *TooManyRequests {
+	return r.JSON429
+}
+
+// GetBody returns the raw response body bytes
+func (r ConfirmMFAEnrollmentResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r ConfirmMFAEnrollmentResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ConfirmMFAEnrollmentResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r ConfirmMFAEnrollmentResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
@@ -4617,6 +4835,32 @@ func (c *ClientWithResponses) EnrollMFAWithResponse(ctx context.Context, reqEdit
 	return ParseEnrollMFAResponse(rsp)
 }
 
+// ConfirmMFAEnrollmentWithBodyWithResponse Confirm a pending MFA enrollment and issue one-time recovery codes.
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /auth/mfa/enrollment/{enrollment_id}/confirmation (the `ConfirmMFAEnrollment` operationId).
+func (c *ClientWithResponses) ConfirmMFAEnrollmentWithBodyWithResponse(ctx context.Context, enrollmentId string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*ConfirmMFAEnrollmentResponse, error) {
+	rsp, err := c.ConfirmMFAEnrollmentWithBody(ctx, enrollmentId, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseConfirmMFAEnrollmentResponse(rsp)
+}
+
+// ConfirmMFAEnrollmentWithResponse Confirm a pending MFA enrollment and issue one-time recovery codes.
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /auth/mfa/enrollment/{enrollment_id}/confirmation (the `ConfirmMFAEnrollment` operationId).
+func (c *ClientWithResponses) ConfirmMFAEnrollmentWithResponse(ctx context.Context, enrollmentId string, body ConfirmMFAEnrollmentJSONRequestBody, reqEditors ...RequestEditorFn) (*ConfirmMFAEnrollmentResponse, error) {
+	rsp, err := c.ConfirmMFAEnrollment(ctx, enrollmentId, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseConfirmMFAEnrollmentResponse(rsp)
+}
+
 // VerifyMFAWithBodyWithResponse Verify a pending MFA challenge and rotate to an authenticated session.
 //
 // Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
@@ -5360,6 +5604,73 @@ func ParseEnrollMFAResponse(rsp *http.Response) (*EnrollMFAResponse, error) {
 			headers.CacheControl = &value
 		}
 		response.Headers201 = &headers
+	}
+
+	return response, nil
+}
+
+// ParseConfirmMFAEnrollmentResponse parses an HTTP response from a ConfirmMFAEnrollmentWithResponse call
+func ParseConfirmMFAEnrollmentResponse(rsp *http.Response) (*ConfirmMFAEnrollmentResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ConfirmMFAEnrollmentResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest MFAEnrollmentConfirmationResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest BadRequest
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest Unauthorized
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest Conflict
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON409 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 429:
+		var dest TooManyRequests
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON429 = &dest
+
+	}
+
+	switch {
+	case rsp.StatusCode == 200:
+		var headers ConfirmMFAEnrollmentResponse200Headers
+		if values := rsp.Header.Values("Cache-Control"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "Cache-Control", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.CacheControl = &value
+		}
+		response.Headers200 = &headers
 	}
 
 	return response, nil

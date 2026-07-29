@@ -28,6 +28,11 @@ func TestRecoveryKeyringsRetainVersionedKeys(t *testing.T) {
 	require.NoError(t, err)
 	_, deliveryKey := deliveryKeys.Active()
 	require.Equal(t, activeKey, deliveryKey)
+
+	codeKeys, err := ParseRecoveryCodeKeyring(2, serialized)
+	require.NoError(t, err)
+	_, codeKey := codeKeys.Active()
+	require.Equal(t, activeKey, codeKey)
 }
 
 func TestRecoveryKeyringsRejectMissingActiveVersion(t *testing.T) {
@@ -38,6 +43,8 @@ func TestRecoveryKeyringsRejectMissingActiveVersion(t *testing.T) {
 	require.ErrorIs(t, err, ErrInvalidRecoveryTokenKeyring)
 	_, err = ParseRecoveryDeliveryKeyring(2, "1:"+encoded)
 	require.ErrorIs(t, err, ErrInvalidRecoveryDeliveryKeyring)
+	_, err = ParseRecoveryCodeKeyring(2, "1:"+encoded)
+	require.ErrorIs(t, err, ErrInvalidRecoveryCodeKeyring)
 }
 
 func TestSecurityConfigRejectsKeyReuseAcrossRecoveryPurposes(t *testing.T) {

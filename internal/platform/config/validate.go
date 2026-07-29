@@ -29,8 +29,16 @@ func Validate(cfg Config) error {
 	if err != nil {
 		return err
 	}
+	codeKeys, err := ParseRecoveryCodeKeyring(
+		cfg.Authentication.Recovery.CodeActiveKeyVersion,
+		cfg.Authentication.Recovery.CodeHMACKeys,
+	)
+	if err != nil {
+		return err
+	}
 	_, tokenKey := tokenKeys.Active()
 	_, deliveryKey := deliveryKeys.Active()
+	_, codeKey := codeKeys.Active()
 	if bytes.Equal(tokenKey, deliveryKey) {
 		return invalidKeyError(
 			"recovery token HMAC and delivery encryption keys",
@@ -39,7 +47,10 @@ func Validate(cfg Config) error {
 	}
 	_, totpKey := totpKeys.Active()
 	if bytes.Equal(totpKey, tokenKey) ||
-		bytes.Equal(totpKey, deliveryKey) {
+		bytes.Equal(totpKey, deliveryKey) ||
+		bytes.Equal(totpKey, codeKey) ||
+		bytes.Equal(tokenKey, codeKey) ||
+		bytes.Equal(deliveryKey, codeKey) {
 		return invalidKeyError(
 			"recovery keyrings",
 			"must be distinct from the TOTP encryption keyring",

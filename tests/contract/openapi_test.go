@@ -156,6 +156,29 @@ func TestMFAEnrollmentContract(t *testing.T) {
 	require.ElementsMatch(t, []string{"enrollment_id", "provisioning_uri"}, schema.Required)
 	require.NotContains(t, schema.Properties, "encrypted_secret")
 	require.NotContains(t, schema.Properties, "secret_ciphertext")
+
+	confirmation := document.Paths.Find(
+		"/auth/mfa/enrollment/{enrollment_id}/confirmation",
+	)
+	require.NotNil(t, confirmation)
+	require.NotNil(t, confirmation.Post)
+	require.Equal(
+		t,
+		"confirmMFAEnrollment",
+		confirmation.Post.OperationID,
+	)
+	confirmationSchema := confirmation.Post.Responses.Value("200").
+		Value.Content.Get("application/json").Schema.Value
+	require.ElementsMatch(
+		t,
+		[]string{"status", "recovery_codes"},
+		confirmationSchema.Required,
+	)
+	require.Equal(
+		t,
+		[]interface{}{"confirmed"},
+		confirmationSchema.Properties["status"].Value.Enum,
+	)
 }
 
 func TestMFAChallengeContract(t *testing.T) {

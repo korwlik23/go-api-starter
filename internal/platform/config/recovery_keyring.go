@@ -14,6 +14,9 @@ var (
 	ErrInvalidRecoveryDeliveryKeyring = errors.New(
 		"invalid recovery delivery encryption keyring",
 	)
+	ErrInvalidRecoveryCodeKeyring = errors.New(
+		"invalid MFA recovery code HMAC keyring",
+	)
 )
 
 type RecoveryTokenKeyring struct {
@@ -21,6 +24,10 @@ type RecoveryTokenKeyring struct {
 }
 
 type RecoveryDeliveryKeyring struct {
+	versionedKeyring
+}
+
+type RecoveryCodeKeyring struct {
 	versionedKeyring
 }
 
@@ -49,6 +56,17 @@ func ParseRecoveryDeliveryKeyring(
 		return RecoveryDeliveryKeyring{}, ErrInvalidRecoveryDeliveryKeyring
 	}
 	return RecoveryDeliveryKeyring{versionedKeyring: keyring}, nil
+}
+
+func ParseRecoveryCodeKeyring(
+	activeVersion int64,
+	serialized string,
+) (RecoveryCodeKeyring, error) {
+	keyring, err := parseVersionedKeyring(activeVersion, serialized)
+	if err != nil {
+		return RecoveryCodeKeyring{}, ErrInvalidRecoveryCodeKeyring
+	}
+	return RecoveryCodeKeyring{versionedKeyring: keyring}, nil
 }
 
 func parseVersionedKeyring(

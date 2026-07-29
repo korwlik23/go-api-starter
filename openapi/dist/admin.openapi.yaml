@@ -197,6 +197,50 @@ paths:
       summary: Create a pending MFA enrollment for the authenticated session.
       tags:
         - Identity
+  /auth/mfa/enrollment/{enrollment_id}/confirmation:
+    post:
+      operationId: confirmMFAEnrollment
+      parameters:
+        - in: path
+          name: enrollment_id
+          required: true
+          schema:
+            minLength: 1
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MFAEnrollmentConfirmationRequest'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MFAEnrollmentConfirmationResponse'
+          description: Enrollment confirmed; recovery codes are returned only once.
+          headers:
+            Cache-Control:
+              description: Recovery codes must never be cached.
+              schema:
+                enum:
+                  - no-store
+                type: string
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+      security:
+        - CSRFToken: []
+          SessionCookie: []
+      summary: Confirm a pending MFA enrollment and issue one-time recovery codes.
+      tags:
+        - Identity
   /auth/mfa/verify:
     post:
       operationId: verifyMFA
@@ -1182,6 +1226,37 @@ components:
         - status
         - challenge_id
         - methods
+      type: object
+    MFAEnrollmentConfirmationRequest:
+      additionalProperties: false
+      properties:
+        code:
+          maxLength: 6
+          minLength: 6
+          type: string
+          writeOnly: true
+      required:
+        - code
+      type: object
+    MFAEnrollmentConfirmationResponse:
+      additionalProperties: false
+      properties:
+        recovery_codes:
+          description: One-time recovery codes. They cannot be retrieved again.
+          items:
+            minLength: 1
+            type: string
+          maxItems: 20
+          minItems: 1
+          type: array
+          uniqueItems: true
+        status:
+          enum:
+            - confirmed
+          type: string
+      required:
+        - status
+        - recovery_codes
       type: object
     MFAEnrollmentResponse:
       additionalProperties: false

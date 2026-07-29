@@ -14,13 +14,14 @@ func TestRegisterRoutesExposesTheIdentityContract(t *testing.T) {
 	routes.Use(func(ctx *gin.Context) { ctx.Next() })
 
 	RegisterRoutes(routes, RouteHandlers{
-		CSRF:          &CSRFHandler{},
-		Login:         &LoginHandler{},
-		MFA:           &MFAHandler{},
-		MFAEnrollment: &MFAEnrollmentHandler{},
-		Recovery:      &RecoveryHandler{},
-		Session:       &SessionHandler{},
-		SessionQuery:  &SessionQueryHandler{},
+		CSRF:            &CSRFHandler{},
+		Login:           &LoginHandler{},
+		MFA:             &MFAHandler{},
+		MFAConfirmation: &MFAConfirmationHandler{},
+		MFAEnrollment:   &MFAEnrollmentHandler{},
+		Recovery:        &RecoveryHandler{},
+		Session:         &SessionHandler{},
+		SessionQuery:    &SessionQueryHandler{},
 	}, RateLimits{
 		Login:    func(ctx *gin.Context) { ctx.Next() },
 		Recovery: func(ctx *gin.Context) { ctx.Next() },
@@ -40,6 +41,7 @@ func TestRegisterRoutesExposesTheIdentityContract(t *testing.T) {
 		"POST /api/v1/auth/login",
 		"POST /api/v1/auth/logout",
 		"POST /api/v1/auth/mfa/enrollment",
+		"POST /api/v1/auth/mfa/enrollment/:enrollment_id/confirmation",
 		"POST /api/v1/auth/mfa/verify",
 		"POST /api/v1/auth/password/recovery",
 		"POST /api/v1/auth/password/reset",

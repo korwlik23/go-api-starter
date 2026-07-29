@@ -110,6 +110,12 @@ func Load(lookup LookupFunc) (Config, error) {
 	if cfg.Authentication.Recovery.DeliveryEncryptionKeys, err = rawValue(lookup, "RECOVERY_DELIVERY_ENCRYPTION_KEYS_B64"); err != nil {
 		return Config{}, err
 	}
+	if cfg.Authentication.Recovery.CodeActiveKeyVersion, err = int64Value(lookup, "MFA_RECOVERY_CODE_HMAC_ACTIVE_VERSION"); err != nil {
+		return Config{}, err
+	}
+	if cfg.Authentication.Recovery.CodeHMACKeys, err = rawValue(lookup, "MFA_RECOVERY_CODE_HMAC_KEYS_B64"); err != nil {
+		return Config{}, err
+	}
 	if cfg.Database.Driver, err = stringValue(lookup, "DB_DRIVER"); err != nil {
 		return Config{}, err
 	}

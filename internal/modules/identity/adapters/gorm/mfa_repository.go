@@ -35,6 +35,19 @@ type mfaTOTPRecord struct {
 	UpdatedAt             time.Time  `gorm:"column:updated_at"`
 }
 
+type mfaRecoveryCodeRecord struct {
+	UserID         databaseID `gorm:"column:user_id"`
+	CodeHash       []byte     `gorm:"column:code_hash"`
+	HashVersion    int16      `gorm:"column:hash_version"`
+	HashKeyVersion int64      `gorm:"column:hash_key_version"`
+	ConsumedAt     *time.Time `gorm:"column:consumed_at"`
+	CreatedAt      time.Time  `gorm:"column:created_at"`
+}
+
+func (mfaRecoveryCodeRecord) TableName() string {
+	return "mfa_recovery_codes"
+}
+
 func (mfaTOTPRecord) TableName() string {
 	return "mfa_totp_credentials"
 }
@@ -153,6 +166,129 @@ func (repository *MFARepository) LoadActive(
 	}, nil
 }
 
+func (repository *MFARepository) LoadPending(
+	ctx context.Context,
+	userID string,
+	enrollmentID string,
+) (identitydomain.MFAEnrollment, error) {
+	encodedUserID, err := encodeDatabaseID(
+		repository.db.Dialector.Name(),
+		userID,
+	)
+	if err != nil {
+		return identitydomain.MFAEnrollment{}, fmt.Errorf("encode MFA user ID: %w", err)
+	}
+	encodedEnrollmentID, err := encodeDatabaseID(
+		repository.db.Dialector.Name(),
+		enrollmentID,
+	)
+	if err != nil {
+		return identitydomain.MFAEnrollment{}, ports.ErrMFAEnrollmentNotFound
+	}
+	var record mfaTOTPRecord
+	err = repository.db.WithContext(ctx).
+		Where(
+			"user_id = ? AND enrollment_id = ? AND confirmed_at IS NULL",
+			encodedUserID,
+			encodedEnrollmentID,
+		).
+		First(&record).
+		Error
+	if errors.Is(err, gormdb.ErrRecordNotFound) {
+		return identitydomain.MFAEnrollment{}, ports.ErrMFAEnrollmentNotFound
+	}
+	if err != nil {
+		return identitydomain.MFAEnrollment{}, fmt.Errorf(
+			"load pending MFA enrollment: %w",
+			err,
+		)
+	}
+	if record.EnrollmentExpiresAt == nil {
+		return identitydomain.MFAEnrollment{}, ports.ErrMFAEnrollmentNotFound
+	}
+	return identitydomain.MFAEnrollment{
+		ID:         record.EnrollmentID.String(),
+		UserID:     record.UserID.String(),
+		State:      identitydomain.MFAEnrollmentPending,
+		KeyVersion: record.SecretKeyVersion,
+		Nonce:      append([]byte(nil), record.SecretNonce...),
+		Ciphertext: append([]byte(nil), record.SecretCiphertext...),
+		ExpiresAt:  *record.EnrollmentExpiresAt,
+		CreatedAt:  record.CreatedAt,
+	}, nil
+}
+
+func (repository *MFARepository) Confirm(
+	ctx context.Context,
+	userID string,
+	enrollmentID string,
+	step int64,
+	codes []identitydomain.MFARecoveryCode,
+	confirmedAt time.Time,
+) error {
+	if step < 1 || len(codes) < 1 {
+		return ErrInvalidMFARepository
+	}
+	encodedUserID, err := encodeDatabaseID(
+		repository.db.Dialector.Name(),
+		userID,
+	)
+	if err != nil {
+		return fmt.Errorf("encode MFA user ID: %w", err)
+	}
+	encodedEnrollmentID, err := encodeDatabaseID(
+		repository.db.Dialector.Name(),
+		enrollmentID,
+	)
+	if err != nil {
+		return ports.ErrMFACompletionConflict
+	}
+	err = repository.db.WithContext(ctx).Transaction(func(tx *gormdb.DB) error {
+		result := tx.Model(&mfaTOTPRecord{}).
+			Where(
+				"user_id = ? AND enrollment_id = ? AND confirmed_at IS NULL "+
+					"AND enrollment_expires_at > ?",
+				encodedUserID,
+				encodedEnrollmentID,
+				confirmedAt,
+			).
+			Updates(map[string]any{
+				"confirmed_at":          confirmedAt,
+				"enrollment_expires_at": nil,
+				"last_used_step":        step,
+				"updated_at":            confirmedAt,
+			})
+		if result.Error != nil {
+			return result.Error
+		}
+		if result.RowsAffected != 1 {
+			return ports.ErrMFACompletionConflict
+		}
+
+		records := make([]map[string]any, 0, len(codes))
+		for _, code := range codes {
+			if code.HashVersion < 1 ||
+				code.HashKeyVersion < 1 ||
+				code.CreatedAt.IsZero() {
+				return ErrInvalidMFARepository
+			}
+			records = append(records, map[string]any{
+				"user_id":          encodedUserID,
+				"code_hash":        append([]byte(nil), code.Hash[:]...),
+				"hash_version":     code.HashVersion,
+				"hash_key_version": code.HashKeyVersion,
+				"consumed_at":      nil,
+				"created_at":       code.CreatedAt,
+			})
+		}
+		return tx.Table("mfa_recovery_codes").Create(&records).Error
+	})
+	if err != nil {
+		return fmt.Errorf("confirm MFA enrollment: %w", err)
+	}
+	return nil
+}
+
 func (repository *MFARepository) IsEnabled(
 	ctx context.Context,
 	userID string,
@@ -227,6 +363,93 @@ func (repository *MFARepository) CompleteTOTP(
 	return nil
 }
 
+func (repository *MFARepository) LoadLiveRecoveryCodes(
+	ctx context.Context,
+	userID string,
+) ([]identitydomain.MFARecoveryCode, error) {
+	encodedUserID, err := encodeDatabaseID(
+		repository.db.Dialector.Name(),
+		userID,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("encode MFA user ID: %w", err)
+	}
+	var records []mfaRecoveryCodeRecord
+	err = repository.db.WithContext(ctx).
+		Where("user_id = ? AND consumed_at IS NULL", encodedUserID).
+		Find(&records).
+		Error
+	if err != nil {
+		return nil, fmt.Errorf("load live MFA recovery codes: %w", err)
+	}
+	codes := make([]identitydomain.MFARecoveryCode, 0, len(records))
+	for _, record := range records {
+		if len(record.CodeHash) != 32 {
+			return nil, ErrInvalidMFARepository
+		}
+		var hash [32]byte
+		copy(hash[:], record.CodeHash)
+		codes = append(codes, identitydomain.MFARecoveryCode{
+			Hash:           hash,
+			HashVersion:    record.HashVersion,
+			HashKeyVersion: record.HashKeyVersion,
+			CreatedAt:      record.CreatedAt,
+		})
+	}
+	return codes, nil
+}
+
+func (repository *MFARepository) CompleteRecoveryCode(
+	ctx context.Context,
+	userID string,
+	codeHash [32]byte,
+	pendingHash identitydomain.TokenHash,
+	replacement identitydomain.Session,
+) error {
+	encodedUserID, err := encodeDatabaseID(
+		repository.db.Dialector.Name(),
+		userID,
+	)
+	if err != nil {
+		return fmt.Errorf("encode MFA user ID: %w", err)
+	}
+	err = repository.db.WithContext(ctx).Transaction(func(tx *gormdb.DB) error {
+		result := tx.Model(&mfaRecoveryCodeRecord{}).
+			Where(
+				"user_id = ? AND code_hash = ? AND consumed_at IS NULL",
+				encodedUserID,
+				codeHash[:],
+			).
+			Update("consumed_at", replacement.CreatedAt)
+		if result.Error != nil {
+			return result.Error
+		}
+		if result.RowsAffected != 1 {
+			return ports.ErrMFACompletionConflict
+		}
+		result = tx.Model(&sessionRecord{}).
+			Where(
+				"token_hash = ? AND state = ? AND revoked_at IS NULL",
+				pendingHash[:],
+				string(identitydomain.SessionStateMFAPending),
+			).
+			Update("revoked_at", replacement.CreatedAt)
+		if result.Error != nil {
+			return result.Error
+		}
+		if result.RowsAffected != 1 {
+			return ports.ErrMFACompletionConflict
+		}
+		return createSession(tx, replacement)
+	})
+	if err != nil {
+		return fmt.Errorf("complete recovery code verification: %w", err)
+	}
+	return nil
+}
+
 var _ ports.MFAStatusReader = (*MFARepository)(nil)
 var _ ports.MFAEnrollmentRepository = (*MFARepository)(nil)
+var _ ports.MFAConfirmationRepository = (*MFARepository)(nil)
 var _ ports.MFACompletionRepository = (*MFARepository)(nil)
+var _ ports.MFARecoveryCompletionRepository = (*MFARepository)(nil)

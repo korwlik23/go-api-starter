@@ -3,13 +3,14 @@ package http
 import "github.com/gin-gonic/gin"
 
 type RouteHandlers struct {
-	CSRF          *CSRFHandler
-	Login         *LoginHandler
-	MFA           *MFAHandler
-	MFAEnrollment *MFAEnrollmentHandler
-	Recovery      *RecoveryHandler
-	Session       *SessionHandler
-	SessionQuery  *SessionQueryHandler
+	CSRF            *CSRFHandler
+	Login           *LoginHandler
+	MFA             *MFAHandler
+	MFAConfirmation *MFAConfirmationHandler
+	MFAEnrollment   *MFAEnrollmentHandler
+	Recovery        *RecoveryHandler
+	Session         *SessionHandler
+	SessionQuery    *SessionQueryHandler
 }
 
 func RegisterRoutes(
@@ -24,6 +25,11 @@ func RegisterRoutes(
 		"/auth/mfa/enrollment",
 		rateLimits.MFA,
 		handlers.MFAEnrollment.Enroll,
+	)
+	router.POST(
+		"/auth/mfa/enrollment/:enrollment_id/confirmation",
+		rateLimits.MFA,
+		handlers.MFAConfirmation.Confirm,
 	)
 	router.GET("/auth/mfa/challenge", handlers.MFA.Challenge)
 	router.POST("/auth/mfa/verify", rateLimits.MFA, handlers.MFA.Verify)

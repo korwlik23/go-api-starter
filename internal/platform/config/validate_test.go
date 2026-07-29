@@ -225,6 +225,8 @@ func validSecurityConfig() Config {
 				TokenHMACKeys:            "1:" + recoveryKeyFixture(0x52),
 				DeliveryActiveKeyVersion: 1,
 				DeliveryEncryptionKeys:   "1:" + recoveryKeyFixture(0x53),
+				CodeActiveKeyVersion:     1,
+				CodeHMACKeys:             "1:" + recoveryKeyFixture(0x54),
 			},
 		},
 		Database: DatabaseConfig{

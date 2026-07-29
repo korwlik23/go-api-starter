@@ -28,6 +28,10 @@ func validateSecrets(cfg Config) error {
 			key:   "RECOVERY_DELIVERY_ENCRYPTION_KEYS_B64",
 			value: cfg.Authentication.Recovery.DeliveryEncryptionKeys,
 		},
+		{
+			key:   "MFA_RECOVERY_CODE_HMAC_KEYS_B64",
+			value: cfg.Authentication.Recovery.CodeHMACKeys,
+		},
 		{key: "DB_PASSWORD", value: cfg.Database.Password},
 	}
 
@@ -70,6 +74,9 @@ func isBundledExampleSecret(key, value string) bool {
 		return strings.Contains(value, example)
 	case "RECOVERY_DELIVERY_ENCRYPTION_KEYS_B64":
 		example := base64.StdEncoding.EncodeToString(bytes.Repeat([]byte{0x33}, 32))
+		return strings.Contains(value, example)
+	case "MFA_RECOVERY_CODE_HMAC_KEYS_B64":
+		example := base64.StdEncoding.EncodeToString(bytes.Repeat([]byte{0x44}, 32))
 		return strings.Contains(value, example)
 	default:
 		return strings.HasPrefix(value, "development-only-")

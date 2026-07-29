@@ -21,19 +21,32 @@ type mfaVerifier interface {
 	) (mfaapp.VerificationResult, error)
 }
 
+type mfaRecoveryVerifier interface {
+	VerifyRecoveryCode(
+		ctx context.Context,
+		command mfaapp.VerifyRecoveryCodeCommand,
+	) (mfaapp.VerificationResult, error)
+}
+
 type MFAHandler struct {
-	verifier    mfaVerifier
-	writeCookie SessionCookieWriter
+	verifier         mfaVerifier
+	recoveryVerifier mfaRecoveryVerifier
+	writeCookie      SessionCookieWriter
 }
 
 func NewMFAHandler(
 	verifier mfaVerifier,
+	recoveryVerifier mfaRecoveryVerifier,
 	writeCookie SessionCookieWriter,
 ) (*MFAHandler, error) {
-	if verifier == nil || writeCookie == nil {
+	if verifier == nil || recoveryVerifier == nil || writeCookie == nil {
 		return nil, ErrInvalidMFAHandler
 	}
-	return &MFAHandler{verifier: verifier, writeCookie: writeCookie}, nil
+	return &MFAHandler{
+		verifier:         verifier,
+		recoveryVerifier: recoveryVerifier,
+		writeCookie:      writeCookie,
+	}, nil
 }
 
 func (handler *MFAHandler) Challenge(ctx *gin.Context) {
@@ -46,6 +59,7 @@ func (handler *MFAHandler) Challenge(ctx *gin.Context) {
 		ChallengeId: session.ID,
 		Methods: []adminapi.MFAChallengeResponseMethods{
 			adminapi.MFAChallengeResponseMethodsTotp,
+			adminapi.MFAChallengeResponseMethodsRecoveryCode,
 		},
 		Status: adminapi.MFAChallengeResponseStatusMfaPending,
 	})
@@ -58,7 +72,6 @@ func (handler *MFAHandler) Verify(ctx *gin.Context) {
 	}
 	var request adminapi.MFAVerificationRequest
 	if err := decodeStrictJSON(ctx, &request); err != nil ||
-		request.Method != adminapi.MFAVerificationRequestMethodTotp ||
 		request.Code == nil ||
 		*request.Code == "" {
 		writeLoginProblem(
@@ -70,15 +83,39 @@ func (handler *MFAHandler) Verify(ctx *gin.Context) {
 		)
 		return
 	}
-	result, err := handler.verifier.VerifyTOTP(
-		ctx.Request.Context(),
-		mfaapp.VerifyTOTPCommand{
-			PendingSessionHash:   session.TokenHash,
-			UserID:               *session.UserID,
-			AuthorizationVersion: *session.AuthorizationVersion,
-			Code:                 *request.Code,
-		},
-	)
+	var result mfaapp.VerificationResult
+	var err error
+	switch request.Method {
+	case adminapi.MFAVerificationRequestMethodTotp:
+		result, err = handler.verifier.VerifyTOTP(
+			ctx.Request.Context(),
+			mfaapp.VerifyTOTPCommand{
+				PendingSessionHash:   session.TokenHash,
+				UserID:               *session.UserID,
+				AuthorizationVersion: *session.AuthorizationVersion,
+				Code:                 *request.Code,
+			},
+		)
+	case adminapi.MFAVerificationRequestMethodRecoveryCode:
+		result, err = handler.recoveryVerifier.VerifyRecoveryCode(
+			ctx.Request.Context(),
+			mfaapp.VerifyRecoveryCodeCommand{
+				PendingSessionHash:   session.TokenHash,
+				UserID:               *session.UserID,
+				AuthorizationVersion: *session.AuthorizationVersion,
+				Code:                 *request.Code,
+			},
+		)
+	default:
+		writeLoginProblem(
+			ctx,
+			nethttp.StatusBadRequest,
+			"request_invalid",
+			"The MFA verification request is invalid.",
+			nil,
+		)
+		return
+	}
 	if errors.Is(err, mfaapp.ErrInvalidMFAVerification) {
 		writeLoginProblem(
 			ctx,

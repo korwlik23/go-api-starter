@@ -23,6 +23,7 @@ func TestMFAChallengeHTTPReturnsPendingOnlyProjection(t *testing.T) {
 
 	handler, err := identityhttp.NewMFAHandler(
 		&mfaVerifierStub{},
+		&mfaVerifierStub{},
 		func(*gin.Context, string) {},
 	)
 	require.NoError(t, err)
@@ -53,6 +54,7 @@ func TestMFAVerifyHTTPRotatesPendingSession(t *testing.T) {
 	}}
 	handler, err := identityhttp.NewMFAHandler(
 		verifier,
+		verifier,
 		func(ctx *gin.Context, token string) {
 			ctx.Header("X-Test-Session", token)
 		},
@@ -77,6 +79,38 @@ func TestMFAVerifyHTTPRotatesPendingSession(t *testing.T) {
 	require.Equal(t, "123456", verifier.command.Code)
 	require.Equal(t, "user-id", verifier.command.UserID)
 	require.Equal(t, int64(7), verifier.command.AuthorizationVersion)
+}
+
+func TestMFAVerifyHTTPAcceptsOneTimeRecoveryCode(t *testing.T) {
+	t.Parallel()
+
+	verifier := &mfaVerifierStub{result: mfaapp.VerificationResult{
+		SessionToken: "authenticated-token",
+		CSRFToken:    "authenticated-csrf",
+	}}
+	handler, err := identityhttp.NewMFAHandler(
+		verifier,
+		verifier,
+		func(*gin.Context, string) {},
+	)
+	require.NoError(t, err)
+	router := mfaPendingTestRouter(t, handler)
+	request := httptest.NewRequest(
+		nethttp.MethodPost,
+		"/api/v1/auth/mfa/verify",
+		bytes.NewBufferString(
+			`{"method":"recovery_code","code":"one-time-code"}`,
+		),
+	)
+	request.Header.Set("Content-Type", "application/json")
+	request.AddCookie(&nethttp.Cookie{Name: "session", Value: "pending-token"})
+	response := httptest.NewRecorder()
+
+	router.ServeHTTP(response, request)
+
+	require.Equal(t, nethttp.StatusOK, response.Code)
+	require.Equal(t, "one-time-code", verifier.recoveryCommand.Code)
+	require.Empty(t, verifier.command.Code)
 }
 
 func mfaPendingTestRouter(
@@ -129,9 +163,18 @@ func (reader fixedAuthorizationVersionReader) CurrentAuthorizationVersion(
 }
 
 type mfaVerifierStub struct {
-	result  mfaapp.VerificationResult
-	command mfaapp.VerifyTOTPCommand
-	err     error
+	result          mfaapp.VerificationResult
+	command         mfaapp.VerifyTOTPCommand
+	recoveryCommand mfaapp.VerifyRecoveryCodeCommand
+	err             error
+}
+
+func (stub *mfaVerifierStub) VerifyRecoveryCode(
+	_ context.Context,
+	command mfaapp.VerifyRecoveryCodeCommand,
+) (mfaapp.VerificationResult, error) {
+	stub.recoveryCommand = command
+	return stub.result, stub.err
 }
 
 func (stub *mfaVerifierStub) VerifyTOTP(

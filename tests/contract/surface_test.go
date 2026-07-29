@@ -41,7 +41,7 @@ func TestOpenAPISurfaceIsolation(t *testing.T) {
 		sort.Strings(surfaces[surface])
 	}
 	require.ElementsMatch(t, []string{
-		"assignRole", "createLocale", "enrollMFA", "getCSRFToken",
+		"assignRole", "confirmMFAEnrollment", "createLocale", "enrollMFA", "getCSRFToken",
 		"getCurrentAccount", "getCurrentSession", "getEffectivePermissions",
 		"getMFAChallenge", "getTranslationCatalog", "grantRolePermission", "listEnabledModules",
 		"listLocales", "listSessions", "login", "logout", "requestPasswordRecovery",
@@ -58,7 +58,7 @@ func TestOpenAPISurfaceIsolation(t *testing.T) {
 func TestGeneratedSurfaceBundlesContainOnlyTheirOperations(t *testing.T) {
 	expected := map[string][]string{
 		"admin": {
-			"assignRole", "createLocale", "enrollMFA", "getCSRFToken",
+			"assignRole", "confirmMFAEnrollment", "createLocale", "enrollMFA", "getCSRFToken",
 			"getCurrentAccount", "getCurrentSession", "getEffectivePermissions",
 			"getMFAChallenge", "getTranslationCatalog", "grantRolePermission", "listEnabledModules",
 			"listLocales", "listSessions", "login", "logout", "requestPasswordRecovery",

@@ -70,6 +70,8 @@ type RecoveryConfig struct {
 	TokenHMACKeys            string
 	DeliveryActiveKeyVersion int64
 	DeliveryEncryptionKeys   string
+	CodeActiveKeyVersion     int64
+	CodeHMACKeys             string
 }
 
 type DatabaseConfig struct {

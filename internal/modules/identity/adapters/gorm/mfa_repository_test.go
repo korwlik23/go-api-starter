@@ -108,6 +108,74 @@ func TestMFARepositoryLoadsActiveEnvelope(t *testing.T) {
 	require.NoError(t, mock.ExpectationsWereMet())
 }
 
+func TestMFARepositoryConfirmsLivePendingEnrollmentAndRecoveryCodesAtomically(
+	t *testing.T,
+) {
+	t.Parallel()
+
+	db, mock := sessionRepositoryDatabase(t)
+	repository, err := NewMFARepository(db)
+	require.NoError(t, err)
+	now := time.Date(2026, time.July, 30, 7, 0, 0, 0, time.UTC)
+	userID := "018f1f64-7b2a-7c10-8bf2-3c40d5f67586"
+	enrollmentID := "018f1f64-7b2a-7c10-8bf2-3c40d5f67585"
+	mock.ExpectQuery(`SELECT .* FROM "mfa_totp_credentials"`).
+		WillReturnRows(sqlmock.NewRows([]string{
+			"user_id", "enrollment_id", "secret_key_version", "secret_nonce",
+			"secret_ciphertext", "enrollment_expires_at", "confirmed_at",
+			"last_used_step", "created_at",
+		}).AddRow(
+			userID,
+			enrollmentID,
+			int64(2),
+			[]byte("123456789012"),
+			[]byte("encrypted-secret-contents"),
+			now.Add(time.Minute),
+			nil,
+			nil,
+			now.Add(-time.Minute),
+		))
+
+	pending, err := repository.LoadPending(
+		context.Background(),
+		userID,
+		enrollmentID,
+	)
+	require.NoError(t, err)
+	require.Equal(t, identitydomain.MFAEnrollmentPending, pending.State)
+
+	mock.ExpectBegin()
+	mock.ExpectExec(`UPDATE "mfa_totp_credentials"`).
+		WillReturnResult(sqlmock.NewResult(0, 1))
+	mock.ExpectExec(`INSERT INTO "mfa_recovery_codes"`).
+		WillReturnResult(sqlmock.NewResult(0, 2))
+	mock.ExpectCommit()
+	err = repository.Confirm(
+		context.Background(),
+		userID,
+		enrollmentID,
+		1,
+		[]identitydomain.MFARecoveryCode{
+			{
+				Hash:           [32]byte{0x11},
+				HashVersion:    1,
+				HashKeyVersion: 3,
+				CreatedAt:      now,
+			},
+			{
+				Hash:           [32]byte{0x12},
+				HashVersion:    1,
+				HashKeyVersion: 3,
+				CreatedAt:      now,
+			},
+		},
+		now,
+	)
+
+	require.NoError(t, err)
+	require.NoError(t, mock.ExpectationsWereMet())
+}
+
 func TestMFARepositoryCompletesTOTPAndSessionRotationAtomically(t *testing.T) {
 	t.Parallel()
 
@@ -147,6 +215,65 @@ func TestMFARepositoryCompletesTOTPAndSessionRotationAtomically(t *testing.T) {
 		context.Background(),
 		"018f1f64-7b2a-7c10-8bf2-3c40d5f67585",
 		124,
+		pendingHash,
+		replacement,
+	)
+
+	require.NoError(t, err)
+	require.NoError(t, mock.ExpectationsWereMet())
+}
+
+func TestMFARepositoryConsumesRecoveryCodeAndRotatesSessionAtomically(
+	t *testing.T,
+) {
+	t.Parallel()
+
+	db, mock := sessionRepositoryDatabase(t)
+	repository, err := NewMFARepository(db)
+	require.NoError(t, err)
+	now := time.Date(2026, time.July, 30, 7, 0, 0, 0, time.UTC)
+	userID := "018f1f64-7b2a-7c10-8bf2-3c40d5f67586"
+	hash := [32]byte{0x44}
+	mock.ExpectQuery(`SELECT .* FROM "mfa_recovery_codes"`).
+		WillReturnRows(sqlmock.NewRows([]string{
+			"user_id", "code_hash", "hash_version", "hash_key_version",
+			"consumed_at", "created_at",
+		}).AddRow(userID, hash[:], int16(1), int64(3), nil, now))
+
+	codes, err := repository.LoadLiveRecoveryCodes(
+		context.Background(),
+		userID,
+	)
+	require.NoError(t, err)
+	require.Len(t, codes, 1)
+	require.Equal(t, hash, codes[0].Hash)
+
+	version := int64(9)
+	replacement := identitydomain.Session{
+		ID:                   "018f1f64-7b2a-7c10-8bf2-3c40d5f67587",
+		TokenHash:            identitydomain.TokenHash{0x31},
+		CSRFTokenHash:        identitydomain.TokenHash{0x32},
+		State:                identitydomain.SessionStateAuthenticated,
+		UserID:               &userID,
+		AuthorizationVersion: &version,
+		IdleExpiresAt:        now.Add(time.Hour),
+		AbsoluteExpiresAt:    now.Add(12 * time.Hour),
+		CreatedAt:            now,
+	}
+	pendingHash := identitydomain.TokenHash{0x11}
+	mock.ExpectBegin()
+	mock.ExpectExec(`UPDATE "mfa_recovery_codes"`).
+		WillReturnResult(sqlmock.NewResult(0, 1))
+	mock.ExpectExec(`UPDATE "sessions"`).
+		WillReturnResult(sqlmock.NewResult(0, 1))
+	mock.ExpectExec(`INSERT INTO "sessions"`).
+		WillReturnResult(sqlmock.NewResult(1, 1))
+	mock.ExpectCommit()
+
+	err = repository.CompleteRecoveryCode(
+		context.Background(),
+		userID,
+		hash,
 		pendingHash,
 		replacement,
 	)

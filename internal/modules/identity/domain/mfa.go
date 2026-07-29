@@ -1,6 +1,13 @@
 package domain
 
-import "time"
+import (
+	"errors"
+	"time"
+)
+
+var ErrInvalidRecoveryCodeHash = errors.New(
+	"recovery code hash must contain exactly 32 bytes",
+)
 
 type MFAEnrollmentState string
 
@@ -19,4 +26,11 @@ type MFAEnrollment struct {
 	LastUsedStep *int64
 	ExpiresAt    time.Time
 	CreatedAt    time.Time
+}
+
+type MFARecoveryCode struct {
+	Hash           [32]byte
+	HashVersion    int16
+	HashKeyVersion int64
+	CreatedAt      time.Time
 }
