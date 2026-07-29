@@ -28,6 +28,15 @@ type CatalogHandler struct {
 	update catalogUpdater
 }
 
+func NewCatalogReadHandler(
+	read catalogReader,
+) (*CatalogHandler, error) {
+	if read == nil {
+		return nil, ErrInvalidLocaleHandler
+	}
+	return &CatalogHandler{read: read}, nil
+}
+
 func NewCatalogHandler(
 	read catalogReader,
 	update catalogUpdater,
