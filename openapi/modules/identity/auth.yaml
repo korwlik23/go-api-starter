@@ -4,6 +4,7 @@ paths:
       tags: [Identity]
       summary: Create or rotate an anonymous pre-auth session and issue a CSRF token.
       operationId: getCSRFToken
+      x-surfaces: [admin]
       security: []
       responses:
         '200':
@@ -29,6 +30,7 @@ paths:
       tags: [Identity]
       summary: Authenticate with a pre-auth session and rotate its session state.
       operationId: login
+      x-surfaces: [admin]
       security:
         - SessionCookie: []
           CSRFToken: []
@@ -80,6 +82,7 @@ paths:
       tags: [Identity]
       summary: Create a pending MFA enrollment for the authenticated session.
       operationId: enrollMFA
+      x-surfaces: [admin]
       security:
         - SessionCookie: []
           CSRFToken: []
@@ -105,6 +108,7 @@ paths:
       tags: [Identity]
       summary: Read the safe projection of the current MFA-pending challenge.
       operationId: getMFAChallenge
+      x-surfaces: [admin]
       security:
         - SessionCookie: []
       responses:
@@ -129,6 +133,7 @@ paths:
       tags: [Identity]
       summary: Verify a pending MFA challenge and rotate to an authenticated session.
       operationId: verifyMFA
+      x-surfaces: [admin]
       security:
         - SessionCookie: []
           CSRFToken: []
@@ -166,6 +171,7 @@ paths:
       tags: [Identity]
       summary: Read the authenticated principal and current session projection.
       operationId: getCurrentSession
+      x-surfaces: [admin]
       security:
         - SessionCookie: []
       responses:
@@ -188,6 +194,7 @@ paths:
       tags: [Identity]
       summary: List safe device and session metadata for the authenticated principal.
       operationId: listSessions
+      x-surfaces: [admin]
       security:
         - SessionCookie: []
       responses:
@@ -209,6 +216,7 @@ paths:
       tags: [Identity]
       summary: Revoke another active session owned by the authenticated principal.
       operationId: revokeSession
+      x-surfaces: [admin]
       security:
         - SessionCookie: []
           CSRFToken: []
@@ -235,6 +243,7 @@ paths:
       tags: [Identity]
       summary: Revoke the current session and expire its cookie.
       operationId: logout
+      x-surfaces: [admin]
       security:
         - SessionCookie: []
           CSRFToken: []

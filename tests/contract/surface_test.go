@@ -1,0 +1,56 @@
+package contract_test
+
+import (
+	"context"
+	"path/filepath"
+	"sort"
+	"testing"
+
+	"github.com/getkin/kin-openapi/openapi3"
+	"github.com/stretchr/testify/require"
+)
+
+func TestOpenAPISurfaceIsolation(t *testing.T) {
+	loader := openapi3.NewLoader()
+	loader.IsExternalRefsAllowed = true
+	document, err := loader.LoadFromFile(filepath.Join("..", "..", "openapi", "root.yaml"))
+	require.NoError(t, err)
+	require.NoError(t, document.Validate(context.Background()))
+
+	surfaces := map[string][]string{}
+	for _, pathItem := range document.Paths.Map() {
+		operations := []*openapi3.Operation{
+			pathItem.Get, pathItem.Post, pathItem.Put, pathItem.Patch, pathItem.Delete,
+		}
+		for _, operation := range operations {
+			if operation == nil {
+				continue
+			}
+			raw, ok := operation.Extensions["x-surfaces"].([]interface{})
+			require.True(t, ok, "operation %s must declare x-surfaces", operation.OperationID)
+			require.NotEmpty(t, raw, "operation %s must belong to at least one surface", operation.OperationID)
+			for _, value := range raw {
+				surface, ok := value.(string)
+				require.True(t, ok)
+				surfaces[surface] = append(surfaces[surface], operation.OperationID)
+			}
+		}
+	}
+
+	for surface := range surfaces {
+		sort.Strings(surfaces[surface])
+	}
+	require.ElementsMatch(t, []string{
+		"assignRole", "createLocale", "enrollMFA", "getCSRFToken",
+		"getCurrentAccount", "getCurrentSession", "getEffectivePermissions",
+		"getMFAChallenge", "getTranslationCatalog", "grantRolePermission", "listEnabledModules",
+		"listLocales", "listSessions", "login", "logout", "requestPasswordRecovery",
+		"resetPassword", "revokeRoleAssignment", "revokeSession", "setDefaultLocale",
+		"updateLocale", "updateLocalePreferences", "updateLocaleStatus",
+		"updateTranslationCatalog", "verifyMFA",
+	}, surfaces["admin"])
+	require.ElementsMatch(t, []string{"getTranslationCatalog", "listLocales"}, surfaces["public"])
+	require.ElementsMatch(t, []string{
+		"getLiveness", "getReadiness", "getTranslationCatalog", "listLocales",
+	}, surfaces["site-server"])
+}

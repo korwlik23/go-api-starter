@@ -4,6 +4,7 @@ paths:
       tags: [Identity]
       summary: Request password recovery without revealing whether the account exists.
       operationId: requestPasswordRecovery
+      x-surfaces: [admin]
       security:
         - SessionCookie: []
           CSRFToken: []
@@ -33,6 +34,7 @@ paths:
       tags: [Identity]
       summary: Consume a one-time recovery token, reset the password, and rotate session state.
       operationId: resetPassword
+      x-surfaces: [admin]
       security:
         - SessionCookie: []
           CSRFToken: []
