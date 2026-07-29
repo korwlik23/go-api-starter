@@ -276,3 +276,23 @@ func TestSessionRevokeContract(t *testing.T) {
 	require.ElementsMatch(t, []string{"target_session_id", "revoked"}, schema.Required)
 	require.NotNil(t, pathItem.Delete.Responses.Value("409"))
 }
+
+func TestLogoutContract(t *testing.T) {
+	loader := openapi3.NewLoader()
+	loader.IsExternalRefsAllowed = true
+	document, err := loader.LoadFromFile(filepath.Join("..", "..", "openapi", "root.yaml"))
+	require.NoError(t, err)
+	require.NoError(t, document.Validate(context.Background()))
+
+	pathItem := document.Paths.Find("/auth/logout")
+	require.NotNil(t, pathItem)
+	require.NotNil(t, pathItem.Post)
+	require.Equal(t, "logout", pathItem.Post.OperationID)
+	require.Contains(t, (*pathItem.Post.Security)[0], "SessionCookie")
+	require.Contains(t, (*pathItem.Post.Security)[0], "CSRFToken")
+
+	response := pathItem.Post.Responses.Value("204")
+	require.NotNil(t, response)
+	require.Equal(t, []interface{}{"no-store"}, response.Value.Headers["Cache-Control"].Value.Schema.Value.Enum)
+	require.NotNil(t, response.Value.Headers["Set-Cookie"])
+}

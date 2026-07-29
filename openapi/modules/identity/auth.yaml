@@ -230,6 +230,28 @@ paths:
           $ref: ../../common/errors.yaml#/components/responses/Unauthorized
         '409':
           $ref: ../../common/errors.yaml#/components/responses/Conflict
+  /auth/logout:
+    post:
+      tags: [Identity]
+      summary: Revoke the current session and expire its cookie.
+      operationId: logout
+      security:
+        - SessionCookie: []
+          CSRFToken: []
+      responses:
+        '204':
+          description: The current session was revoked.
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                enum: [no-store]
+            Set-Cookie:
+              description: Expired opaque session cookie with the same secure scope.
+              schema:
+                type: string
+        '401':
+          $ref: ../../common/errors.yaml#/components/responses/Unauthorized
 components:
   schemas:
     CSRFTokenResponse:
