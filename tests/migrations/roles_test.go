@@ -5,7 +5,6 @@ import (
 	"database/sql"
 	"io/fs"
 	"testing"
-	"testing/fstest"
 	"time"
 
 	"github.com/korwlik23/go-api-starter/internal/app"
@@ -84,27 +83,13 @@ func TestM10Parity(t *testing.T) {
 func m10AuthorizationBundle(t *testing.T, cfg config.DatabaseConfig) fs.FS {
 	t.Helper()
 
-	dialect := migrationTestDialect(t, cfg)
-	bundle := make(fstest.MapFS, 2)
-	for _, migration := range []struct {
-		filename     string
-		allowMissing bool
-	}{
-		{filename: m9MigrationFilename},
-		{filename: m10MigrationFilename, allowMissing: true},
-	} {
-		source := migrationTestFileBundle(
-			t,
-			"authorization",
-			dialect,
-			migration.filename,
-			migration.allowMissing,
-		)
-		content, err := fs.ReadFile(source, migration.filename)
-		require.NoError(t, err)
-		bundle[migration.filename] = &fstest.MapFile{Data: content}
-	}
-	return bundle
+	return migrationTestFilesBundleWithOptionalLast(
+		t,
+		"authorization",
+		migrationTestDialect(t, cfg),
+		m9MigrationFilename,
+		m10MigrationFilename,
+	)
 }
 
 func m10AssertRolesSchema(

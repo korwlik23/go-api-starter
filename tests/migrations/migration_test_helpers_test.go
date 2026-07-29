@@ -82,6 +82,31 @@ func migrationTestFilesBundle(
 	return bundle
 }
 
+func migrationTestFilesBundleWithOptionalLast(
+	t *testing.T,
+	module string,
+	dialect string,
+	filenames ...string,
+) fs.FS {
+	t.Helper()
+
+	require.NotEmpty(t, filenames, "at least one migration filename is required")
+	bundle := make(fstest.MapFS, len(filenames))
+	for index, filename := range filenames {
+		source := migrationTestFileBundle(
+			t,
+			module,
+			dialect,
+			filename,
+			index == len(filenames)-1,
+		)
+		content, err := fs.ReadFile(source, filename)
+		require.NoError(t, err)
+		bundle[filename] = &fstest.MapFile{Data: content}
+	}
+	return bundle
+}
+
 func exactMigrationTestBundles(
 	t *testing.T,
 	module string,
