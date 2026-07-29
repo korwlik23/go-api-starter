@@ -1,0 +1,14 @@
+components:
+  securitySchemes:
+    SessionCookie:
+      type: apiKey
+      in: cookie
+      name: go_lang_starter_session
+      description: >-
+        Opaque, server-side session cookie. Production deployments use a
+        __Host- prefixed configured name with Secure, HttpOnly and SameSite=Lax.
+    CSRFToken:
+      type: apiKey
+      in: header
+      name: X-CSRF-Token
+      description: Session-bound CSRF token required for every unsafe method.

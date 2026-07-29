@@ -1,0 +1,75 @@
+components:
+  schemas:
+    FieldErrors:
+      type: object
+      additionalProperties:
+        type: array
+        items:
+          type: string
+    Problem:
+      type: object
+      additionalProperties: false
+      required: [code, message, fields, request_id]
+      properties:
+        code:
+          type: string
+          description: Stable, machine-readable error code.
+        message:
+          type: string
+          description: Safe, translatable message for the caller.
+        fields:
+          $ref: '#/components/schemas/FieldErrors'
+        request_id:
+          type: string
+          minLength: 1
+          description: Opaque correlation identifier; never an authorization credential.
+    ErrorEnvelope:
+      type: object
+      additionalProperties: false
+      required: [error]
+      properties:
+        error:
+          $ref: '#/components/schemas/Problem'
+  responses:
+    BadRequest:
+      description: The request could not be processed.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+    Unauthorized:
+      description: Authentication is required or no longer valid.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+    Forbidden:
+      description: The authenticated principal lacks the required permission.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+    NotFound:
+      description: The requested resource is not available.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+    Conflict:
+      description: The request conflicts with current state or a concurrent change.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+    TooManyRequests:
+      description: The request exceeded its rate limit.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+    InternalServerError:
+      description: An unexpected error prevented completion of the request.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
