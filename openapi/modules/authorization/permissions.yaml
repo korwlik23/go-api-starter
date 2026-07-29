@@ -21,6 +21,111 @@ paths:
                 $ref: '#/components/schemas/EffectivePermissionsResponse'
         '401':
           $ref: ../../common/errors.yaml#/components/responses/Unauthorized
+  /authorization/roles/{role_id}/permissions:
+    post:
+      tags: [Authorization]
+      summary: Grant a permission key to a role using optimistic concurrency.
+      operationId: grantRolePermission
+      x-surfaces: [admin]
+      security:
+        - SessionCookie: []
+          CSRFToken: []
+      parameters:
+        - name: role_id
+          in: path
+          required: true
+          schema:
+            type: string
+            minLength: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PermissionGrantRequest'
+      responses:
+        '200':
+          description: The permission grant was applied.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PermissionGrantResponse'
+        '401':
+          $ref: ../../common/errors.yaml#/components/responses/Unauthorized
+        '403':
+          $ref: ../../common/errors.yaml#/components/responses/Forbidden
+        '409':
+          $ref: ../../common/errors.yaml#/components/responses/Conflict
+  /authorization/roles/{role_id}/assignments:
+    post:
+      tags: [Authorization]
+      summary: Assign a role in account or system scope using optimistic concurrency.
+      operationId: assignRole
+      x-surfaces: [admin]
+      security:
+        - SessionCookie: []
+          CSRFToken: []
+      parameters:
+        - name: role_id
+          in: path
+          required: true
+          schema:
+            type: string
+            minLength: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RoleAssignmentRequest'
+      responses:
+        '200':
+          description: The role assignment was applied.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RoleAssignmentResponse'
+        '401':
+          $ref: ../../common/errors.yaml#/components/responses/Unauthorized
+        '403':
+          $ref: ../../common/errors.yaml#/components/responses/Forbidden
+        '409':
+          $ref: ../../common/errors.yaml#/components/responses/Conflict
+  /authorization/assignments/{assignment_id}:
+    delete:
+      tags: [Authorization]
+      summary: Revoke a role assignment while preserving the last-manager invariant.
+      operationId: revokeRoleAssignment
+      x-surfaces: [admin]
+      security:
+        - SessionCookie: []
+          CSRFToken: []
+      parameters:
+        - name: assignment_id
+          in: path
+          required: true
+          schema:
+            type: string
+            minLength: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RoleRevokeRequest'
+      responses:
+        '200':
+          description: The assignment was revoked.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RoleRevokeResponse'
+        '401':
+          $ref: ../../common/errors.yaml#/components/responses/Unauthorized
+        '403':
+          $ref: ../../common/errors.yaml#/components/responses/Forbidden
+        '409':
+          $ref: ../../common/errors.yaml#/components/responses/Conflict
 components:
   schemas:
     EffectivePermissionsResponse:
@@ -37,3 +142,130 @@ components:
           items:
             type: string
             minLength: 1
+    PermissionGrantRequest:
+      type: object
+      additionalProperties: false
+      required: [permission_key, expected_version]
+      properties:
+        permission_key:
+          type: string
+          minLength: 1
+        expected_version:
+          type: integer
+          minimum: 1
+    PermissionGrantResponse:
+      type: object
+      additionalProperties: false
+      required: [role_id, permission_key, version, affected_principals, session_outcome]
+      properties:
+        role_id:
+          type: string
+          minLength: 1
+        permission_key:
+          type: string
+          minLength: 1
+        version:
+          type: integer
+          minimum: 1
+        affected_principals:
+          type: integer
+          minimum: 0
+        session_outcome:
+          $ref: '#/components/schemas/SessionInvalidationOutcome'
+    RoleAssignmentRequest:
+      oneOf:
+        - $ref: '#/components/schemas/AccountRoleAssignmentRequest'
+        - $ref: '#/components/schemas/SystemRoleAssignmentRequest'
+      discriminator:
+        propertyName: scope
+        mapping:
+          account: '#/components/schemas/AccountRoleAssignmentRequest'
+          system: '#/components/schemas/SystemRoleAssignmentRequest'
+    AccountRoleAssignmentRequest:
+      type: object
+      additionalProperties: false
+      required: [scope, account_id, user_id, expected_version]
+      properties:
+        scope:
+          type: string
+          enum: [account]
+        account_id:
+          type: string
+          minLength: 1
+        user_id:
+          type: string
+          minLength: 1
+        expected_version:
+          type: integer
+          minimum: 1
+    SystemRoleAssignmentRequest:
+      type: object
+      additionalProperties: false
+      required: [scope, user_id, expected_version]
+      properties:
+        scope:
+          type: string
+          enum: [system]
+        user_id:
+          type: string
+          minLength: 1
+        expected_version:
+          type: integer
+          minimum: 1
+    RoleAssignmentResponse:
+      type: object
+      additionalProperties: false
+      required: [assignment_id, role_id, version, affected_principals, session_outcome]
+      properties:
+        assignment_id:
+          type: string
+          minLength: 1
+        role_id:
+          type: string
+          minLength: 1
+        version:
+          type: integer
+          minimum: 1
+        affected_principals:
+          type: integer
+          minimum: 0
+        session_outcome:
+          $ref: '#/components/schemas/SessionInvalidationOutcome'
+    RoleRevokeRequest:
+      type: object
+      additionalProperties: false
+      required: [expected_version]
+      properties:
+        expected_version:
+          type: integer
+          minimum: 1
+    RoleRevokeResponse:
+      type: object
+      additionalProperties: false
+      required: [assignment_id, revoked, version, affected_principals, session_outcome]
+      properties:
+        assignment_id:
+          type: string
+          minLength: 1
+        revoked:
+          type: boolean
+          enum: [true]
+        version:
+          type: integer
+          minimum: 1
+        affected_principals:
+          type: integer
+          minimum: 0
+        session_outcome:
+          $ref: '#/components/schemas/SessionInvalidationOutcome'
+    SessionInvalidationOutcome:
+      type: object
+      additionalProperties: false
+      required: [current_principal, other_principals]
+      properties:
+        current_principal:
+          type: string
+          enum: [unchanged, rotated]
+        other_principals:
+          type: string
+          enum: [unchanged, invalidated]
