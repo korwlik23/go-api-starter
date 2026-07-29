@@ -255,3 +255,24 @@ func TestSessionListContract(t *testing.T) {
 	require.NotContains(t, item.Properties, "token")
 	require.NotContains(t, item.Properties, "fingerprint")
 }
+
+func TestSessionRevokeContract(t *testing.T) {
+	loader := openapi3.NewLoader()
+	loader.IsExternalRefsAllowed = true
+	document, err := loader.LoadFromFile(filepath.Join("..", "..", "openapi", "root.yaml"))
+	require.NoError(t, err)
+	require.NoError(t, document.Validate(context.Background()))
+
+	pathItem := document.Paths.Find("/auth/sessions/{session_id}")
+	require.NotNil(t, pathItem)
+	require.NotNil(t, pathItem.Delete)
+	require.Equal(t, "revokeSession", pathItem.Delete.OperationID)
+	require.Contains(t, (*pathItem.Delete.Security)[0], "SessionCookie")
+	require.Contains(t, (*pathItem.Delete.Security)[0], "CSRFToken")
+
+	response := pathItem.Delete.Responses.Value("200")
+	require.NotNil(t, response)
+	schema := response.Value.Content.Get("application/json").Schema.Value
+	require.ElementsMatch(t, []string{"target_session_id", "revoked"}, schema.Required)
+	require.NotNil(t, pathItem.Delete.Responses.Value("409"))
+}

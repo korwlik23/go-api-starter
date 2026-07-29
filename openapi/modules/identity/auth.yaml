@@ -204,6 +204,32 @@ paths:
                 $ref: '#/components/schemas/SessionListResponse'
         '401':
           $ref: ../../common/errors.yaml#/components/responses/Unauthorized
+  /auth/sessions/{session_id}:
+    delete:
+      tags: [Identity]
+      summary: Revoke another active session owned by the authenticated principal.
+      operationId: revokeSession
+      security:
+        - SessionCookie: []
+          CSRFToken: []
+      parameters:
+        - name: session_id
+          in: path
+          required: true
+          schema:
+            type: string
+            minLength: 1
+      responses:
+        '200':
+          description: The target session was revoked.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RevokeSessionResponse'
+        '401':
+          $ref: ../../common/errors.yaml#/components/responses/Unauthorized
+        '409':
+          $ref: ../../common/errors.yaml#/components/responses/Conflict
 components:
   schemas:
     CSRFTokenResponse:
@@ -353,3 +379,14 @@ components:
                 format: date-time
               current:
                 type: boolean
+    RevokeSessionResponse:
+      type: object
+      additionalProperties: false
+      required: [target_session_id, revoked]
+      properties:
+        target_session_id:
+          type: string
+          minLength: 1
+        revoked:
+          type: boolean
+          enum: [true]

@@ -26,6 +26,8 @@ paths:
     $ref: ./modules/identity/auth.yaml#/paths/~1auth~1session
   /auth/sessions:
     $ref: ./modules/identity/auth.yaml#/paths/~1auth~1sessions
+  /auth/sessions/{session_id}:
+    $ref: ./modules/identity/auth.yaml#/paths/~1auth~1sessions~1{session_id}
 components:
   schemas:
     Problem:
