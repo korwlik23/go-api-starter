@@ -208,3 +208,26 @@ func TestMFAVerificationContract(t *testing.T) {
 	require.Equal(t, []interface{}{"authenticated"}, schema.Properties["status"].Value.Enum)
 	require.NotContains(t, schema.Properties, "recovery_code")
 }
+
+func TestCurrentSessionContract(t *testing.T) {
+	loader := openapi3.NewLoader()
+	loader.IsExternalRefsAllowed = true
+	document, err := loader.LoadFromFile(filepath.Join("..", "..", "openapi", "root.yaml"))
+	require.NoError(t, err)
+	require.NoError(t, document.Validate(context.Background()))
+
+	pathItem := document.Paths.Find("/auth/session")
+	require.NotNil(t, pathItem)
+	require.NotNil(t, pathItem.Get)
+	require.Equal(t, "getCurrentSession", pathItem.Get.OperationID)
+	require.Contains(t, (*pathItem.Get.Security)[0], "SessionCookie")
+
+	response := pathItem.Get.Responses.Value("200")
+	require.NotNil(t, response)
+	require.Equal(t, []interface{}{"no-store"}, response.Value.Headers["Cache-Control"].Value.Schema.Value.Enum)
+	schema := response.Value.Content.Get("application/json").Schema.Value
+	require.ElementsMatch(t, []string{"session_id", "principal", "state"}, schema.Required)
+	require.NotContains(t, schema.Properties, "token")
+	require.NotContains(t, schema.Properties, "cookie")
+	require.NotContains(t, schema.Properties, "fingerprint")
+}

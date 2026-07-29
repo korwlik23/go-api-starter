@@ -161,6 +161,28 @@ paths:
           $ref: ../../common/errors.yaml#/components/responses/Forbidden
         '429':
           $ref: ../../common/errors.yaml#/components/responses/TooManyRequests
+  /auth/session:
+    get:
+      tags: [Identity]
+      summary: Read the authenticated principal and current session projection.
+      operationId: getCurrentSession
+      security:
+        - SessionCookie: []
+      responses:
+        '200':
+          description: Current authenticated session without raw token or fingerprint material.
+          headers:
+            Cache-Control:
+              description: Authentication state must never be stored by shared caches.
+              schema:
+                type: string
+                enum: [no-store]
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CurrentSessionResponse'
+        '401':
+          $ref: ../../common/errors.yaml#/components/responses/Unauthorized
 components:
   schemas:
     CSRFTokenResponse:
@@ -265,3 +287,25 @@ components:
         csrf_token:
           type: string
           minLength: 1
+    CurrentSessionResponse:
+      type: object
+      additionalProperties: false
+      required: [session_id, principal, state]
+      properties:
+        session_id:
+          type: string
+          minLength: 1
+        state:
+          type: string
+          enum: [authenticated]
+        principal:
+          type: object
+          additionalProperties: false
+          required: [id, email]
+          properties:
+            id:
+              type: string
+              minLength: 1
+            email:
+              type: string
+              format: email
