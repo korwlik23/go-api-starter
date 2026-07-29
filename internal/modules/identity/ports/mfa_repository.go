@@ -2,9 +2,12 @@ package ports
 
 import (
 	"context"
+	"errors"
 
 	"github.com/korwlik23/go-api-starter/internal/modules/identity/domain"
 )
+
+var ErrMFACompletionConflict = errors.New("MFA completion conflict")
 
 type MFAStatusReader interface {
 	IsEnabled(ctx context.Context, userID string) (bool, error)
@@ -12,4 +15,15 @@ type MFAStatusReader interface {
 
 type MFAEnrollmentRepository interface {
 	SavePending(ctx context.Context, enrollment domain.MFAEnrollment) error
+}
+
+type MFACompletionRepository interface {
+	LoadActive(ctx context.Context, userID string) (domain.MFAEnrollment, error)
+	CompleteTOTP(
+		ctx context.Context,
+		enrollmentID string,
+		step int64,
+		pendingHash domain.TokenHash,
+		replacement domain.Session,
+	) error
 }

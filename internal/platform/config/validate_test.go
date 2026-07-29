@@ -149,7 +149,7 @@ func TestA3(t *testing.T) {
 		{
 			name:  "TOTP encryption key",
 			key:   "TOTP_ENCRYPTION_KEYS_B64",
-			value: "v1:" + bundledTOTPFixture(),
+			value: "1:" + bundledTOTPFixture(),
 			set: func(cfg *Config, value string) {
 				cfg.Session.TOTPEncryptionKeys = value
 			},
@@ -209,8 +209,8 @@ func validSecurityConfig() Config {
 		Session: SessionConfig{
 			TokenPepper:          "session-token-pepper",
 			CSRFTokenPepper:      "csrf-token-pepper",
-			TOTPActiveKeyVersion: "v1",
-			TOTPEncryptionKeys:   "v1:" + validTOTPFixture(),
+			TOTPActiveKeyVersion: 1,
+			TOTPEncryptionKeys:   "1:" + validTOTPFixture(),
 		},
 		Authentication: AuthenticationConfig{
 			Attempts: AuthAttemptConfig{

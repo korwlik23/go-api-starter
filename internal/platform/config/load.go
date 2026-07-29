@@ -77,7 +77,7 @@ func Load(lookup LookupFunc) (Config, error) {
 	if cfg.Session.CSRFTokenPepper, err = rawValue(lookup, "CSRF_TOKEN_PEPPER"); err != nil {
 		return Config{}, err
 	}
-	if cfg.Session.TOTPActiveKeyVersion, err = stringValue(lookup, "TOTP_ENCRYPTION_ACTIVE_VERSION"); err != nil {
+	if cfg.Session.TOTPActiveKeyVersion, err = int64Value(lookup, "TOTP_ENCRYPTION_ACTIVE_VERSION"); err != nil {
 		return Config{}, err
 	}
 	if cfg.Session.TOTPEncryptionKeys, err = rawValue(lookup, "TOTP_ENCRYPTION_KEYS_B64"); err != nil {
@@ -239,6 +239,18 @@ func uint64Value(lookup LookupFunc, key string) (uint64, error) {
 	parsed, parseErr := strconv.ParseUint(value, 10, 64)
 	if parseErr != nil {
 		return 0, invalidKeyError(key, "must be a non-negative integer")
+	}
+	return parsed, nil
+}
+
+func int64Value(lookup LookupFunc, key string) (int64, error) {
+	value, err := stringValue(lookup, key)
+	if err != nil {
+		return 0, err
+	}
+	parsed, parseErr := strconv.ParseInt(value, 10, 64)
+	if parseErr != nil {
+		return 0, invalidKeyError(key, "must be an integer")
 	}
 	return parsed, nil
 }

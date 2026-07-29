@@ -16,7 +16,7 @@ import (
 func TestEnrollCreatesEncryptedPendingSecretAndOneTimeProvisioningURI(t *testing.T) {
 	now := time.Date(2026, time.July, 30, 7, 0, 0, 0, time.UTC)
 	cipher := &envelopeCipherStub{envelope: platformcrypto.Envelope{
-		KeyVersion: "v2",
+		KeyVersion: 2,
 		Nonce:      bytes.Repeat([]byte{0x01}, 12),
 		Ciphertext: []byte("encrypted-secret"),
 	}}
@@ -46,7 +46,7 @@ func TestEnrollCreatesEncryptedPendingSecretAndOneTimeProvisioningURI(t *testing
 		ID:         "enrollment-id",
 		UserID:     "user-id",
 		State:      identitydomain.MFAEnrollmentPending,
-		KeyVersion: "v2",
+		KeyVersion: 2,
 		Nonce:      bytes.Repeat([]byte{0x01}, 12),
 		Ciphertext: []byte("encrypted-secret"),
 		ExpiresAt:  now.Add(10 * time.Minute),

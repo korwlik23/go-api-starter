@@ -16,14 +16,14 @@ var (
 )
 
 type Envelope struct {
-	KeyVersion string
+	KeyVersion int64
 	Nonce      []byte
 	Ciphertext []byte
 }
 
 type envelopeKeyring interface {
-	Active() (version string, key []byte)
-	Key(version string) ([]byte, bool)
+	Active() (version int64, key []byte)
+	Key(version int64) ([]byte, bool)
 }
 
 type EnvelopeCipher struct {
@@ -43,7 +43,7 @@ func newEnvelopeCipher(
 		return nil, ErrInvalidEnvelopeCipher
 	}
 	version, key := keyring.Active()
-	if version == "" || len(key) != 32 {
+	if version < 1 || len(key) != 32 {
 		return nil, ErrInvalidEnvelopeCipher
 	}
 	return &EnvelopeCipher{keyring: keyring, random: random}, nil
@@ -55,7 +55,7 @@ func (envelopeCipher *EnvelopeCipher) Encrypt(
 ) (Envelope, error) {
 	version, key := envelopeCipher.keyring.Active()
 	aead, err := newGCM(key)
-	if err != nil || version == "" {
+	if err != nil || version < 1 {
 		return Envelope{}, ErrInvalidEnvelopeCipher
 	}
 

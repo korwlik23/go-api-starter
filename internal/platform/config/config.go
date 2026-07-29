@@ -55,7 +55,7 @@ type SessionConfig struct {
 	AbsoluteTimeout      time.Duration
 	TokenPepper          string
 	CSRFTokenPepper      string
-	TOTPActiveKeyVersion string
+	TOTPActiveKeyVersion int64
 	TOTPEncryptionKeys   string
 }
 

@@ -30,8 +30,8 @@ func TestA2(t *testing.T) {
 		"SESSION_ABSOLUTE_TIMEOUT":       "12h",
 		"SESSION_TOKEN_PEPPER":           "test-session-pepper",
 		"CSRF_TOKEN_PEPPER":              "test-csrf-pepper",
-		"TOTP_ENCRYPTION_ACTIVE_VERSION": "v1",
-		"TOTP_ENCRYPTION_KEYS_B64":       "v1:ERERERERERERERERERERERERERERERERERERERERERE=",
+		"TOTP_ENCRYPTION_ACTIVE_VERSION": "1",
+		"TOTP_ENCRYPTION_KEYS_B64":       "1:ERERERERERERERERERERERERERERERERERERERERERE=",
 		"AUTH_ATTEMPT_THRESHOLD":         "5",
 		"AUTH_ATTEMPT_WINDOW":            "15m",
 		"AUTH_ATTEMPT_LOCK_DURATION":     "30m",
@@ -103,7 +103,7 @@ func TestA2(t *testing.T) {
 
 	values["SESSION_TOKEN_PEPPER"] = ""
 	values["CSRF_TOKEN_PEPPER"] = "  csrf-token-pepper  "
-	values["TOTP_ENCRYPTION_KEYS_B64"] = "  v1:ERERERERERERERERERERERERERERERERERERERERERE=  "
+	values["TOTP_ENCRYPTION_KEYS_B64"] = "  1:ERERERERERERERERERERERERERERERERERERERERERE=  "
 	values["DB_PASSWORD"] = "  database-password  "
 	values["REDIS_PASSWORD"] = "  redis-password  "
 
@@ -113,7 +113,7 @@ func TestA2(t *testing.T) {
 	require.Equal(t, "  csrf-token-pepper  ", cfg.Session.CSRFTokenPepper)
 	require.Equal(
 		t,
-		"  v1:ERERERERERERERERERERERERERERERERERERERERERE=  ",
+		"  1:ERERERERERERERERERERERERERERERERERERERERERE=  ",
 		cfg.Session.TOTPEncryptionKeys,
 	)
 	require.Equal(t, "  database-password  ", cfg.Database.Password)

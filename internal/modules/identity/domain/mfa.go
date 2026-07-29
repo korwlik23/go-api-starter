@@ -10,12 +10,13 @@ const (
 )
 
 type MFAEnrollment struct {
-	ID         string
-	UserID     string
-	State      MFAEnrollmentState
-	KeyVersion string
-	Nonce      []byte
-	Ciphertext []byte
-	ExpiresAt  time.Time
-	CreatedAt  time.Time
+	ID           string
+	UserID       string
+	State        MFAEnrollmentState
+	KeyVersion   int64
+	Nonce        []byte
+	Ciphertext   []byte
+	LastUsedStep *int64
+	ExpiresAt    time.Time
+	CreatedAt    time.Time
 }
