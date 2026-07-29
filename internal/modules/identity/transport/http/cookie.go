@@ -4,6 +4,7 @@ import (
 	"errors"
 	nethttp "net/http"
 	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -48,5 +49,18 @@ func (cookie *SessionCookie) Write(ctx *gin.Context, token string) {
 		HttpOnly: true,
 		Secure:   cookie.secure,
 		SameSite: nethttp.SameSiteLaxMode,
+	})
+}
+
+func (cookie *SessionCookie) Clear(ctx *gin.Context) {
+	nethttp.SetCookie(ctx.Writer, &nethttp.Cookie{
+		Name:     cookie.name,
+		Value:    "",
+		Path:     "/",
+		HttpOnly: true,
+		Secure:   cookie.secure,
+		SameSite: nethttp.SameSiteLaxMode,
+		MaxAge:   -1,
+		Expires:  time.Unix(1, 0).UTC(),
 	})
 }

@@ -63,3 +63,27 @@ func TestSessionCookieRejectsInvalidNames(t *testing.T) {
 		require.ErrorIs(t, err, ErrInvalidSessionCookie)
 	}
 }
+
+func TestSessionCookieClearExpiresTheSameSecureScope(t *testing.T) {
+	t.Parallel()
+
+	cookie, err := NewSessionCookie(SessionCookieConfig{
+		Name:       "session",
+		Production: true,
+	})
+	require.NoError(t, err)
+	recorder := httptest.NewRecorder()
+	ctx, _ := gin.CreateTestContext(recorder)
+
+	cookie.Clear(ctx)
+
+	result := recorder.Result().Cookies()
+	require.Len(t, result, 1)
+	require.Equal(t, "__Host-session", result[0].Name)
+	require.Empty(t, result[0].Value)
+	require.Equal(t, -1, result[0].MaxAge)
+	require.True(t, result[0].HttpOnly)
+	require.True(t, result[0].Secure)
+	require.Equal(t, "/", result[0].Path)
+	require.Equal(t, nethttp.SameSiteLaxMode, result[0].SameSite)
+}
