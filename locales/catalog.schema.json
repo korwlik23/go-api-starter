@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://tewarach-dev.me/schemas/localization-catalog.json",
+  "title": "Localization category catalog",
+  "type": "object",
+  "minProperties": 1,
+  "additionalProperties": false,
+  "patternProperties": {
+    "^[a-z][a-z0-9_]*(\\.[a-z][a-z0-9_]*)*$": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 4096
+    }
+  }
+}

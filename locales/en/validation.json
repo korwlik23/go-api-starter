@@ -1,0 +1,5 @@
+{
+  "field.invalid": "This value is invalid.",
+  "field.required": "This field is required.",
+  "request.failed": "The request could not be completed."
+}
