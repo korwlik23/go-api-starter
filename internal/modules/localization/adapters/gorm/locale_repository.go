@@ -66,6 +66,29 @@ func (repository *LocaleRepository) ListEnabled(
 	return locales, nil
 }
 
+func (repository *LocaleRepository) ListSelectable(
+	ctx context.Context,
+) ([]localizationdomain.Locale, error) {
+	var records []localeRecord
+	err := repository.db.WithContext(ctx).
+		Where("enabled = ? AND user_selectable = ?", true, true).
+		Order("tag ASC").
+		Find(&records).
+		Error
+	if err != nil {
+		return nil, fmt.Errorf("list selectable locales: %w", err)
+	}
+	locales := make([]localizationdomain.Locale, 0, len(records))
+	for _, record := range records {
+		locale, mapErr := localeFromRecord(record)
+		if mapErr != nil {
+			return nil, mapErr
+		}
+		locales = append(locales, locale)
+	}
+	return locales, nil
+}
+
 func localeFromRecord(
 	record localeRecord,
 ) (localizationdomain.Locale, error) {
@@ -96,3 +119,4 @@ func localeFromRecord(
 }
 
 var _ ports.LocaleRepository = (*LocaleRepository)(nil)
+var _ ports.SelectableLocaleRepository = (*LocaleRepository)(nil)
