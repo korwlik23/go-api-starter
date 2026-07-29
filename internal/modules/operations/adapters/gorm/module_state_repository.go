@@ -127,6 +127,15 @@ func (repository *ModuleStateRepository) CurrentRevision(
 	return revision, nil
 }
 
+func (repository *ModuleStateRepository) CurrentSnapshot(
+	ctx context.Context,
+) (ports.ReconcileSnapshot, error) {
+	if repository == nil || repository.db == nil || ctx == nil {
+		return ports.ReconcileSnapshot{}, ErrInvalidModuleStateRepository
+	}
+	return readSnapshot(ctx, repository.db)
+}
+
 type moduleStateSession struct {
 	db      *gormdb.DB
 	dialect string
@@ -135,15 +144,22 @@ type moduleStateSession struct {
 func (session *moduleStateSession) Snapshot(
 	ctx context.Context,
 ) (ports.ReconcileSnapshot, error) {
+	return readSnapshot(ctx, session.db)
+}
+
+func readSnapshot(
+	ctx context.Context,
+	db *gormdb.DB,
+) (ports.ReconcileSnapshot, error) {
 	var modules []moduleStateRecord
-	if err := session.db.WithContext(ctx).
+	if err := db.WithContext(ctx).
 		Table("module_states").
 		Order("module_id").
 		Find(&modules).Error; err != nil {
 		return ports.ReconcileSnapshot{}, ErrModuleStateRepositoryFailed
 	}
 	var permissions []permissionRecord
-	if err := session.db.WithContext(ctx).
+	if err := db.WithContext(ctx).
 		Table("permissions").
 		Order("permission_key").
 		Find(&permissions).Error; err != nil {

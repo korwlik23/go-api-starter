@@ -13,6 +13,7 @@ import (
 	localizationapp "github.com/korwlik23/go-api-starter/internal/modules/localization/application"
 	catalogapp "github.com/korwlik23/go-api-starter/internal/modules/localization/application/catalog"
 	localizationhttp "github.com/korwlik23/go-api-starter/internal/modules/localization/transport/http"
+	operationsgorm "github.com/korwlik23/go-api-starter/internal/modules/operations/adapters/gorm"
 	"github.com/korwlik23/go-api-starter/internal/platform/config"
 	"github.com/korwlik23/go-api-starter/internal/platform/database"
 	"github.com/korwlik23/go-api-starter/internal/platform/httpserver"
@@ -39,6 +40,28 @@ func buildPublicRuntime(
 	fail := func(cause error) (HTTPServer, func() error, error) {
 		_ = closeDatabase()
 		return nil, nil, cause
+	}
+	moduleRegistry, err := Modules()
+	if err != nil {
+		return fail(err)
+	}
+	moduleRepository, err := operationsgorm.NewModuleStateRepository(
+		db,
+		cfg.Database.MigrationLockTimeout,
+	)
+	if err != nil {
+		return fail(err)
+	}
+	moduleProbe, err := newModuleProjectionProbe(
+		moduleRegistry,
+		enabledModuleConfiguration(moduleRegistry),
+		moduleRepository,
+	)
+	if err != nil {
+		return fail(err)
+	}
+	if err := moduleProbe(ctx); err != nil {
+		return fail(err)
 	}
 
 	localeRepository, err := localizationgorm.NewLocaleRepository(db)
@@ -111,9 +134,10 @@ func buildPublicRuntime(
 
 	readiness := httpserver.NewReadinessGate(httpserver.Readiness{
 		Timeout: cfg.Database.ConnectTimeout,
-		Probes: []httpserver.Probe{{
-			Name: "database", Critical: true, Check: sqlDB.PingContext,
-		}},
+		Probes: []httpserver.Probe{
+			{Name: "database", Critical: true, Check: sqlDB.PingContext},
+			{Name: "module_projection", Critical: true, Check: moduleProbe},
+		},
 	})
 	router := httpserver.NewRouter(readiness)
 	if trustedProxies.Enabled() {

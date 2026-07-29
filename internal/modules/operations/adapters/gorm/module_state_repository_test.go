@@ -1,6 +1,7 @@
 package gorm_test
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"os"
@@ -94,6 +95,28 @@ func TestModuleStateRepositoryReconcilesAtomically(t *testing.T) {
 
 	require.Equal(t, int64(6), tableCount(t, ctx, db, "module_states"))
 	require.Equal(t, int64(9), tableCount(t, ctx, db, "permissions"))
+	snapshot, err := repository.CurrentSnapshot(ctx)
+	require.NoError(t, err)
+	require.NoError(t, operationsapp.VerifyProjection(registry, enabled, snapshot))
+
+	require.NoError(t, db.WithContext(ctx).Exec(
+		"UPDATE module_states SET module_checksum = ? WHERE module_id = ?",
+		bytes.Repeat([]byte{0xff}, 32),
+		"identity",
+	).Error)
+	snapshot, err = repository.CurrentSnapshot(ctx)
+	require.NoError(t, err)
+	require.ErrorIs(
+		t,
+		operationsapp.VerifyProjection(registry, enabled, snapshot),
+		operationsapp.ErrProjectionDrift,
+	)
+	repaired, err := reconciler.Execute(ctx, operationsapp.ReconcileRequest{
+		Registry:         registry,
+		Enabled:          enabled,
+		ExpectedRevision: second.Revision,
+	})
+	require.NoError(t, err)
 
 	var wait sync.WaitGroup
 	wait.Add(2)
@@ -106,7 +129,7 @@ func TestModuleStateRepositoryReconcilesAtomically(t *testing.T) {
 				operationsapp.ReconcileRequest{
 					Registry:         registry,
 					Enabled:          enabled,
-					ExpectedRevision: second.Revision,
+					ExpectedRevision: repaired.Revision,
 				},
 			)
 			errorsFound <- reconcileErr

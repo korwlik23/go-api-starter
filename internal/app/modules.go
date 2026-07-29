@@ -20,3 +20,14 @@ func Modules() (*modular.Registry, error) {
 		operationsmodule.Manifest(),
 	})
 }
+
+func enabledModuleConfiguration(registry *modular.Registry) map[string]bool {
+	enabled := make(map[string]bool)
+	if registry == nil {
+		return enabled
+	}
+	for _, manifest := range registry.Ordered() {
+		enabled[manifest.ID] = true
+	}
+	return enabled
+}
