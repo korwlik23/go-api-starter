@@ -120,6 +120,28 @@ func TestCSRFRejectsRevokedSession(t *testing.T) {
 	require.Equal(t, nethttp.StatusForbidden, response.Code)
 }
 
+func TestCSRFRejectsExpiredSession(t *testing.T) {
+	sessionCodec, csrfCodec := csrfTestCodecs(t)
+	now := csrfTestNow()
+	repository := &csrfSessionReader{
+		session: identitydomain.Session{
+			CSRFTokenHash:     identitydomain.TokenHash(csrfCodec.Hash("correct-csrf")),
+			IdleExpiresAt:     now,
+			AbsoluteExpiresAt: now.Add(time.Hour),
+		},
+	}
+	router := csrfTestRouter(t, repository, sessionCodec, csrfCodec)
+
+	request := httptest.NewRequest(nethttp.MethodPost, "/mutation", nil)
+	request.Header.Set("Origin", "https://admin.example.com")
+	request.AddCookie(&nethttp.Cookie{Name: "session", Value: "session-token"})
+	request.Header.Set(CSRFTokenHeader, "correct-csrf")
+	response := httptest.NewRecorder()
+	router.ServeHTTP(response, request)
+
+	require.Equal(t, nethttp.StatusForbidden, response.Code)
+}
+
 func TestCSRFAllowsSafeMethodsWithoutSessionLookup(t *testing.T) {
 	sessionCodec, csrfCodec := csrfTestCodecs(t)
 	repository := &csrfSessionReader{}
@@ -217,6 +239,13 @@ func csrfTestRouter(
 ) *gin.Engine {
 	t.Helper()
 	gin.SetMode(gin.TestMode)
+	now := csrfTestNow()
+	if repository.session.IdleExpiresAt.IsZero() {
+		repository.session.IdleExpiresAt = now.Add(time.Minute)
+	}
+	if repository.session.AbsoluteExpiresAt.IsZero() {
+		repository.session.AbsoluteExpiresAt = now.Add(time.Hour)
+	}
 
 	guard, err := NewCSRF(CSRFConfig{
 		TrustedOrigin: "https://admin.example.com",
@@ -224,6 +253,7 @@ func csrfTestRouter(
 		Sessions:      repository,
 		SessionTokens: sessionCodec,
 		CSRFTokens:    csrfCodec,
+		Now:           func() time.Time { return now },
 	})
 	require.NoError(t, err)
 
@@ -234,6 +264,10 @@ func csrfTestRouter(
 		ctx.Status(nethttp.StatusNoContent)
 	})
 	return router
+}
+
+func csrfTestNow() time.Time {
+	return time.Date(2026, time.July, 30, 3, 0, 0, 0, time.UTC)
 }
 
 func csrfTestCodecs(t *testing.T) (*platformcrypto.TokenCodec, *platformcrypto.TokenCodec) {

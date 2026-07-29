@@ -6,6 +6,7 @@ import (
 	nethttp "net/http"
 	"net/url"
 	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	identitydomain "github.com/korwlik23/go-api-starter/internal/modules/identity/domain"
@@ -35,6 +36,7 @@ type CSRFConfig struct {
 	Sessions      csrfSessionStore
 	SessionTokens csrfTokenCodec
 	CSRFTokens    csrfTokenCodec
+	Now           func() time.Time
 }
 
 func NewCSRF(config CSRFConfig) (gin.HandlerFunc, error) {
@@ -43,7 +45,8 @@ func NewCSRF(config CSRFConfig) (gin.HandlerFunc, error) {
 		strings.TrimSpace(config.CookieName) == "" ||
 		config.Sessions == nil ||
 		config.SessionTokens == nil ||
-		config.CSRFTokens == nil {
+		config.CSRFTokens == nil ||
+		config.Now == nil {
 		return nil, ErrInvalidCSRFConfig
 	}
 
@@ -67,7 +70,7 @@ func NewCSRF(config CSRFConfig) (gin.HandlerFunc, error) {
 		sessionHash := identitydomain.TokenHash(config.SessionTokens.Hash(sessionToken))
 		session, err := config.Sessions.FindByTokenHash(ctx.Request.Context(), sessionHash)
 		if err != nil ||
-			session.RevokedAt != nil ||
+			session.ValidateAt(config.Now()) != nil ||
 			!config.CSRFTokens.Matches(csrfToken, [32]byte(session.CSRFTokenHash)) {
 			writeCSRFRejected(ctx, err)
 			return
