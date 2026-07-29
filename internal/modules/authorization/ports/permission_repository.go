@@ -14,11 +14,13 @@ const (
 )
 
 type EffectiveGrant struct {
-	RoleID       string
-	AccountID    string
-	PermissionID string
-	Key          authorizationdomain.PermissionKey
-	Source       GrantSource
+	RoleID          string
+	AccountID       string
+	PermissionID    string
+	Key             authorizationdomain.PermissionKey
+	Source          GrantSource
+	CatalogEpoch    int64
+	CatalogChecksum [32]byte
 }
 
 type PermissionRepository interface {
