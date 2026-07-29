@@ -124,6 +124,43 @@ paths:
           $ref: ../../common/errors.yaml#/components/responses/Unauthorized
         '403':
           $ref: ../../common/errors.yaml#/components/responses/Forbidden
+  /auth/mfa/verify:
+    post:
+      tags: [Identity]
+      summary: Verify a pending MFA challenge and rotate to an authenticated session.
+      operationId: verifyMFA
+      security:
+        - SessionCookie: []
+          CSRFToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MFAVerificationRequest'
+      responses:
+        '200':
+          description: MFA succeeded and the pending session was rotated to authenticated.
+          headers:
+            Cache-Control:
+              description: Authentication state must never be stored by shared caches.
+              schema:
+                type: string
+                enum: [no-store]
+            Set-Cookie:
+              description: Rotated opaque authenticated session cookie with secure attributes.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MFAVerificationResponse'
+        '401':
+          $ref: ../../common/errors.yaml#/components/responses/Unauthorized
+        '403':
+          $ref: ../../common/errors.yaml#/components/responses/Forbidden
+        '429':
+          $ref: ../../common/errors.yaml#/components/responses/TooManyRequests
 components:
   schemas:
     CSRFTokenResponse:
@@ -205,3 +242,26 @@ components:
           items:
             type: string
             enum: [totp, recovery_code]
+    MFAVerificationRequest:
+      type: object
+      additionalProperties: false
+      required: [method, code]
+      properties:
+        method:
+          type: string
+          enum: [totp, recovery_code]
+        code:
+          type: string
+          minLength: 1
+          writeOnly: true
+    MFAVerificationResponse:
+      type: object
+      additionalProperties: false
+      required: [status, csrf_token]
+      properties:
+        status:
+          type: string
+          enum: [authenticated]
+        csrf_token:
+          type: string
+          minLength: 1

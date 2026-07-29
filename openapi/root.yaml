@@ -20,6 +20,8 @@ paths:
     $ref: ./modules/identity/auth.yaml#/paths/~1auth~1mfa~1enrollment
   /auth/mfa/challenge:
     $ref: ./modules/identity/auth.yaml#/paths/~1auth~1mfa~1challenge
+  /auth/mfa/verify:
+    $ref: ./modules/identity/auth.yaml#/paths/~1auth~1mfa~1verify
 components:
   schemas:
     Problem:
