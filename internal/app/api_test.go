@@ -4,6 +4,8 @@ import (
 	"context"
 	"testing"
 	"time"
+
+	"github.com/korwlik23/go-api-starter/internal/platform/config"
 )
 
 func TestA1(t *testing.T) {
@@ -13,7 +15,19 @@ func TestA1(t *testing.T) {
 	result := make(chan error, 1)
 
 	go func() {
-		result <- Run(ctx)
+		result <- runApplication(
+			ctx,
+			func() (config.Config, error) {
+				return config.Config{}, nil
+			},
+			func(config.Config) error { return nil },
+			func(context.Context, config.Config) (HTTPServer, func() error, error) {
+				return stubHTTPServer{run: func(ctx context.Context) error {
+					<-ctx.Done()
+					return nil
+				}}, func() error { return nil }, nil
+			},
+		)
 	}()
 
 	select {

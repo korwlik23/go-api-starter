@@ -1,10 +1,21 @@
 package app
 
-import "context"
+import (
+	"context"
+	"os"
 
-// Run owns the API process lifecycle. Platform dependencies and the HTTP server
-// are composed here as their milestones are implemented.
+	"github.com/korwlik23/go-api-starter/internal/platform/config"
+)
+
+// Run owns the production API lifecycle from validated process configuration
+// through graceful server shutdown and dependency cleanup.
 func Run(ctx context.Context) error {
-	<-ctx.Done()
-	return nil
+	return runApplication(
+		ctx,
+		func() (config.Config, error) {
+			return config.Load(os.LookupEnv)
+		},
+		config.Validate,
+		buildPublicRuntime,
+	)
 }
