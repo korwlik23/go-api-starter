@@ -231,3 +231,27 @@ func TestCurrentSessionContract(t *testing.T) {
 	require.NotContains(t, schema.Properties, "cookie")
 	require.NotContains(t, schema.Properties, "fingerprint")
 }
+
+func TestSessionListContract(t *testing.T) {
+	loader := openapi3.NewLoader()
+	loader.IsExternalRefsAllowed = true
+	document, err := loader.LoadFromFile(filepath.Join("..", "..", "openapi", "root.yaml"))
+	require.NoError(t, err)
+	require.NoError(t, document.Validate(context.Background()))
+
+	pathItem := document.Paths.Find("/auth/sessions")
+	require.NotNil(t, pathItem)
+	require.NotNil(t, pathItem.Get)
+	require.Equal(t, "listSessions", pathItem.Get.OperationID)
+	require.Contains(t, (*pathItem.Get.Security)[0], "SessionCookie")
+
+	response := pathItem.Get.Responses.Value("200")
+	require.NotNil(t, response)
+	require.Equal(t, []interface{}{"no-store"}, response.Value.Headers["Cache-Control"].Value.Schema.Value.Enum)
+	schema := response.Value.Content.Get("application/json").Schema.Value
+	require.ElementsMatch(t, []string{"items"}, schema.Required)
+	item := schema.Properties["items"].Value.Items.Value
+	require.ElementsMatch(t, []string{"id", "created_at", "last_seen_at", "current"}, item.Required)
+	require.NotContains(t, item.Properties, "token")
+	require.NotContains(t, item.Properties, "fingerprint")
+}

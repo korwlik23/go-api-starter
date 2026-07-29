@@ -183,6 +183,27 @@ paths:
                 $ref: '#/components/schemas/CurrentSessionResponse'
         '401':
           $ref: ../../common/errors.yaml#/components/responses/Unauthorized
+  /auth/sessions:
+    get:
+      tags: [Identity]
+      summary: List safe device and session metadata for the authenticated principal.
+      operationId: listSessions
+      security:
+        - SessionCookie: []
+      responses:
+        '200':
+          description: Sessions without raw token or device fingerprint values.
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                enum: [no-store]
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionListResponse'
+        '401':
+          $ref: ../../common/errors.yaml#/components/responses/Unauthorized
 components:
   schemas:
     CSRFTokenResponse:
@@ -309,3 +330,26 @@ components:
             email:
               type: string
               format: email
+    SessionListResponse:
+      type: object
+      additionalProperties: false
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            required: [id, created_at, last_seen_at, current]
+            properties:
+              id:
+                type: string
+                minLength: 1
+              created_at:
+                type: string
+                format: date-time
+              last_seen_at:
+                type: string
+                format: date-time
+              current:
+                type: boolean
