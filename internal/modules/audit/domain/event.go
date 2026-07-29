@@ -58,6 +58,7 @@ type Event struct {
 	RequestID   string
 	Data        json.RawMessage
 	OccurredAt  time.Time
+	RecordedAt  time.Time
 }
 
 func NewEvent(input EventInput) (Event, error) {
