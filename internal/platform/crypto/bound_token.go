@@ -130,6 +130,10 @@ func ParseBoundToken(raw string) (string, bool) {
 	return tokenID, true
 }
 
+func (codec *BoundTokenCodec) Parse(raw string) (string, bool) {
+	return ParseBoundToken(raw)
+}
+
 func validBoundTokenFields(purpose, tokenID, userID string) bool {
 	return strings.TrimSpace(purpose) != "" &&
 		strings.TrimSpace(tokenID) != "" &&
