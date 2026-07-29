@@ -1,6 +1,9 @@
 package domain
 
-import "errors"
+import (
+	"errors"
+	"time"
+)
 
 var ErrInvalidTokenHash = errors.New("token hash must contain exactly 32 bytes")
 
@@ -17,6 +20,22 @@ func NewTokenHash(value []byte) (TokenHash, error) {
 }
 
 type Session struct {
-	ID        string
-	TokenHash TokenHash
+	ID                   string
+	TokenHash            TokenHash
+	CSRFTokenHash        TokenHash
+	State                SessionState
+	UserID               *string
+	AuthorizationVersion *int64
+	IdleExpiresAt        time.Time
+	AbsoluteExpiresAt    time.Time
+	RevokedAt            *time.Time
+	CreatedAt            time.Time
 }
+
+type SessionState string
+
+const (
+	SessionStateAnonymous     SessionState = "anonymous"
+	SessionStateMFAPending    SessionState = "mfa_pending"
+	SessionStateAuthenticated SessionState = "authenticated"
+)
