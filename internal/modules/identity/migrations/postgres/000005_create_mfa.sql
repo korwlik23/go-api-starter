@@ -1,6 +1,7 @@
 -- +goose Up
 CREATE TABLE mfa_totp_credentials (
     user_id UUID PRIMARY KEY,
+    enrollment_id UUID NOT NULL,
     secret_envelope_version SMALLINT NOT NULL,
     secret_key_version BIGINT NOT NULL,
     secret_nonce BYTEA NOT NULL,
@@ -12,6 +13,8 @@ CREATE TABLE mfa_totp_credentials (
     updated_at TIMESTAMPTZ(6) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT mfa_totp_credentials_key_nonce_unique
         UNIQUE (secret_key_version, secret_nonce),
+    CONSTRAINT mfa_totp_credentials_enrollment_id_unique
+        UNIQUE (enrollment_id),
     CONSTRAINT mfa_totp_credentials_user_fk FOREIGN KEY (user_id)
         REFERENCES users (id) ON UPDATE RESTRICT ON DELETE CASCADE,
     CONSTRAINT mfa_totp_credentials_envelope_version_valid

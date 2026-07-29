@@ -7,7 +7,10 @@ import (
 	"github.com/korwlik23/go-api-starter/internal/modules/identity/domain"
 )
 
-var ErrMFACompletionConflict = errors.New("MFA completion conflict")
+var (
+	ErrMFACompletionConflict = errors.New("MFA completion conflict")
+	ErrMFAEnrollmentNotFound = errors.New("MFA enrollment not found")
+)
 
 type MFAStatusReader interface {
 	IsEnabled(ctx context.Context, userID string) (bool, error)

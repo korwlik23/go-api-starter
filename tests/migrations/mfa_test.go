@@ -108,8 +108,9 @@ func m7AssertTOTPSchema(
 
 	columns := migrationColumns(t, ctx, db, cfg, m7TOTPTable)
 	require.NotEmpty(t, columns, "TOTP credentials table must exist")
-	require.Len(t, columns, 10, "M7 must persist only the encrypted TOTP envelope and lifecycle state")
+	require.Len(t, columns, 11, "M7 must persist enrollment identity, encrypted envelope, and lifecycle state")
 	m7AssertColumn(t, columns, "user_id", m3ExpectedIDType(t, cfg), "NO", false)
+	m7AssertColumn(t, columns, "enrollment_id", m3ExpectedIDType(t, cfg), "NO", false)
 	m7AssertColumn(t, columns, "secret_envelope_version", "smallint", "NO", false)
 	m7AssertColumn(t, columns, "secret_key_version", "bigint", "NO", false)
 	m7AssertColumn(t, columns, "secret_ciphertext", m7ExpectedBinaryType(t, cfg), "NO", false)
@@ -123,6 +124,7 @@ func m7AssertTOTPSchema(
 		require.Equal(t, int64(1024), columns["secret_ciphertext"].maximumLength.Int64)
 		require.Equal(t, int64(32), columns["secret_nonce"].maximumLength.Int64)
 		require.Equal(t, int64(16), columns["user_id"].maximumLength.Int64)
+		require.Equal(t, int64(16), columns["enrollment_id"].maximumLength.Int64)
 	}
 
 	require.True(t, migrationHasExactConstraintColumns(
@@ -133,6 +135,15 @@ func m7AssertTOTPSchema(
 		m7TOTPTable,
 		"PRIMARY KEY",
 		[]string{"user_id"},
+	))
+	require.True(t, migrationHasExactConstraintColumns(
+		t,
+		ctx,
+		db,
+		cfg,
+		m7TOTPTable,
+		"UNIQUE",
+		[]string{"enrollment_id"},
 	))
 	require.True(t, migrationHasExactConstraintColumns(
 		t,
