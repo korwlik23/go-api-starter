@@ -23,4 +23,5 @@ regexes = [
 ]
 paths = [
   '''internal/modules/identity/adapters/gorm/.*_test\.go$''',
+  '''internal/platform/crypto/bound_token_test\.go$''',
 ]
