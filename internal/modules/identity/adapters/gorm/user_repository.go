@@ -81,5 +81,38 @@ func (repository *UserRepository) CurrentAuthorizationVersion(
 	return record.AuthorizationVersion, nil
 }
 
+func (repository *UserRepository) FindByID(
+	ctx context.Context,
+	userID string,
+) (identitydomain.User, error) {
+	encodedID, err := encodeDatabaseID(repository.db.Dialector.Name(), userID)
+	if err != nil {
+		return identitydomain.User{}, ports.ErrUserNotFound
+	}
+	var record userRecord
+	err = repository.db.WithContext(ctx).
+		Select("id", "normalized_email", "status", "authorization_version").
+		Where("id = ?", encodedID).
+		First(&record).
+		Error
+	if errors.Is(err, gormdb.ErrRecordNotFound) {
+		return identitydomain.User{}, ports.ErrUserNotFound
+	}
+	if err != nil {
+		return identitydomain.User{}, fmt.Errorf("find user by ID: %w", err)
+	}
+	return userFromRecord(record), nil
+}
+
+func userFromRecord(record userRecord) identitydomain.User {
+	return identitydomain.User{
+		ID:                   record.ID.String(),
+		Email:                record.NormalizedEmail,
+		Status:               identitydomain.UserStatus(record.Status),
+		AuthorizationVersion: record.AuthorizationVersion,
+	}
+}
+
 var _ ports.UserRepository = (*UserRepository)(nil)
+var _ ports.UserByIDReader = (*UserRepository)(nil)
 var _ ports.AuthorizationVersionReader = (*UserRepository)(nil)

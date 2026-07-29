@@ -64,6 +64,26 @@ func TestUserRepositoryReadsAuthorizationVersionByUserID(t *testing.T) {
 	require.NoError(t, mock.ExpectationsWereMet())
 }
 
+func TestUserRepositoryFindsSafeUserProjectionByID(t *testing.T) {
+	t.Parallel()
+
+	db, mock := sessionRepositoryDatabase(t)
+	repository, err := NewUserRepository(db)
+	require.NoError(t, err)
+	userID := "018f1f64-7b2a-7c10-8bf2-3c40d5f67585"
+	mock.ExpectQuery(`SELECT .* FROM "users" WHERE id = .*`).
+		WillReturnRows(sqlmock.NewRows([]string{
+			"id", "normalized_email", "status", "authorization_version",
+		}).AddRow(userID, "person@example.com", "active", int64(7)))
+
+	user, err := repository.FindByID(context.Background(), userID)
+
+	require.NoError(t, err)
+	require.Equal(t, "person@example.com", user.Email)
+	require.Equal(t, int64(7), user.AuthorizationVersion)
+	require.NoError(t, mock.ExpectationsWereMet())
+}
+
 func TestUserRepositoryReturnsStableNotFound(t *testing.T) {
 	t.Parallel()
 

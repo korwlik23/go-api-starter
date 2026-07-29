@@ -97,6 +97,14 @@ func (repository *SessionRepository) FindByTokenHash(
 		return identitydomain.Session{}, fmt.Errorf("find session: %w", err)
 	}
 
+	session, err := sessionFromRecord(record)
+	if err != nil {
+		return identitydomain.Session{}, err
+	}
+	return session, nil
+}
+
+func sessionFromRecord(record sessionRecord) (identitydomain.Session, error) {
 	tokenHash, err := identitydomain.NewTokenHash(record.TokenHash)
 	if err != nil {
 		return identitydomain.Session{}, fmt.Errorf("decode session token hash: %w", err)
@@ -131,6 +139,69 @@ func (repository *SessionRepository) RevokeByTokenHash(
 		Update("revoked_at", revokedAt)
 	if result.Error != nil {
 		return false, fmt.Errorf("revoke session: %w", result.Error)
+	}
+	return result.RowsAffected == 1, nil
+}
+
+func (repository *SessionRepository) ListActiveByUser(
+	ctx context.Context,
+	userID string,
+	now time.Time,
+) ([]identitydomain.Session, error) {
+	encodedUserID, err := encodeDatabaseID(repository.db.Dialector.Name(), userID)
+	if err != nil {
+		return nil, fmt.Errorf("encode session user ID: %w", err)
+	}
+	var records []sessionRecord
+	err = repository.db.WithContext(ctx).
+		Where(
+			"user_id = ? AND revoked_at IS NULL "+
+				"AND idle_expires_at > ? AND absolute_expires_at > ?",
+			encodedUserID,
+			now,
+			now,
+		).
+		Order("created_at DESC").
+		Find(&records).
+		Error
+	if err != nil {
+		return nil, fmt.Errorf("list active sessions: %w", err)
+	}
+	sessions := make([]identitydomain.Session, 0, len(records))
+	for _, record := range records {
+		session, mapErr := sessionFromRecord(record)
+		if mapErr != nil {
+			return nil, mapErr
+		}
+		sessions = append(sessions, session)
+	}
+	return sessions, nil
+}
+
+func (repository *SessionRepository) RevokeOwnedByID(
+	ctx context.Context,
+	userID string,
+	sessionID string,
+	revokedAt time.Time,
+) (bool, error) {
+	encodedUserID, err := encodeDatabaseID(repository.db.Dialector.Name(), userID)
+	if err != nil {
+		return false, fmt.Errorf("encode session user ID: %w", err)
+	}
+	encodedSessionID, err := encodeDatabaseID(repository.db.Dialector.Name(), sessionID)
+	if err != nil {
+		return false, nil
+	}
+	result := repository.db.WithContext(ctx).
+		Model(&sessionRecord{}).
+		Where(
+			"id = ? AND user_id = ? AND revoked_at IS NULL",
+			encodedSessionID,
+			encodedUserID,
+		).
+		Update("revoked_at", revokedAt)
+	if result.Error != nil {
+		return false, fmt.Errorf("revoke owned session: %w", result.Error)
 	}
 	return result.RowsAffected == 1, nil
 }
@@ -212,3 +283,4 @@ func databaseIDStringPointer(value *databaseID) *string {
 
 var _ ports.SessionRepository = (*SessionRepository)(nil)
 var _ ports.SessionRotator = (*SessionRepository)(nil)
+var _ ports.SessionManagementRepository = (*SessionRepository)(nil)

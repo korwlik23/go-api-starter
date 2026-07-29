@@ -119,6 +119,66 @@ func TestSessionRepositoryReturnsStableNotFound(t *testing.T) {
 	require.NoError(t, mock.ExpectationsWereMet())
 }
 
+func TestSessionRepositoryListsOnlyActiveOwnedSessions(t *testing.T) {
+	t.Parallel()
+
+	db, mock := sessionRepositoryDatabase(t)
+	repository, err := NewSessionRepository(db)
+	require.NoError(t, err)
+	now := time.Date(2026, time.July, 30, 12, 0, 0, 0, time.UTC)
+	userID := "018f1f64-7b2a-7c10-8bf2-3c40d5f67586"
+	tokenHash := identitydomain.TokenHash{1}
+	csrfHash := identitydomain.TokenHash{2}
+	mock.ExpectQuery(`SELECT .* FROM "sessions" WHERE user_id = .*revoked_at IS NULL.*absolute_expires_at >`).
+		WillReturnRows(sqlmock.NewRows([]string{
+			"id", "token_hash", "csrf_token_hash", "state", "user_id",
+			"authorization_version", "idle_expires_at", "absolute_expires_at",
+			"revoked_at", "created_at",
+		}).AddRow(
+			"018f1f64-7b2a-7c10-8bf2-3c40d5f67585",
+			tokenHash[:],
+			csrfHash[:],
+			"authenticated",
+			userID,
+			int64(7),
+			now.Add(time.Minute),
+			now.Add(time.Hour),
+			nil,
+			now.Add(-time.Hour),
+		))
+
+	sessions, err := repository.ListActiveByUser(context.Background(), userID, now)
+
+	require.NoError(t, err)
+	require.Len(t, sessions, 1)
+	require.Equal(t, userID, *sessions[0].UserID)
+	require.NoError(t, mock.ExpectationsWereMet())
+}
+
+func TestSessionRepositoryRevokesOnlyOwnedSessionID(t *testing.T) {
+	t.Parallel()
+
+	db, mock := sessionRepositoryDatabase(t)
+	repository, err := NewSessionRepository(db)
+	require.NoError(t, err)
+	now := time.Date(2026, time.July, 30, 12, 0, 0, 0, time.UTC)
+	mock.ExpectBegin()
+	mock.ExpectExec(`UPDATE "sessions" SET "revoked_at"=.*WHERE id = .* AND user_id = .* AND revoked_at IS NULL`).
+		WillReturnResult(sqlmock.NewResult(0, 1))
+	mock.ExpectCommit()
+
+	revoked, err := repository.RevokeOwnedByID(
+		context.Background(),
+		"018f1f64-7b2a-7c10-8bf2-3c40d5f67586",
+		"018f1f64-7b2a-7c10-8bf2-3c40d5f67585",
+		now,
+	)
+
+	require.NoError(t, err)
+	require.True(t, revoked)
+	require.NoError(t, mock.ExpectationsWereMet())
+}
+
 func TestSessionRepositoryPurgesExpiredRowsInBoundedBatch(t *testing.T) {
 	db, mock := sessionRepositoryDatabase(t)
 	repository, err := NewSessionRepository(db)
