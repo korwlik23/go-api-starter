@@ -20,7 +20,7 @@ paths:
       summary: Create a locale using a system-scoped permission.
       operationId: createLocale
       x-surfaces: [admin]
-      x-required-permission: localization.locales.create
+      x-required-permission: localization.locales.manage.system
       security:
         - SessionCookie: []
           CSRFToken: []
@@ -49,7 +49,7 @@ paths:
       summary: Update locale display metadata using optimistic concurrency.
       operationId: updateLocale
       x-surfaces: [admin]
-      x-required-permission: localization.locales.update
+      x-required-permission: localization.locales.manage.system
       security:
         - SessionCookie: []
           CSRFToken: []
@@ -85,7 +85,7 @@ paths:
       summary: Change locale enabled and selectable state while enforcing registry invariants.
       operationId: updateLocaleStatus
       x-surfaces: [admin]
-      x-required-permission: localization.locales.update
+      x-required-permission: localization.locales.manage.system
       security:
         - SessionCookie: []
           CSRFToken: []
@@ -121,7 +121,7 @@ paths:
       summary: Set the single enabled and selectable default locale transactionally.
       operationId: setDefaultLocale
       x-surfaces: [admin]
-      x-required-permission: localization.locales.set-default
+      x-required-permission: localization.locales.manage.system
       security:
         - SessionCookie: []
           CSRFToken: []

@@ -597,7 +597,7 @@ paths:
       summary: Create a locale using a system-scoped permission.
       tags:
         - Localization
-      x-required-permission: localization.locales.create
+      x-required-permission: localization.locales.manage.system
   /locales/preferences:
     put:
       operationId: updateLocalePreferences
@@ -660,7 +660,7 @@ paths:
       summary: Update locale display metadata using optimistic concurrency.
       tags:
         - Localization
-      x-required-permission: localization.locales.update
+      x-required-permission: localization.locales.manage.system
   /locales/{locale_id}/default:
     put:
       operationId: setDefaultLocale
@@ -696,7 +696,7 @@ paths:
       summary: Set the single enabled and selectable default locale transactionally.
       tags:
         - Localization
-      x-required-permission: localization.locales.set-default
+      x-required-permission: localization.locales.manage.system
   /locales/{locale_id}/status:
     patch:
       operationId: updateLocaleStatus
@@ -732,7 +732,7 @@ paths:
       summary: Change locale enabled and selectable state while enforcing registry invariants.
       tags:
         - Localization
-      x-required-permission: localization.locales.update
+      x-required-permission: localization.locales.manage.system
   /localization/catalog:
     get:
       operationId: getTranslationCatalog
@@ -791,7 +791,7 @@ paths:
       summary: Replace translation overrides for one locale category using optimistic concurrency.
       tags:
         - Localization
-      x-required-permission: localization.catalog.update
+      x-required-permission: localization.translations.update.system
   /operations/modules:
     get:
       operationId: listEnabledModules

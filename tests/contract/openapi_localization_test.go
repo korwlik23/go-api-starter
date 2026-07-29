@@ -41,7 +41,7 @@ func TestLocaleCreateContract(t *testing.T) {
 	operation := document.Paths.Find("/locales").Post
 	require.NotNil(t, operation)
 	require.Equal(t, "createLocale", operation.OperationID)
-	require.Equal(t, "localization.locales.create", operation.Extensions["x-required-permission"])
+	require.Equal(t, "localization.locales.manage.system", operation.Extensions["x-required-permission"])
 	require.NotContains(t, operation.Extensions, "x-required-role")
 	require.Contains(t, (*operation.Security)[0], "CSRFToken")
 
@@ -63,7 +63,7 @@ func TestLocaleUpdateContract(t *testing.T) {
 	operation := pathItem.Patch
 	require.NotNil(t, operation)
 	require.Equal(t, "updateLocale", operation.OperationID)
-	require.Equal(t, "localization.locales.update", operation.Extensions["x-required-permission"])
+	require.Equal(t, "localization.locales.manage.system", operation.Extensions["x-required-permission"])
 
 	request := operation.RequestBody.Value.Content.Get("application/json").Schema.Value
 	require.ElementsMatch(t, []string{"name", "direction", "expected_version"}, request.Required)
@@ -167,7 +167,7 @@ func TestCatalogUpdateContract(t *testing.T) {
 	operation := document.Paths.Find("/localization/catalog").Put
 	require.NotNil(t, operation)
 	require.Equal(t, "updateTranslationCatalog", operation.OperationID)
-	require.Equal(t, "localization.catalog.update", operation.Extensions["x-required-permission"])
+	require.Equal(t, "localization.translations.update.system", operation.Extensions["x-required-permission"])
 	require.NotContains(t, operation.Extensions, "x-required-role")
 
 	request := operation.RequestBody.Value.Content.Get("application/json").Schema.Value

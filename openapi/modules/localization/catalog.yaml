@@ -35,7 +35,7 @@ paths:
       summary: Replace translation overrides for one locale category using optimistic concurrency.
       operationId: updateTranslationCatalog
       x-surfaces: [admin]
-      x-required-permission: localization.catalog.update
+      x-required-permission: localization.translations.update.system
       security:
         - SessionCookie: []
           CSRFToken: []
