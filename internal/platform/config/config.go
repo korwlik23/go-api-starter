@@ -48,14 +48,15 @@ type OriginsConfig struct {
 }
 
 type SessionConfig struct {
-	Store             string
-	CookieName        string
-	CookieSecure      bool
-	IdleTimeout       time.Duration
-	AbsoluteTimeout   time.Duration
-	TokenPepper       string
-	CSRFTokenPepper   string
-	TOTPEncryptionKey string
+	Store                string
+	CookieName           string
+	CookieSecure         bool
+	IdleTimeout          time.Duration
+	AbsoluteTimeout      time.Duration
+	TokenPepper          string
+	CSRFTokenPepper      string
+	TOTPActiveKeyVersion string
+	TOTPEncryptionKeys   string
 }
 
 type AuthenticationConfig struct {

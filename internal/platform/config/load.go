@@ -77,7 +77,10 @@ func Load(lookup LookupFunc) (Config, error) {
 	if cfg.Session.CSRFTokenPepper, err = rawValue(lookup, "CSRF_TOKEN_PEPPER"); err != nil {
 		return Config{}, err
 	}
-	if cfg.Session.TOTPEncryptionKey, err = rawValue(lookup, "TOTP_ENCRYPTION_KEY_B64"); err != nil {
+	if cfg.Session.TOTPActiveKeyVersion, err = stringValue(lookup, "TOTP_ENCRYPTION_ACTIVE_VERSION"); err != nil {
+		return Config{}, err
+	}
+	if cfg.Session.TOTPEncryptionKeys, err = rawValue(lookup, "TOTP_ENCRYPTION_KEYS_B64"); err != nil {
 		return Config{}, err
 	}
 	if cfg.Authentication.Attempts.Threshold, err = uint64Value(lookup, "AUTH_ATTEMPT_THRESHOLD"); err != nil {

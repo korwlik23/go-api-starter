@@ -1,6 +1,7 @@
 package config
 
 import (
+	"bytes"
 	"encoding/base64"
 	"strings"
 )
@@ -14,7 +15,7 @@ func validateSecrets(cfg Config) error {
 	secrets := []secretSetting{
 		{key: "SESSION_TOKEN_PEPPER", value: cfg.Session.TokenPepper},
 		{key: "CSRF_TOKEN_PEPPER", value: cfg.Session.CSRFTokenPepper},
-		{key: "TOTP_ENCRYPTION_KEY_B64", value: cfg.Session.TOTPEncryptionKey},
+		{key: "TOTP_ENCRYPTION_KEYS_B64", value: cfg.Session.TOTPEncryptionKeys},
 		{
 			key:   "AUTH_ATTEMPT_FINGERPRINT_KEY",
 			value: cfg.Authentication.AttemptFingerprintKey,
@@ -52,18 +53,10 @@ func allowsBundledExampleSecrets(environment Environment) bool {
 }
 
 func isBundledExampleSecret(key, value string) bool {
-	if key != "TOTP_ENCRYPTION_KEY_B64" {
+	if key != "TOTP_ENCRYPTION_KEYS_B64" {
 		return strings.HasPrefix(value, "development-only-")
 	}
 
-	decoded, err := base64.StdEncoding.DecodeString(value)
-	if err != nil || len(decoded) != 32 {
-		return false
-	}
-	for _, valueByte := range decoded {
-		if valueByte != 0x11 {
-			return false
-		}
-	}
-	return true
+	example := base64.StdEncoding.EncodeToString(bytes.Repeat([]byte{0x11}, 32))
+	return strings.Contains(value, example)
 }

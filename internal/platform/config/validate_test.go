@@ -33,9 +33,9 @@ func TestA3(t *testing.T) {
 		},
 		{
 			name: "TOTP encryption key",
-			key:  "TOTP_ENCRYPTION_KEY_B64",
+			key:  "TOTP_ENCRYPTION_KEYS_B64",
 			clear: func(cfg *Config) {
-				cfg.Session.TOTPEncryptionKey = ""
+				cfg.Session.TOTPEncryptionKeys = ""
 			},
 		},
 		{
@@ -88,9 +88,9 @@ func TestA3(t *testing.T) {
 		},
 		{
 			name: "TOTP encryption key",
-			key:  "TOTP_ENCRYPTION_KEY_B64",
+			key:  "TOTP_ENCRYPTION_KEYS_B64",
 			set: func(cfg *Config, value string) {
-				cfg.Session.TOTPEncryptionKey = value
+				cfg.Session.TOTPEncryptionKeys = value
 			},
 		},
 		{
@@ -148,10 +148,10 @@ func TestA3(t *testing.T) {
 		},
 		{
 			name:  "TOTP encryption key",
-			key:   "TOTP_ENCRYPTION_KEY_B64",
-			value: bundledTOTPFixture(),
+			key:   "TOTP_ENCRYPTION_KEYS_B64",
+			value: "v1:" + bundledTOTPFixture(),
 			set: func(cfg *Config, value string) {
-				cfg.Session.TOTPEncryptionKey = value
+				cfg.Session.TOTPEncryptionKeys = value
 			},
 		},
 		{
@@ -207,9 +207,10 @@ func TestA3(t *testing.T) {
 func validSecurityConfig() Config {
 	return Config{
 		Session: SessionConfig{
-			TokenPepper:       "session-token-pepper",
-			CSRFTokenPepper:   "csrf-token-pepper",
-			TOTPEncryptionKey: "totp-encryption-key",
+			TokenPepper:          "session-token-pepper",
+			CSRFTokenPepper:      "csrf-token-pepper",
+			TOTPActiveKeyVersion: "v1",
+			TOTPEncryptionKeys:   "v1:" + validTOTPFixture(),
 		},
 		Authentication: AuthenticationConfig{
 			Attempts: AuthAttemptConfig{
@@ -246,4 +247,8 @@ func validSecurityConfig() Config {
 
 func bundledTOTPFixture() string {
 	return base64.StdEncoding.EncodeToString(bytes.Repeat([]byte{0x11}, 32))
+}
+
+func validTOTPFixture() string {
+	return base64.StdEncoding.EncodeToString(bytes.Repeat([]byte{0x44}, 32))
 }

@@ -6,6 +6,12 @@ func Validate(cfg Config) error {
 	if err := validateSecrets(cfg); err != nil {
 		return err
 	}
+	if _, err := ParseTOTPKeyring(
+		cfg.Session.TOTPActiveKeyVersion,
+		cfg.Session.TOTPEncryptionKeys,
+	); err != nil {
+		return err
+	}
 	if err := ValidateDatabase(cfg.Database); err != nil {
 		return err
 	}
