@@ -26,6 +26,9 @@ func TestCoreModuleRegistryIsCanonicalAndDependencyOrdered(t *testing.T) {
 	)
 
 	for _, manifest := range registry.Ordered() {
+		if manifest.Tier != modular.TierCore {
+			continue
+		}
 		require.Equal(t, modular.TierCore, manifest.Tier)
 		require.False(t, manifest.Disableable)
 		require.Len(t, manifest.Migrations, 3)
@@ -78,6 +81,9 @@ func TestAuditManifestPinsForeignKeyParents(t *testing.T) {
 func coreModuleIDs(manifests []modular.Manifest) []string {
 	ids := make([]string, 0, len(manifests))
 	for _, manifest := range manifests {
+		if manifest.Tier != modular.TierCore {
+			continue
+		}
 		ids = append(ids, manifest.ID)
 	}
 	return ids

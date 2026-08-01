@@ -8,6 +8,7 @@ import (
 	identitymodule "github.com/korwlik23/go-api-starter/internal/modules/identity"
 	localizationmodule "github.com/korwlik23/go-api-starter/internal/modules/localization"
 	operationsmodule "github.com/korwlik23/go-api-starter/internal/modules/operations"
+	publishingmodule "github.com/korwlik23/go-api-starter/internal/modules/publishing"
 )
 
 func Modules() (*modular.Registry, error) {
@@ -18,6 +19,7 @@ func Modules() (*modular.Registry, error) {
 		localizationmodule.Manifest(),
 		auditmodule.Manifest(),
 		operationsmodule.Manifest(),
+		publishingmodule.Manifest(),
 	})
 }
 
