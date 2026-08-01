@@ -7,6 +7,7 @@ import (
 	identitymodule "github.com/korwlik23/go-api-starter/internal/modules/identity"
 	localizationmodule "github.com/korwlik23/go-api-starter/internal/modules/localization"
 	operationsmodule "github.com/korwlik23/go-api-starter/internal/modules/operations"
+	publishingmodule "github.com/korwlik23/go-api-starter/internal/modules/publishing"
 	"github.com/korwlik23/go-api-starter/internal/platform/database"
 )
 
@@ -18,5 +19,6 @@ func MigrationModules() []database.MigrationModule {
 		localizationmodule.MigrationModule(),
 		operationsmodule.MigrationModule(),
 		auditmodule.MigrationModule(),
+		publishingmodule.MigrationModule(),
 	}
 }
