@@ -1,0 +1,14 @@
+.git
+.github
+.env
+.env.*
+!.env.example
+*.exe
+*.log
+*.out
+*.test
+coverage.*
+node_modules
+openapi
+tests
+tmp
