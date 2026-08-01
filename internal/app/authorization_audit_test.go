@@ -7,6 +7,8 @@ import (
 	auditapp "github.com/korwlik23/go-api-starter/internal/modules/audit/application"
 	auditdomain "github.com/korwlik23/go-api-starter/internal/modules/audit/domain"
 	authorizationapp "github.com/korwlik23/go-api-starter/internal/modules/authorization/application"
+	localizationapp "github.com/korwlik23/go-api-starter/internal/modules/localization/application"
+	catalogapp "github.com/korwlik23/go-api-starter/internal/modules/localization/application/catalog"
 	"github.com/stretchr/testify/require"
 )
 
@@ -63,6 +65,36 @@ func TestAuthorizationAuditAdapterMapsRoleChangeEvent(t *testing.T) {
 	require.Equal(t, "request-3", appender.command.RequestID)
 	require.Equal(t, "authorization.role.updated", appender.command.Action)
 	require.Equal(t, "role-1", appender.command.Data["role_id"])
+}
+
+func TestAuthorizationAuditAdapterMapsLocaleChangeWithoutTranslationBody(t *testing.T) {
+	appender := &authorizationAuditAppenderFake{}
+	adapter := authorizationAuditAdapter{appender: appender}
+
+	err := adapter.RecordLocaleChange(context.Background(), localizationapp.LocaleManagementAuditEvent{
+		ActorUserID: "actor-1", Action: "localization.locale.status.updated",
+		LocaleID: "locale-1", Version: 4,
+	})
+
+	require.NoError(t, err)
+	require.Equal(t, auditdomain.ScopeSystem, appender.command.Scope)
+	require.Equal(t, auditdomain.Actor{Type: auditdomain.ActorUser, ID: "actor-1"}, appender.command.Actor)
+	require.Equal(t, "locale-1", appender.command.Data["locale_id"])
+}
+
+func TestAuthorizationAuditAdapterMapsCatalogMetadataOnly(t *testing.T) {
+	appender := &authorizationAuditAppenderFake{}
+	adapter := authorizationAuditAdapter{appender: appender}
+
+	err := adapter.RecordCatalogUpdate(context.Background(), catalogapp.CatalogAuditEvent{
+		ActorUserID: "actor-1", Locale: "th", Category: "common", Version: 8, EntryCount: 12,
+	})
+
+	require.NoError(t, err)
+	require.Equal(t, "localization.catalog.updated", appender.command.Action)
+	require.Equal(t, 12, appender.command.Data["entry_count"])
+	_, hasBody := appender.command.Data["entries"]
+	require.False(t, hasBody)
 }
 
 type authorizationAuditAppenderFake struct {

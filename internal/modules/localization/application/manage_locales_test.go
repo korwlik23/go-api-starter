@@ -2,6 +2,7 @@ package application
 
 import (
 	"context"
+	"errors"
 	"testing"
 	"time"
 
@@ -79,6 +80,46 @@ func TestManageLocalesRejectsMutationWithoutSystemPermission(t *testing.T) {
 	require.ErrorIs(t, err, ErrLocaleManagementDenied)
 }
 
+func TestManageLocalesRecordsCreateAuditInsideTransaction(t *testing.T) {
+	repository := &localeManagementRepositoryStub{}
+	transactor := &localeManagementTransactorFake{}
+	auditor := &localeManagementAuditorFake{}
+	useCase, err := NewManageLocales(ManageLocaleDependencies{
+		Authorizer: localeAuthorizerStub{allowed: true}, Repository: repository,
+		NewID: func() (string, error) { return "locale-id", nil }, Now: time.Now,
+		Transactions: transactor, Auditor: auditor,
+	})
+	require.NoError(t, err)
+
+	_, err = useCase.Create(context.Background(), "system-user", CreateLocaleInput{
+		Tag: "fr", Name: "French", Direction: "ltr", RequestID: "request-1",
+	})
+
+	require.NoError(t, err)
+	require.True(t, transactor.called)
+	require.True(t, auditor.called)
+	require.Equal(t, "localization.locale.created", auditor.event.Action)
+	require.Equal(t, "request-1", auditor.event.RequestID)
+}
+
+func TestManageLocalesReturnsAuditFailureForAtomicRollback(t *testing.T) {
+	transactor := &localeManagementTransactorFake{}
+	auditor := &localeManagementAuditorFake{err: errors.New("audit unavailable")}
+	useCase, err := NewManageLocales(ManageLocaleDependencies{
+		Authorizer: localeAuthorizerStub{allowed: true}, Repository: &localeManagementRepositoryStub{},
+		NewID: func() (string, error) { return "locale-id", nil }, Now: time.Now,
+		Transactions: transactor, Auditor: auditor,
+	})
+	require.NoError(t, err)
+
+	_, err = useCase.Create(context.Background(), "system-user", CreateLocaleInput{
+		Tag: "fr", Name: "French", Direction: "ltr",
+	})
+
+	require.Error(t, err)
+	require.True(t, transactor.rolledBack)
+}
+
 func newLocaleManagerForTest(
 	t *testing.T,
 	repository *localeManagementRepositoryStub,
@@ -111,6 +152,36 @@ type localeManagementRepositoryStub struct {
 	found   localizationdomain.Locale
 	created ports.CreateLocaleCommand
 	updated ports.UpdateLocaleCommand
+}
+
+type localeManagementTransactorFake struct {
+	called     bool
+	rolledBack bool
+}
+
+func (fake *localeManagementTransactorFake) WithinTransaction(
+	ctx context.Context,
+	operation func(context.Context) error,
+) error {
+	fake.called = true
+	err := operation(ctx)
+	fake.rolledBack = err != nil
+	return err
+}
+
+type localeManagementAuditorFake struct {
+	called bool
+	event  LocaleManagementAuditEvent
+	err    error
+}
+
+func (fake *localeManagementAuditorFake) RecordLocaleChange(
+	_ context.Context,
+	event LocaleManagementAuditEvent,
+) error {
+	fake.called = true
+	fake.event = event
+	return fake.err
 }
 
 func (stub *localeManagementRepositoryStub) FindByTag(

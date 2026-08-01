@@ -1,6 +1,7 @@
 package app
 
 import (
+	"errors"
 	"time"
 
 	"github.com/korwlik23/go-api-starter/internal/modules/localization/adapters/bundle"
@@ -9,8 +10,11 @@ import (
 	catalogapp "github.com/korwlik23/go-api-starter/internal/modules/localization/application/catalog"
 	preferenceapp "github.com/korwlik23/go-api-starter/internal/modules/localization/application/preferences"
 	localizationhttp "github.com/korwlik23/go-api-starter/internal/modules/localization/transport/http"
+	"github.com/korwlik23/go-api-starter/internal/platform/database"
 	gormdb "gorm.io/gorm"
 )
+
+var errLocalizationComposition = errors.New("app: localization composition failed")
 
 type localizationRuntime struct {
 	locales     *localizationhttp.LocaleHandler
@@ -22,12 +26,22 @@ type localizationRuntime struct {
 func buildLocalizationRuntime(
 	db *gormdb.DB,
 	authorizer systemPermissionAuthorizer,
+	transactions *database.TransactionManager,
+	auditor authorizationAuditAppender,
 ) (localizationRuntime, error) {
-	locales, err := localizationgorm.NewLocaleRepository(db)
+	if transactions == nil || auditor == nil {
+		return localizationRuntime{}, errLocalizationComposition
+	}
+	localizationAuditor := authorizationAuditAdapter{appender: auditor}
+	locales, err := localizationgorm.NewLocaleRepositoryWithDependencies(
+		db, transactions, transactions,
+	)
 	if err != nil {
 		return localizationRuntime{}, err
 	}
-	catalog, err := localizationgorm.NewCatalogRepository(db, time.Now)
+	catalog, err := localizationgorm.NewCatalogRepositoryWithDependencies(
+		db, time.Now, transactions, transactions,
+	)
 	if err != nil {
 		return localizationRuntime{}, err
 	}
@@ -45,16 +59,20 @@ func buildLocalizationRuntime(
 	}
 	manageLocales, err := localizationapp.NewManageLocales(
 		localizationapp.ManageLocaleDependencies{
-			Authorizer: authorizer,
-			Repository: locales,
-			NewID:      newRuntimeID,
-			Now:        time.Now,
+			Authorizer:   authorizer,
+			Repository:   locales,
+			NewID:        newRuntimeID,
+			Now:          time.Now,
+			Transactions: transactions,
+			Auditor:      localizationAuditor,
 		},
 	)
 	if err != nil {
 		return localizationRuntime{}, err
 	}
-	updateCatalog, err := catalogapp.NewUpdate(authorizer, catalog, catalog)
+	updateCatalog, err := catalogapp.NewUpdateWithDependencies(
+		authorizer, catalog, catalog, transactions, localizationAuditor,
+	)
 	if err != nil {
 		return localizationRuntime{}, err
 	}

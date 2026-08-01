@@ -37,6 +37,7 @@ type localeManager interface {
 		string,
 		string,
 		int64,
+		string,
 	) (ports.DefaultLocaleResult, error)
 }
 
@@ -60,7 +61,7 @@ func (handler *LocaleManagementHandler) Create(ctx *gin.Context) {
 		return
 	}
 	var request adminapi.LocaleCreateRequest
-	if err := ctx.ShouldBindJSON(&request); err != nil {
+	if err := decodeStrictJSON(ctx, &request); err != nil {
 		writeLocalizationProblem(ctx, nethttp.StatusBadRequest, err)
 		return
 	}
@@ -70,6 +71,7 @@ func (handler *LocaleManagementHandler) Create(ctx *gin.Context) {
 		localizationapp.CreateLocaleInput{
 			Tag: request.Code, Name: request.Name,
 			Direction: string(request.Direction),
+			RequestID: platformmiddleware.RequestIDFromContext(ctx.Request.Context()),
 		},
 	)
 	if err != nil {
@@ -86,7 +88,7 @@ func (handler *LocaleManagementHandler) UpdateMetadata(ctx *gin.Context) {
 		return
 	}
 	var request adminapi.LocaleUpdateRequest
-	if err := ctx.ShouldBindJSON(&request); err != nil {
+	if err := decodeStrictJSON(ctx, &request); err != nil {
 		writeLocalizationProblem(ctx, nethttp.StatusBadRequest, err)
 		return
 	}
@@ -97,6 +99,7 @@ func (handler *LocaleManagementHandler) UpdateMetadata(ctx *gin.Context) {
 		localizationapp.UpdateLocaleMetadataInput{
 			Name: request.Name, Direction: string(request.Direction),
 			ExpectedVersion: int64(request.ExpectedVersion),
+			RequestID:       platformmiddleware.RequestIDFromContext(ctx.Request.Context()),
 		},
 	)
 	if err != nil {
@@ -117,7 +120,7 @@ func (handler *LocaleManagementHandler) UpdateStatus(ctx *gin.Context) {
 		return
 	}
 	var request adminapi.LocaleStatusRequest
-	if err := ctx.ShouldBindJSON(&request); err != nil {
+	if err := decodeStrictJSON(ctx, &request); err != nil {
 		writeLocalizationProblem(ctx, nethttp.StatusBadRequest, err)
 		return
 	}
@@ -128,6 +131,7 @@ func (handler *LocaleManagementHandler) UpdateStatus(ctx *gin.Context) {
 		localizationapp.UpdateLocaleStatusInput{
 			Enabled: request.Enabled, UserSelectable: request.Selectable,
 			ExpectedVersion: int64(request.ExpectedVersion),
+			RequestID:       platformmiddleware.RequestIDFromContext(ctx.Request.Context()),
 		},
 	)
 	if err != nil {
@@ -147,7 +151,7 @@ func (handler *LocaleManagementHandler) SetDefault(ctx *gin.Context) {
 		return
 	}
 	var request adminapi.SetDefaultLocaleRequest
-	if err := ctx.ShouldBindJSON(&request); err != nil {
+	if err := decodeStrictJSON(ctx, &request); err != nil {
 		writeLocalizationProblem(ctx, nethttp.StatusBadRequest, err)
 		return
 	}
@@ -156,6 +160,7 @@ func (handler *LocaleManagementHandler) SetDefault(ctx *gin.Context) {
 		userID,
 		ctx.Param("locale_id"),
 		int64(request.ExpectedVersion),
+		platformmiddleware.RequestIDFromContext(ctx.Request.Context()),
 	)
 	if err != nil {
 		writeLocalizationMutationError(ctx, err)

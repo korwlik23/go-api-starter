@@ -60,7 +60,7 @@ func (handler *PreferenceHandler) Update(ctx *gin.Context) {
 		return
 	}
 	var request adminapi.LocalePreferenceRequest
-	if err := ctx.ShouldBindJSON(&request); err != nil {
+	if err := decodeStrictJSON(ctx, &request); err != nil {
 		writeLocalizationProblem(ctx, nethttp.StatusBadRequest, err)
 		return
 	}

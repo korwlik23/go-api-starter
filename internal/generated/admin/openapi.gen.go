@@ -779,6 +779,7 @@ type Locale struct {
 	Id         string          `json:"id"`
 	Name       string          `json:"name"`
 	Selectable bool            `json:"selectable"`
+	Version    *int            `json:"version,omitempty"`
 }
 
 // LocaleDirection defines model for Locale.Direction.

@@ -8,6 +8,7 @@ import (
 
 	localizationdomain "github.com/korwlik23/go-api-starter/internal/modules/localization/domain"
 	"github.com/korwlik23/go-api-starter/internal/modules/localization/ports"
+	"github.com/korwlik23/go-api-starter/internal/platform/database"
 	"github.com/korwlik23/go-api-starter/internal/platform/databaseid"
 	gormdb "gorm.io/gorm"
 )
@@ -15,7 +16,9 @@ import (
 var ErrInvalidLocaleRepository = errors.New("invalid locale repository")
 
 type LocaleRepository struct {
-	db *gormdb.DB
+	db           *gormdb.DB
+	connections  database.ConnectionProvider
+	transactions database.Transactor
 }
 
 type localeRecord struct {
@@ -40,14 +43,54 @@ func NewLocaleRepository(db *gormdb.DB) (*LocaleRepository, error) {
 	if db == nil {
 		return nil, ErrInvalidLocaleRepository
 	}
-	return &LocaleRepository{db: db}, nil
+	manager, err := database.NewTransactionManager(db)
+	if err != nil {
+		return nil, ErrInvalidLocaleRepository
+	}
+	return NewLocaleRepositoryWithDependencies(db, manager, manager)
+}
+
+// NewLocaleRepositoryWithDependencies lets application composition share one
+// transaction boundary with audit and other system mutations.
+func NewLocaleRepositoryWithDependencies(
+	db *gormdb.DB,
+	connections database.ConnectionProvider,
+	transactions database.Transactor,
+) (*LocaleRepository, error) {
+	if db == nil || connections == nil || transactions == nil {
+		return nil, ErrInvalidLocaleRepository
+	}
+	return &LocaleRepository{
+		db: db, connections: connections, transactions: transactions,
+	}, nil
+}
+
+func (repository *LocaleRepository) connection(ctx context.Context) (*gormdb.DB, error) {
+	if repository == nil || ctx == nil || repository.connections == nil {
+		return nil, ErrInvalidLocaleRepository
+	}
+	return repository.connections.Connection(ctx)
+}
+
+func (repository *LocaleRepository) withinTransaction(
+	ctx context.Context,
+	operation func(context.Context) error,
+) error {
+	if repository == nil || repository.transactions == nil || ctx == nil || operation == nil {
+		return ErrInvalidLocaleRepository
+	}
+	return repository.transactions.WithinTransaction(ctx, operation)
 }
 
 func (repository *LocaleRepository) ListEnabled(
 	ctx context.Context,
 ) ([]localizationdomain.Locale, error) {
 	var records []localeRecord
-	err := repository.db.WithContext(ctx).
+	db, err := repository.connection(ctx)
+	if err != nil {
+		return nil, err
+	}
+	err = db.
 		Where("enabled = ?", true).
 		Order("tag ASC").
 		Find(&records).
@@ -70,7 +113,11 @@ func (repository *LocaleRepository) ListSelectable(
 	ctx context.Context,
 ) ([]localizationdomain.Locale, error) {
 	var records []localeRecord
-	err := repository.db.WithContext(ctx).
+	db, err := repository.connection(ctx)
+	if err != nil {
+		return nil, err
+	}
+	err = db.
 		Where("enabled = ? AND user_selectable = ?", true, true).
 		Order("tag ASC").
 		Find(&records).

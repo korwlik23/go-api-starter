@@ -9,6 +9,7 @@ import (
 	authorizationdomain "github.com/korwlik23/go-api-starter/internal/modules/authorization/domain"
 	localizationdomain "github.com/korwlik23/go-api-starter/internal/modules/localization/domain"
 	"github.com/korwlik23/go-api-starter/internal/modules/localization/ports"
+	"github.com/korwlik23/go-api-starter/internal/platform/database"
 )
 
 var (
@@ -24,29 +25,47 @@ type localeManagementAuthorizer interface {
 	) (bool, error)
 }
 
+type LocaleManagementAuditEvent struct {
+	ActorUserID           string
+	RequestID             string
+	Action                string
+	LocaleID              string
+	Version               int64
+	PreviousDefaultLocale string
+}
+
+type LocaleManagementAuditor interface {
+	RecordLocaleChange(context.Context, LocaleManagementAuditEvent) error
+}
+
 type ManageLocaleDependencies struct {
-	Authorizer localeManagementAuthorizer
-	Repository ports.LocaleManagementRepository
-	NewID      func() (string, error)
-	Now        func() time.Time
+	Authorizer   localeManagementAuthorizer
+	Repository   ports.LocaleManagementRepository
+	NewID        func() (string, error)
+	Now          func() time.Time
+	Transactions database.Transactor
+	Auditor      LocaleManagementAuditor
 }
 
 type CreateLocaleInput struct {
 	Tag       string
 	Name      string
 	Direction string
+	RequestID string
 }
 
 type UpdateLocaleMetadataInput struct {
 	Name            string
 	Direction       string
 	ExpectedVersion int64
+	RequestID       string
 }
 
 type UpdateLocaleStatusInput struct {
 	Enabled         bool
 	UserSelectable  bool
 	ExpectedVersion int64
+	RequestID       string
 }
 
 type ManageLocales struct {
@@ -103,11 +122,33 @@ func (useCase *ManageLocales) Create(
 		Enabled: false, UserSelectable: false, Default: false,
 		Version: 1, CreatedAt: now, UpdatedAt: now,
 	}
-	if err := useCase.dependencies.Repository.Create(
-		ctx,
-		ports.CreateLocaleCommand{Locale: locale},
-	); err != nil {
-		return localizationdomain.Locale{}, err
+	var operationErr error
+	operation := func(operationContext context.Context) error {
+		if err := useCase.dependencies.Repository.Create(
+			operationContext,
+			ports.CreateLocaleCommand{Locale: locale},
+		); err != nil {
+			return err
+		}
+		if useCase.dependencies.Auditor == nil {
+			return nil
+		}
+		return useCase.dependencies.Auditor.RecordLocaleChange(
+			operationContext,
+			LocaleManagementAuditEvent{
+				ActorUserID: authenticatedUserID, RequestID: input.RequestID,
+				Action: "localization.locale.created", LocaleID: locale.ID,
+				Version: locale.Version,
+			},
+		)
+	}
+	if useCase.dependencies.Transactions != nil {
+		operationErr = useCase.dependencies.Transactions.WithinTransaction(ctx, operation)
+	} else {
+		operationErr = operation(ctx)
+	}
+	if operationErr != nil {
+		return localizationdomain.Locale{}, operationErr
 	}
 	return locale, nil
 }
@@ -134,12 +175,25 @@ func (useCase *ManageLocales) UpdateMetadata(
 		current.Version != input.ExpectedVersion {
 		return 0, ErrInvalidLocaleManagement
 	}
-	return useCase.update(ctx, current, ports.UpdateLocaleCommand{
-		ID: localeID, ExpectedVersion: input.ExpectedVersion,
-		Name: name, Direction: direction,
-		FallbackID: current.FallbackID, Enabled: current.Enabled,
-		UserSelectable: current.UserSelectable,
-	})
+	var version int64
+	operation := func(operationContext context.Context) error {
+		var updateErr error
+		version, updateErr = useCase.update(operationContext, current, ports.UpdateLocaleCommand{
+			ID: localeID, ExpectedVersion: input.ExpectedVersion,
+			Name: name, Direction: direction,
+			FallbackID: current.FallbackID, Enabled: current.Enabled,
+			UserSelectable: current.UserSelectable,
+		})
+		if updateErr != nil || useCase.dependencies.Auditor == nil {
+			return updateErr
+		}
+		return useCase.dependencies.Auditor.RecordLocaleChange(operationContext, LocaleManagementAuditEvent{
+			ActorUserID: authenticatedUserID, RequestID: input.RequestID,
+			Action: "localization.locale.metadata.updated", LocaleID: localeID,
+			Version: version,
+		})
+	}
+	return version, useCase.runMutation(ctx, operation)
 }
 
 func (useCase *ManageLocales) UpdateStatus(
@@ -160,12 +214,25 @@ func (useCase *ManageLocales) UpdateStatus(
 		(input.UserSelectable && !input.Enabled) {
 		return 0, ErrInvalidLocaleManagement
 	}
-	return useCase.update(ctx, current, ports.UpdateLocaleCommand{
-		ID: localeID, ExpectedVersion: input.ExpectedVersion,
-		Name: current.Name, Direction: current.Direction,
-		FallbackID: current.FallbackID, Enabled: input.Enabled,
-		UserSelectable: input.UserSelectable,
-	})
+	var version int64
+	operation := func(operationContext context.Context) error {
+		var updateErr error
+		version, updateErr = useCase.update(operationContext, current, ports.UpdateLocaleCommand{
+			ID: localeID, ExpectedVersion: input.ExpectedVersion,
+			Name: current.Name, Direction: current.Direction,
+			FallbackID: current.FallbackID, Enabled: input.Enabled,
+			UserSelectable: input.UserSelectable,
+		})
+		if updateErr != nil || useCase.dependencies.Auditor == nil {
+			return updateErr
+		}
+		return useCase.dependencies.Auditor.RecordLocaleChange(operationContext, LocaleManagementAuditEvent{
+			ActorUserID: authenticatedUserID, RequestID: input.RequestID,
+			Action: "localization.locale.status.updated", LocaleID: localeID,
+			Version: version,
+		})
+	}
+	return version, useCase.runMutation(ctx, operation)
 }
 
 func (useCase *ManageLocales) SetDefault(
@@ -173,6 +240,7 @@ func (useCase *ManageLocales) SetDefault(
 	authenticatedUserID string,
 	localeID string,
 	expectedVersion int64,
+	requestID string,
 ) (ports.DefaultLocaleResult, error) {
 	if err := useCase.authorize(ctx, authenticatedUserID); err != nil {
 		return ports.DefaultLocaleResult{}, err
@@ -180,12 +248,44 @@ func (useCase *ManageLocales) SetDefault(
 	if expectedVersion < 1 {
 		return ports.DefaultLocaleResult{}, ErrInvalidLocaleManagement
 	}
-	return useCase.dependencies.Repository.SetDefault(
-		ctx,
-		localeID,
-		expectedVersion,
-		useCase.dependencies.Now().UTC(),
-	)
+	var result ports.DefaultLocaleResult
+	operation := func(operationContext context.Context) error {
+		var err error
+		result, err = useCase.dependencies.Repository.SetDefault(
+			operationContext, localeID, expectedVersion,
+			useCase.dependencies.Now().UTC(),
+		)
+		if err != nil || useCase.dependencies.Auditor == nil {
+			return err
+		}
+		return useCase.dependencies.Auditor.RecordLocaleChange(
+			operationContext,
+			LocaleManagementAuditEvent{
+				ActorUserID: authenticatedUserID,
+				RequestID:   requestID,
+				Action:      "localization.locale.default.updated", LocaleID: localeID,
+				Version:               result.Version,
+				PreviousDefaultLocale: result.PreviousDefaultLocaleID,
+			},
+		)
+	}
+	var err error
+	if useCase.dependencies.Transactions != nil {
+		err = useCase.dependencies.Transactions.WithinTransaction(ctx, operation)
+	} else {
+		err = operation(ctx)
+	}
+	return result, err
+}
+
+func (useCase *ManageLocales) runMutation(
+	ctx context.Context,
+	operation func(context.Context) error,
+) error {
+	if useCase.dependencies.Transactions == nil {
+		return operation(ctx)
+	}
+	return useCase.dependencies.Transactions.WithinTransaction(ctx, operation)
 }
 
 func (useCase *ManageLocales) update(

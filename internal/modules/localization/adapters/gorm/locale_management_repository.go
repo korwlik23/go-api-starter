@@ -25,7 +25,11 @@ func (repository *LocaleRepository) FindByTag(
 		return localizationdomain.Locale{}, ports.ErrLocaleNotFound
 	}
 	var record localeRecord
-	err = repository.db.WithContext(ctx).
+	db, connectionErr := repository.connection(ctx)
+	if connectionErr != nil {
+		return localizationdomain.Locale{}, connectionErr
+	}
+	err = db.
 		Where("tag = ?", normalized).
 		First(&record).
 		Error
@@ -50,7 +54,11 @@ func (repository *LocaleRepository) FindByID(
 		return localizationdomain.Locale{}, ports.ErrLocaleNotFound
 	}
 	var record localeRecord
-	err = repository.db.WithContext(ctx).
+	db, connectionErr := repository.connection(ctx)
+	if connectionErr != nil {
+		return localizationdomain.Locale{}, connectionErr
+	}
+	err = db.
 		Where("id = ?", encodedID).
 		First(&record).
 		Error
@@ -90,22 +98,26 @@ func (repository *LocaleRepository) Create(
 	if err != nil {
 		return ErrInvalidLocaleRepository
 	}
-	err = repository.db.WithContext(ctx).
-		Table("locales").
-		Create(map[string]any{
-			"id":                 encodedID,
-			"tag":                locale.Tag,
-			"name":               locale.Name,
-			"direction":          string(locale.Direction),
-			"fallback_locale_id": nil,
-			"enabled":            locale.Enabled,
-			"user_selectable":    locale.UserSelectable,
-			"default_slot":       nil,
-			"version":            int64(1),
-			"created_at":         locale.CreatedAt,
-			"updated_at":         locale.UpdatedAt,
-		}).
-		Error
+	err = repository.withinTransaction(ctx, func(transactionContext context.Context) error {
+		db, connectionErr := repository.connection(transactionContext)
+		if connectionErr != nil {
+			return connectionErr
+		}
+		return db.Table("locales").
+			Create(map[string]any{
+				"id":                 encodedID,
+				"tag":                locale.Tag,
+				"name":               locale.Name,
+				"direction":          string(locale.Direction),
+				"fallback_locale_id": nil,
+				"enabled":            locale.Enabled,
+				"user_selectable":    locale.UserSelectable,
+				"default_slot":       nil,
+				"version":            int64(1),
+				"created_at":         locale.CreatedAt,
+				"updated_at":         locale.UpdatedAt,
+			}).Error
+	})
 	if err != nil {
 		return fmt.Errorf("%w: %v", ports.ErrLocaleConflict, err)
 	}
@@ -143,7 +155,11 @@ func (repository *LocaleRepository) Update(
 	}
 
 	newVersion := command.ExpectedVersion + 1
-	err = repository.db.WithContext(ctx).Transaction(func(tx *gormdb.DB) error {
+	err = repository.withinTransaction(ctx, func(transactionContext context.Context) error {
+		tx, connectionErr := repository.connection(transactionContext)
+		if connectionErr != nil {
+			return connectionErr
+		}
 		var records []localeRecord
 		if lockErr := tx.Clauses(clause.Locking{Strength: "UPDATE"}).
 			Order("id ASC").
@@ -247,7 +263,11 @@ func (repository *LocaleRepository) SetDefault(
 		return ports.DefaultLocaleResult{}, ports.ErrLocaleNotFound
 	}
 	result := ports.DefaultLocaleResult{Version: expectedVersion}
-	err = repository.db.WithContext(ctx).Transaction(func(tx *gormdb.DB) error {
+	err = repository.withinTransaction(ctx, func(transactionContext context.Context) error {
+		tx, connectionErr := repository.connection(transactionContext)
+		if connectionErr != nil {
+			return connectionErr
+		}
 		var records []localeRecord
 		if lockErr := tx.Clauses(clause.Locking{Strength: "UPDATE"}).
 			Where("default_slot = ? OR id = ?", int16(1), encodedID).

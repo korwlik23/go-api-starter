@@ -10,6 +10,7 @@ import (
 
 	localizationdomain "github.com/korwlik23/go-api-starter/internal/modules/localization/domain"
 	"github.com/korwlik23/go-api-starter/internal/modules/localization/ports"
+	"github.com/korwlik23/go-api-starter/internal/platform/database"
 	"github.com/korwlik23/go-api-starter/internal/platform/databaseid"
 	gormdb "gorm.io/gorm"
 	"gorm.io/gorm/clause"
@@ -29,8 +30,10 @@ var (
 )
 
 type CatalogRepository struct {
-	db  *gormdb.DB
-	now func() time.Time
+	db           *gormdb.DB
+	now          func() time.Time
+	connections  database.ConnectionProvider
+	transactions database.Transactor
 }
 
 type translationRecord struct {
@@ -53,7 +56,44 @@ func NewCatalogRepository(
 	if db == nil || now == nil {
 		return nil, ErrInvalidCatalogRepository
 	}
-	return &CatalogRepository{db: db, now: now}, nil
+	manager, err := database.NewTransactionManager(db)
+	if err != nil {
+		return nil, ErrInvalidCatalogRepository
+	}
+	return NewCatalogRepositoryWithDependencies(db, now, manager, manager)
+}
+
+// NewCatalogRepositoryWithDependencies shares the application transaction
+// boundary so catalog writes and their audit event commit atomically.
+func NewCatalogRepositoryWithDependencies(
+	db *gormdb.DB,
+	now func() time.Time,
+	connections database.ConnectionProvider,
+	transactions database.Transactor,
+) (*CatalogRepository, error) {
+	if db == nil || now == nil || connections == nil || transactions == nil {
+		return nil, ErrInvalidCatalogRepository
+	}
+	return &CatalogRepository{
+		db: db, now: now, connections: connections, transactions: transactions,
+	}, nil
+}
+
+func (repository *CatalogRepository) connection(ctx context.Context) (*gormdb.DB, error) {
+	if repository == nil || ctx == nil || repository.connections == nil {
+		return nil, ErrInvalidCatalogRepository
+	}
+	return repository.connections.Connection(ctx)
+}
+
+func (repository *CatalogRepository) withinTransaction(
+	ctx context.Context,
+	operation func(context.Context) error,
+) error {
+	if repository == nil || repository.transactions == nil || ctx == nil || operation == nil {
+		return ErrInvalidCatalogRepository
+	}
+	return repository.transactions.WithinTransaction(ctx, operation)
 }
 
 func (repository *CatalogRepository) FindEnabledLocaleByTag(
@@ -61,7 +101,11 @@ func (repository *CatalogRepository) FindEnabledLocaleByTag(
 	tag string,
 ) (localizationdomain.Locale, error) {
 	var record localeRecord
-	err := repository.db.WithContext(ctx).
+	db, err := repository.connection(ctx)
+	if err != nil {
+		return localizationdomain.Locale{}, err
+	}
+	err = db.
 		Where("tag = ? AND enabled = ?", tag, true).
 		First(&record).
 		Error
@@ -80,7 +124,11 @@ func (repository *CatalogRepository) FindEnabledLocaleByID(
 		return localizationdomain.Locale{}, ports.ErrCatalogNotFound
 	}
 	var record localeRecord
-	err = repository.db.WithContext(ctx).
+	db, err := repository.connection(ctx)
+	if err != nil {
+		return localizationdomain.Locale{}, err
+	}
+	err = db.
 		Where("id = ? AND enabled = ?", encodedID, true).
 		First(&record).
 		Error
@@ -116,7 +164,11 @@ func (repository *CatalogRepository) ListActiveOverrides(
 		return nil, ports.ErrCatalogNotFound
 	}
 	var records []translationRecord
-	err = repository.db.WithContext(ctx).
+	db, err := repository.connection(ctx)
+	if err != nil {
+		return nil, err
+	}
+	err = db.
 		Where(
 			"locale_id = ? AND category = ? AND value IS NOT NULL",
 			encodedID,
@@ -172,7 +224,11 @@ func (repository *CatalogRepository) ReplaceCategory(
 	}
 	newVersion := expectedVersion + 1
 	now := repository.now()
-	err = repository.db.WithContext(ctx).Transaction(func(tx *gormdb.DB) error {
+	err = repository.withinTransaction(ctx, func(transactionContext context.Context) error {
+		tx, connectionErr := repository.connection(transactionContext)
+		if connectionErr != nil {
+			return connectionErr
+		}
 		var locale localeRecord
 		if lockErr := tx.Clauses(clause.Locking{Strength: "UPDATE"}).
 			Where("id = ? AND enabled = ?", encodedID, true).

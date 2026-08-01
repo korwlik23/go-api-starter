@@ -44,11 +44,12 @@ func (handler *LocaleHandler) List(ctx *gin.Context) {
 }
 
 func localeResponse(locale localizationdomain.Locale) adminapi.Locale {
+	version := int(locale.Version)
 	return adminapi.Locale{
 		Id: locale.ID, Code: locale.Tag, Name: locale.Name,
 		Direction: adminapi.LocaleDirection(locale.Direction),
 		Enabled:   locale.Enabled, Selectable: locale.UserSelectable,
-		Default: locale.Default,
+		Default: locale.Default, Version: &version,
 	}
 }
 

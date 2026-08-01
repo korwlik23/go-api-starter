@@ -1630,6 +1630,9 @@ components:
           type: string
         selectable:
           type: boolean
+        version:
+          minimum: 1
+          type: integer
       required:
         - id
         - code

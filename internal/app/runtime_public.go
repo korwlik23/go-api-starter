@@ -65,6 +65,8 @@ func buildPublicRuntime(
 	localization, err := buildLocalizationRuntime(
 		db,
 		authorization.systemAuthorizer,
+		authorization.transactions,
+		authorization.auditor,
 	)
 	if err != nil {
 		return fail(err)

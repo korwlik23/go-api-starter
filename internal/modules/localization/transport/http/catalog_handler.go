@@ -9,6 +9,7 @@ import (
 	adminapi "github.com/korwlik23/go-api-starter/internal/generated/admin"
 	catalogapp "github.com/korwlik23/go-api-starter/internal/modules/localization/application/catalog"
 	"github.com/korwlik23/go-api-starter/internal/modules/localization/ports"
+	platformmiddleware "github.com/korwlik23/go-api-starter/internal/platform/middleware"
 )
 
 type catalogReader interface {
@@ -75,7 +76,7 @@ func (handler *CatalogHandler) Update(ctx *gin.Context) {
 		return
 	}
 	var request adminapi.TranslationCatalogUpdateRequest
-	if err := ctx.ShouldBindJSON(&request); err != nil {
+	if err := decodeStrictJSON(ctx, &request); err != nil {
 		writeLocalizationProblem(ctx, nethttp.StatusBadRequest, err)
 		return
 	}
@@ -86,6 +87,7 @@ func (handler *CatalogHandler) Update(ctx *gin.Context) {
 			Locale: request.Locale, Category: request.Category,
 			Entries:         request.Entries,
 			ExpectedVersion: int64(request.ExpectedVersion),
+			RequestID:       platformmiddleware.RequestIDFromContext(ctx.Request.Context()),
 		},
 	)
 	if err != nil {

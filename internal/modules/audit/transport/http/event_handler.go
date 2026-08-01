@@ -4,9 +4,9 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"net/http"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
@@ -15,6 +15,7 @@ import (
 	auditapp "github.com/korwlik23/go-api-starter/internal/modules/audit/application"
 	auditdomain "github.com/korwlik23/go-api-starter/internal/modules/audit/domain"
 	auditports "github.com/korwlik23/go-api-starter/internal/modules/audit/ports"
+	identitydomain "github.com/korwlik23/go-api-starter/internal/modules/identity/domain"
 	platformmiddleware "github.com/korwlik23/go-api-starter/internal/platform/middleware"
 	"github.com/korwlik23/go-api-starter/internal/platform/response"
 )
@@ -33,7 +34,7 @@ func NewEventHandler(query *auditapp.ListSystemEvents) (*EventHandler, error) {
 
 func (handler *EventHandler) List(ctx *gin.Context) {
 	session, ok := platformmiddleware.SessionFromContext(ctx.Request.Context())
-	if !ok || session.UserID == nil || session.State != "authenticated" {
+	if !ok || session.UserID == nil || session.State != identitydomain.SessionStateAuthenticated {
 		writeAuditProblem(ctx, http.StatusUnauthorized, "authentication_required", "Authentication is required.", nil)
 		return
 	}
@@ -110,8 +111,8 @@ func parseAuditFilter(ctx *gin.Context) (auditFilter, error) {
 	return auditFilter{Cursor: cursor, Limit: limit, Action: action, ActorID: actorID}, nil
 }
 func parsePositive(value string) (int, error) {
-	var parsed int
-	if _, err := fmt.Sscanf(value, "%d", &parsed); err != nil || parsed < 1 {
+	parsed, err := strconv.Atoi(value)
+	if err != nil || parsed < 1 {
 		return 0, errors.New("invalid integer")
 	}
 	return parsed, nil
@@ -168,7 +169,8 @@ func mapAuditEvent(event auditdomain.Event) (adminapi.AuditEvent, error) {
 	return body, nil
 }
 func validActor(actor auditdomain.Actor) bool {
-	return (actor.Type == auditdomain.ActorUser && actor.ID != "") || (actor.Type != auditdomain.ActorUser && actor.ID == "")
+	return (actor.Type == auditdomain.ActorUser && actor.ID != "") ||
+		((actor.Type == auditdomain.ActorSystem || actor.Type == auditdomain.ActorAnonymous) && actor.ID == "")
 }
 func redactAuditData(input map[string]any) map[string]any {
 	output := make(map[string]any, len(input))
@@ -181,7 +183,15 @@ func redactAuditData(input map[string]any) map[string]any {
 		case map[string]any:
 			output[key] = redactAuditData(typed)
 		case []any:
-			output[key] = typed
+			redacted := make([]any, len(typed))
+			for index, item := range typed {
+				if nested, ok := item.(map[string]any); ok {
+					redacted[index] = redactAuditData(nested)
+				} else {
+					redacted[index] = item
+				}
+			}
+			output[key] = redacted
 		default:
 			output[key] = value
 		}

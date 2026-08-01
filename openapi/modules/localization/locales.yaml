@@ -185,6 +185,9 @@ components:
           type: boolean
         default:
           type: boolean
+        version:
+          type: integer
+          minimum: 1
     LocaleCreateRequest:
       type: object
       additionalProperties: false

@@ -11,6 +11,7 @@ import (
 	accountsapp "github.com/korwlik23/go-api-starter/internal/modules/accounts/application"
 	accountsports "github.com/korwlik23/go-api-starter/internal/modules/accounts/ports"
 	accountshttp "github.com/korwlik23/go-api-starter/internal/modules/accounts/transport/http"
+	auditmodule "github.com/korwlik23/go-api-starter/internal/modules/audit"
 	auditgorm "github.com/korwlik23/go-api-starter/internal/modules/audit/adapters/gorm"
 	auditapp "github.com/korwlik23/go-api-starter/internal/modules/audit/application"
 	audithttp "github.com/korwlik23/go-api-starter/internal/modules/audit/transport/http"
@@ -36,6 +37,8 @@ var errAuthorizationComposition = errors.New(
 )
 
 type authorizationRuntime struct {
+	transactions             *database.TransactionManager
+	auditor                  authorizationAuditAppender
 	currentAccount           *accountshttp.CurrentAccountHandler
 	effectivePermissions     *authorizationhttp.PermissionHandler
 	modules                  *operationshttp.ModuleHandler
@@ -370,13 +373,15 @@ func buildAuthorizationRuntime(
 	auditEventsReadGuard, err := newPermissionGuard(
 		resolveAccount,
 		evaluator,
-		"audit.events.read.system",
+		auditmodule.PermissionEventsReadSystem,
 		nil,
 	)
 	if err != nil {
 		return authorizationRuntime{}, err
 	}
 	return authorizationRuntime{
+		transactions:   transactions,
+		auditor:        auditor,
 		currentAccount: currentAccount, effectivePermissions: effective,
 		modules: moduleHandler, currentAccountGuard: currentAccountGuard,
 		effectiveGuard: effectiveGuard, modulesGuard: modulesGuard,
