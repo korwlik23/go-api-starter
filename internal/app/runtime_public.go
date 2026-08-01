@@ -107,6 +107,18 @@ func buildPublicRuntime(
 				Capacity: cfg.RateLimits.Baseline.Capacity,
 				Window:   cfg.RateLimits.Baseline.Window,
 			},
+			"login": {
+				Capacity: cfg.RateLimits.Login.Capacity,
+				Window:   cfg.RateLimits.Login.Window,
+			},
+			"recovery": {
+				Capacity: cfg.RateLimits.Recovery.Capacity,
+				Window:   cfg.RateLimits.Recovery.Window,
+			},
+			"mfa": {
+				Capacity: cfg.RateLimits.MFA.Capacity,
+				Window:   cfg.RateLimits.MFA.Window,
+			},
 		},
 		ratelimit.Options{
 			Clock:               time.Now,
@@ -131,6 +143,17 @@ func buildPublicRuntime(
 	logger := telemetry.NewLogger(os.Stdout, telemetry.LoggerOptions{
 		Service: cfg.App.Name, Environment: string(cfg.App.Environment), Level: level,
 	})
+	identity, err := buildIdentityRuntime(
+		db,
+		cfg,
+		trustedProxies,
+		limiter,
+		clientKey,
+		logger,
+	)
+	if err != nil {
+		return fail(err)
+	}
 
 	readiness := httpserver.NewReadinessGate(httpserver.Readiness{
 		Timeout: cfg.Database.ConnectTimeout,
@@ -145,19 +168,13 @@ func buildPublicRuntime(
 			return fail(fmt.Errorf("app: invalid trusted proxy configuration"))
 		}
 	}
-	router.Use(
-		platformmiddleware.RequestID(nil),
-		cors,
-		platformmiddleware.RateLimit(platformmiddleware.RateLimitOptions{
-			Policy: "baseline", Limiter: limiter,
-			TrustedProxies: trustedProxies, ClientKey: clientKey, Logger: logger,
-		}),
-	)
+	router.Use(platformmiddleware.RequestID(nil), cors, identity.rateLimits.Baseline)
 	RegisterPublicSystemRoutes(
 		router.Group("/api/v1"),
 		localeHandler,
 		catalogHandler,
 	)
+	RegisterIdentityRoutes(router.Group("/api/v1"), identity)
 	server := httpserver.NewServer(httpserver.ServerConfig{
 		Address: cfg.HTTP.Address, ReadHeaderTimeout: cfg.HTTP.ReadHeaderTimeout,
 		ShutdownTimeout: cfg.HTTP.ShutdownTimeout,

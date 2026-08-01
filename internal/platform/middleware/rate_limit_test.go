@@ -396,3 +396,16 @@ func decodeRateLimitProblem(
 	require.NoError(t, json.Unmarshal(responseRecorder.Body.Bytes(), &envelope))
 	return envelope
 }
+
+func TestResolveClientAddressSharesTheValidatedProxyPolicy(t *testing.T) {
+	trustedProxies, err := config.ParseTrustedProxyCIDRs([]string{"10.0.0.0/8"})
+	require.NoError(t, err)
+
+	request := httptest.NewRequest(http.MethodPost, "/", nil)
+	request.RemoteAddr = "10.0.0.2:49152"
+	request.Header.Set("X-Forwarded-For", "198.51.100.40")
+
+	address, err := ResolveClientAddress(request, trustedProxies)
+	require.NoError(t, err)
+	require.Equal(t, "198.51.100.40", address)
+}

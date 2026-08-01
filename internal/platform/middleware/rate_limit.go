@@ -181,6 +181,19 @@ func resolveClientAddress(
 	return peerAddress, nil
 }
 
+// ResolveClientAddress returns the canonical address selected with the same
+// explicit trusted-proxy policy used by rate limiting.
+func ResolveClientAddress(
+	request *http.Request,
+	trustedProxies config.TrustedProxySet,
+) (string, error) {
+	address, err := resolveClientAddress(request, trustedProxies)
+	if err != nil {
+		return "", err
+	}
+	return address.String(), nil
+}
+
 func parseRemoteAddress(remoteAddress string) (netip.Addr, error) {
 	host, _, err := net.SplitHostPort(remoteAddress)
 	if err == nil {

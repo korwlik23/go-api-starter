@@ -57,6 +57,21 @@ func TestDevelopmentSessionCookieSupportsLocalHTTP(t *testing.T) {
 	require.Equal(t, nethttp.SameSiteLaxMode, result[0].SameSite)
 }
 
+func TestSessionCookieExposesTheEffectiveEnvironmentName(t *testing.T) {
+	development, err := NewSessionCookie(SessionCookieConfig{
+		Name: "go_lang_starter_session",
+	})
+	require.NoError(t, err)
+	require.Equal(t, "go_lang_starter_session", development.Name())
+
+	production, err := NewSessionCookie(SessionCookieConfig{
+		Name:       "go_lang_starter_session",
+		Production: true,
+	})
+	require.NoError(t, err)
+	require.Equal(t, "__Host-go_lang_starter_session", production.Name())
+}
+
 func TestSessionCookieRejectsInvalidNames(t *testing.T) {
 	for _, name := range []string{"", "__Host-existing-prefix", "contains space"} {
 		_, err := NewSessionCookie(SessionCookieConfig{Name: name})

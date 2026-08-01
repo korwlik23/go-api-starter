@@ -22,6 +22,10 @@ type SessionCookie struct {
 	secure bool
 }
 
+func (cookie *SessionCookie) Name() string {
+	return cookie.name
+}
+
 func NewSessionCookie(config SessionCookieConfig) (*SessionCookie, error) {
 	if config.Name == "" || strings.HasPrefix(config.Name, "__Host-") {
 		return nil, ErrInvalidSessionCookie
