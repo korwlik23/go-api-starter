@@ -69,7 +69,7 @@ func RegisterAdministrationRoutes(
 	runtime authorizationRuntime,
 	identity identityRuntime,
 ) {
-	if runtime.adminUsers == nil || runtime.memberships == nil {
+	if runtime.adminUsers == nil || runtime.memberships == nil || runtime.auditEvents == nil {
 		return
 	}
 	protected := router.Group("")
