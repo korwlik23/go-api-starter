@@ -20,6 +20,31 @@ func RegisterAuthorizationRoutes(
 		runtime.effectivePermissions.GetEffective,
 	)
 	protected.GET("/system/modules", runtime.modulesGuard, runtime.modules.List)
+	protected.GET(
+		"/authorization/roles",
+		runtime.rolesReadGuard,
+		runtime.roleHandler.ListRoles,
+	)
+	protected.POST(
+		"/authorization/roles",
+		runtime.rolesManageGuard,
+		runtime.roleHandler.CreateRole,
+	)
+	protected.PATCH(
+		"/authorization/roles/:role_id",
+		runtime.rolesManageGuard,
+		runtime.roleHandler.UpdateRole,
+	)
+	protected.GET(
+		"/authorization/roles/:role_id/permissions",
+		runtime.rolePermissionsReadGuard,
+		runtime.roleHandler.ListRolePermissions,
+	)
+	protected.GET(
+		"/authorization/roles/:role_id/assignments",
+		runtime.roleAssignmentsReadGuard,
+		runtime.roleHandler.ListRoleAssignments,
+	)
 	protected.POST(
 		"/authorization/roles/:role_id/permissions",
 		runtime.grantGuard,

@@ -31,18 +31,23 @@ var errAuthorizationComposition = errors.New(
 )
 
 type authorizationRuntime struct {
-	currentAccount       *accountshttp.CurrentAccountHandler
-	effectivePermissions *authorizationhttp.PermissionHandler
-	modules              *operationshttp.ModuleHandler
-	currentAccountGuard  gin.HandlerFunc
-	effectiveGuard       gin.HandlerFunc
-	modulesGuard         gin.HandlerFunc
-	grantGuard           gin.HandlerFunc
-	grantRolePermission  *authorizationhttp.GrantRolePermissionHandler
-	assignmentGuard      gin.HandlerFunc
-	revokeGuard          gin.HandlerFunc
-	roleAssignment       *authorizationhttp.RoleAssignmentHandler
-	systemAuthorizer     systemPermissionAuthorizer
+	currentAccount           *accountshttp.CurrentAccountHandler
+	effectivePermissions     *authorizationhttp.PermissionHandler
+	modules                  *operationshttp.ModuleHandler
+	currentAccountGuard      gin.HandlerFunc
+	effectiveGuard           gin.HandlerFunc
+	modulesGuard             gin.HandlerFunc
+	grantGuard               gin.HandlerFunc
+	grantRolePermission      *authorizationhttp.GrantRolePermissionHandler
+	assignmentGuard          gin.HandlerFunc
+	revokeGuard              gin.HandlerFunc
+	roleAssignment           *authorizationhttp.RoleAssignmentHandler
+	rolesReadGuard           gin.HandlerFunc
+	rolesManageGuard         gin.HandlerFunc
+	rolePermissionsReadGuard gin.HandlerFunc
+	roleAssignmentsReadGuard gin.HandlerFunc
+	roleHandler              *authorizationhttp.RoleHandler
+	systemAuthorizer         systemPermissionAuthorizer
 }
 
 func buildAuthorizationRuntime(
@@ -110,6 +115,17 @@ func buildAuthorizationRuntime(
 	if err != nil {
 		return authorizationRuntime{}, err
 	}
+	roleQueryRepository, err := authorizationgorm.NewRoleQueryRepository(db)
+	if err != nil {
+		return authorizationRuntime{}, err
+	}
+	roleCommandRepository, err := authorizationgorm.NewTransactionalRoleCommandRepository(
+		transactions,
+		db.Dialector.Name(),
+	)
+	if err != nil {
+		return authorizationRuntime{}, err
+	}
 	resolveAccount, err := accountsapp.NewResolveAccount(accounts)
 	if err != nil {
 		return authorizationRuntime{}, err
@@ -122,6 +138,20 @@ func buildAuthorizationRuntime(
 		permissions,
 		principalOwnership{accounts: resolveAccount},
 	)
+	if err != nil {
+		return authorizationRuntime{}, err
+	}
+	systemAuthorizer := systemPermissionAuthorizer{evaluator: evaluator}
+	roleManagement, err := authorizationapp.NewRoleManagementService(
+		transactions,
+		systemAuthorizer,
+		roleCommandRepository,
+		authorizationAuditAdapter{appender: auditor},
+	)
+	if err != nil {
+		return authorizationRuntime{}, err
+	}
+	roleHandler, err := authorizationhttp.NewRoleHandler(roleQueryRepository, roleManagement)
 	if err != nil {
 		return authorizationRuntime{}, err
 	}
@@ -194,14 +224,54 @@ func buildAuthorizationRuntime(
 	if err != nil {
 		return authorizationRuntime{}, err
 	}
+	rolesReadGuard, err := newPermissionGuard(
+		resolveAccount,
+		evaluator,
+		authorizationmodule.PermissionRolesReadSystem,
+		nil,
+	)
+	if err != nil {
+		return authorizationRuntime{}, err
+	}
+	rolesManageGuard, err := newPermissionGuard(
+		resolveAccount,
+		evaluator,
+		authorizationmodule.PermissionRolesManageSystem,
+		nil,
+	)
+	if err != nil {
+		return authorizationRuntime{}, err
+	}
+	rolePermissionsReadGuard, err := newPermissionGuard(
+		resolveAccount,
+		evaluator,
+		authorizationmodule.PermissionRolePermissionsReadSystem,
+		nil,
+	)
+	if err != nil {
+		return authorizationRuntime{}, err
+	}
+	roleAssignmentsReadGuard, err := newPermissionGuard(
+		resolveAccount,
+		evaluator,
+		authorizationmodule.PermissionRoleAssignmentsReadSystem,
+		nil,
+	)
+	if err != nil {
+		return authorizationRuntime{}, err
+	}
 	return authorizationRuntime{
 		currentAccount: currentAccount, effectivePermissions: effective,
 		modules: moduleHandler, currentAccountGuard: currentAccountGuard,
 		effectiveGuard: effectiveGuard, modulesGuard: modulesGuard,
 		grantGuard: grantGuard, grantRolePermission: grantHandler,
 		assignmentGuard: assignmentGuard, revokeGuard: revokeGuard,
-		roleAssignment:   assignmentHandler,
-		systemAuthorizer: systemPermissionAuthorizer{evaluator: evaluator},
+		roleAssignment: assignmentHandler,
+		rolesReadGuard: rolesReadGuard, rolesManageGuard: rolesManageGuard,
+		rolePermissionsReadGuard: rolePermissionsReadGuard,
+		roleAssignmentsReadGuard: roleAssignmentsReadGuard,
+		roleHandler:              roleHandler,
+		systemAuthorizer:         systemAuthorizer,
 	}, nil
 }
 

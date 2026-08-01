@@ -94,5 +94,41 @@ func (adapter authorizationAuditAdapter) RecordRolePermissionGrant(
 	return err
 }
 
+func (adapter authorizationAuditAdapter) RecordRoleChange(
+	ctx context.Context,
+	event authorizationapp.RoleManagementAuditEvent,
+) error {
+	if adapter.appender == nil || ctx == nil {
+		return ErrInvalidAuthorizationAuditAdapter
+	}
+	scope := auditdomain.Scope(event.Scope)
+	switch scope {
+	case auditdomain.ScopeSystem:
+		if event.AccountID != "" {
+			return ErrInvalidAuthorizationAuditAdapter
+		}
+	case auditdomain.ScopeAccount:
+		if event.AccountID == "" {
+			return ErrInvalidAuthorizationAuditAdapter
+		}
+	default:
+		return ErrInvalidAuthorizationAuditAdapter
+	}
+	if event.ActorUserID == "" || event.Action == "" || event.RoleID == "" {
+		return ErrInvalidAuthorizationAuditAdapter
+	}
+	_, err := adapter.appender.Execute(ctx, auditapp.AppendCommand{
+		Scope: scope, AccountID: event.AccountID,
+		Actor:  auditdomain.Actor{Type: auditdomain.ActorUser, ID: event.ActorUserID},
+		Action: event.Action, RequestID: event.RequestID,
+		Data: map[string]any{
+			"role_id": event.RoleID,
+			"scope":   event.Scope,
+		},
+	})
+	return err
+}
+
 var _ authorizationapp.RoleAssignmentAuditor = authorizationAuditAdapter{}
 var _ authorizationapp.GrantRolePermissionAuditor = authorizationAuditAdapter{}
+var _ authorizationapp.RoleManagementAuditor = authorizationAuditAdapter{}

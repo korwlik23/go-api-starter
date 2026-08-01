@@ -47,6 +47,24 @@ func TestAuthorizationAuditAdapterMapsRolePermissionGrant(t *testing.T) {
 	require.Equal(t, "role-1", appender.command.Data["role_id"])
 }
 
+func TestAuthorizationAuditAdapterMapsRoleChangeEvent(t *testing.T) {
+	appender := &authorizationAuditAppenderFake{}
+	adapter := authorizationAuditAdapter{appender: appender}
+
+	err := adapter.RecordRoleChange(context.Background(), authorizationapp.RoleManagementAuditEvent{
+		Scope: "account", AccountID: "account-1", ActorUserID: "actor-1", RequestID: "request-3",
+		Action: "authorization.role.updated", RoleID: "role-1",
+	})
+
+	require.NoError(t, err)
+	require.Equal(t, auditdomain.ScopeAccount, appender.command.Scope)
+	require.Equal(t, "account-1", appender.command.AccountID)
+	require.Equal(t, "actor-1", appender.command.Actor.ID)
+	require.Equal(t, "request-3", appender.command.RequestID)
+	require.Equal(t, "authorization.role.updated", appender.command.Action)
+	require.Equal(t, "role-1", appender.command.Data["role_id"])
+}
+
 type authorizationAuditAppenderFake struct {
 	command auditapp.AppendCommand
 }
