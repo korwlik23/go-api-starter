@@ -13,6 +13,7 @@ var (
 	ErrInvalidContentRepository = errors.New("invalid content repository")
 	ErrInvalidContentQuery      = errors.New("invalid content query")
 	ErrContentNotFound          = errors.New("content not found")
+	ErrContentConflict           = errors.New("content version conflict")
 )
 
 var contentIDPattern = regexp.MustCompile(
@@ -81,6 +82,35 @@ type ContentRepository interface {
 	List(ctx context.Context, query ContentListQuery) (ContentListPage, error)
 	Get(ctx context.Context, accountID, contentID, localeID string) (ContentDetail, error)
 	FindPublic(ctx context.Context, accountID, localeID, path string) (ContentDetail, error)
+}
+
+type CreateContentCommand struct {
+	Item        publishingdomain.ContentItem
+	Translation publishingdomain.ContentTranslation
+}
+
+type UpdateContentCommand struct {
+	AccountID       string
+	ContentID       string
+	TranslationID   string
+	LocaleID        string
+	ExpectedVersion int64
+	Translation     publishingdomain.ContentTranslation
+}
+
+type DeleteContentCommand struct {
+	AccountID       string
+	ContentID       string
+	TranslationID   string
+	LocaleID        string
+	ExpectedVersion int64
+	DeletedAt       time.Time
+}
+
+type ContentCommandRepository interface {
+	Create(context.Context, CreateContentCommand) (ContentDetail, error)
+	Update(context.Context, UpdateContentCommand) (ContentDetail, error)
+	SoftDelete(context.Context, DeleteContentCommand) error
 }
 
 func ValidateContentListQuery(query ContentListQuery) error {

@@ -9,6 +9,7 @@ import (
 
 	publishingdomain "github.com/korwlik23/go-api-starter/internal/modules/publishing/domain"
 	"github.com/korwlik23/go-api-starter/internal/modules/publishing/ports"
+	"github.com/korwlik23/go-api-starter/internal/platform/database"
 	"github.com/korwlik23/go-api-starter/internal/platform/databaseid"
 	gormdb "gorm.io/gorm"
 )
@@ -16,7 +17,8 @@ import (
 var ErrInvalidContentRepository = errors.New("invalid content repository")
 
 type ContentRepository struct {
-	db *gormdb.DB
+	db          *gormdb.DB
+	connections database.ConnectionProvider
 }
 
 type contentListRecord struct {
@@ -69,7 +71,18 @@ func NewContentRepository(db *gormdb.DB) (*ContentRepository, error) {
 	if db == nil {
 		return nil, ErrInvalidContentRepository
 	}
-	return &ContentRepository{db: db}, nil
+	manager, err := database.NewTransactionManager(db)
+	if err != nil {
+		return nil, ErrInvalidContentRepository
+	}
+	return &ContentRepository{db: db, connections: manager}, nil
+}
+
+func (repository *ContentRepository) connection(ctx context.Context) (*gormdb.DB, error) {
+	if repository == nil || repository.connections == nil || ctx == nil {
+		return nil, ErrInvalidContentRepository
+	}
+	return repository.connections.Connection(ctx)
 }
 
 func (repository *ContentRepository) List(
@@ -90,7 +103,11 @@ func (repository *ContentRepository) List(
 	if err != nil {
 		return ports.ContentListPage{}, ports.ErrInvalidContentQuery
 	}
-	db := repository.db.WithContext(ctx).
+	db, err := repository.connection(ctx)
+	if err != nil {
+		return ports.ContentListPage{}, err
+	}
+	db = db.WithContext(ctx).
 		Table("content_translations").
 		Select(
 			"content_items.id AS content_id, content_items.account_id, "+
@@ -176,7 +193,11 @@ func (repository *ContentRepository) Get(
 		return ports.ContentDetail{}, ports.ErrContentNotFound
 	}
 	var record contentDetailRecord
-	db := repository.detailQuery(ctx).
+	db, err := repository.detailQuery(ctx)
+	if err != nil {
+		return ports.ContentDetail{}, err
+	}
+	db = db.
 		Where(
 			"content_items.account_id = ? AND content_translations.content_id = ? "+
 				"AND content_translations.locale_id = ? "+
@@ -217,7 +238,11 @@ func (repository *ContentRepository) FindPublic(
 		return ports.ContentDetail{}, ports.ErrContentNotFound
 	}
 	var record contentDetailRecord
-	result := repository.detailQuery(ctx).
+	db, err := repository.detailQuery(ctx)
+	if err != nil {
+		return ports.ContentDetail{}, err
+	}
+	result := db.
 		Where(
 			"content_items.account_id = ? AND content_translations.locale_id = ? "+
 				"AND content_translations.path = ? AND content_items.status = ? "+
@@ -240,8 +265,12 @@ func (repository *ContentRepository) FindPublic(
 	return mapContentDetailRecord(record)
 }
 
-func (repository *ContentRepository) detailQuery(ctx context.Context) *gormdb.DB {
-	return repository.db.WithContext(ctx).
+func (repository *ContentRepository) detailQuery(ctx context.Context) (*gormdb.DB, error) {
+	db, err := repository.connection(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return db.WithContext(ctx).
 		Table("content_translations").
 		Select(
 			"content_items.id AS content_id, content_translations.id AS translation_id, " +
@@ -258,7 +287,7 @@ func (repository *ContentRepository) detailQuery(ctx context.Context) *gormdb.DB
 				"content_translations.aeo_answer, content_translations.updated_at").
 		Joins(
 			"JOIN content_items ON content_items.id = content_translations.content_id " +
-				"AND content_items.account_id = content_translations.account_id")
+				"AND content_items.account_id = content_translations.account_id"), nil
 }
 
 func (repository *ContentRepository) encodeIDs(
