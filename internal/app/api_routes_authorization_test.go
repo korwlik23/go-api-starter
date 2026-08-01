@@ -20,6 +20,8 @@ func TestAuthorizationCompositionRegistersProtectedReadRoutes(t *testing.T) {
 	noOp := func(ctx *gin.Context) { ctx.Next() }
 	grantHandler, err := authorizationhttp.NewGrantRolePermissionHandler(routeGrantServiceStub{})
 	require.NoError(t, err)
+	assignmentHandler, err := authorizationhttp.NewRoleAssignmentHandler(routeRoleAssignmentServiceStub{})
+	require.NoError(t, err)
 
 	RegisterAuthorizationRoutes(router.Group("/api/v1"), authorizationRuntime{
 		currentAccount:       &accountshttp.CurrentAccountHandler{},
@@ -30,6 +32,9 @@ func TestAuthorizationCompositionRegistersProtectedReadRoutes(t *testing.T) {
 		modulesGuard:         noOp,
 		grantGuard:           noOp,
 		grantRolePermission:  grantHandler,
+		assignmentGuard:      noOp,
+		revokeGuard:          noOp,
+		roleAssignment:       assignmentHandler,
 	}, identityRuntime{
 		authenticate: noOp,
 		csrf:         noOp,
@@ -40,6 +45,8 @@ func TestAuthorizationCompositionRegistersProtectedReadRoutes(t *testing.T) {
 		"GET /api/v1/authorization/permissions",
 		"GET /api/v1/system/modules",
 		"POST /api/v1/authorization/roles/:role_id/permissions",
+		"POST /api/v1/authorization/roles/:role_id/assignments",
+		"DELETE /api/v1/authorization/assignments/:assignment_id",
 	}, routeKeys(router))
 }
 
@@ -66,6 +73,9 @@ func TestAuthorizationCompositionAppliesIdentitySecurityBeforePermissionGuards(
 		modulesGuard:         guard,
 		grantGuard:           guard,
 		grantRolePermission:  mustGrantRolePermissionHandler(t),
+		assignmentGuard:      guard,
+		revokeGuard:          guard,
+		roleAssignment:       mustRoleAssignmentHandler(t),
 	}, identityRuntime{
 		authenticate: authenticate,
 		csrf:         func(ctx *gin.Context) { ctx.Next() },
@@ -85,8 +95,24 @@ func (routeGrantServiceStub) Execute(context.Context, authorizationapp.GrantRole
 	return authorizationapp.GrantRolePermissionResult{}, nil
 }
 
+type routeRoleAssignmentServiceStub struct{}
+
+func (routeRoleAssignmentServiceStub) Assign(context.Context, authorizationapp.AssignRoleCommand) (authorizationapp.RoleAssignmentResult, error) {
+	return authorizationapp.RoleAssignmentResult{}, nil
+}
+
+func (routeRoleAssignmentServiceStub) Revoke(context.Context, authorizationapp.RevokeRoleCommand) (authorizationapp.RoleRevokeResult, error) {
+	return authorizationapp.RoleRevokeResult{}, nil
+}
+
 func mustGrantRolePermissionHandler(t *testing.T) *authorizationhttp.GrantRolePermissionHandler {
 	handler, err := authorizationhttp.NewGrantRolePermissionHandler(routeGrantServiceStub{})
+	require.NoError(t, err)
+	return handler
+}
+
+func mustRoleAssignmentHandler(t *testing.T) *authorizationhttp.RoleAssignmentHandler {
+	handler, err := authorizationhttp.NewRoleAssignmentHandler(routeRoleAssignmentServiceStub{})
 	require.NoError(t, err)
 	return handler
 }

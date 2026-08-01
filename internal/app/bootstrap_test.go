@@ -33,6 +33,8 @@ func TestBootstrapCreatesDynamicPermissionDrivenFoundationOnce(t *testing.T) {
 	require.Len(t, store.record.Permissions, 9)
 	require.NotEmpty(t, store.record.AccountRoleID)
 	require.NotEmpty(t, store.record.SystemRoleID)
+	require.NotEmpty(t, store.record.MembershipRoleAssignmentID)
+	require.NotEmpty(t, store.record.SystemRoleAssignmentID)
 	require.NotEqual(t, store.record.AccountRoleID, store.record.SystemRoleID)
 	require.Equal(t, "owner@example.test", store.record.Email)
 	require.Equal(t, "hashed-password", store.record.PasswordHash)
@@ -170,6 +172,8 @@ func newBootstrapForTest(
 				"018f1f64-7b2a-7c10-8bf2-3c40d5f67585",
 				"018f1f64-7b2a-7c10-8bf2-3c40d5f67586",
 				"018f1f64-7b2a-7c10-8bf2-3c40d5f67587",
+				"018f1f64-7b2a-7c10-8bf2-3c40d5f67588",
+				"018f1f64-7b2a-7c10-8bf2-3c40d5f67589",
 			}[sequence-1], nil
 		},
 	})

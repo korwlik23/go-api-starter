@@ -36,6 +36,9 @@ type authorizationRuntime struct {
 	modulesGuard         gin.HandlerFunc
 	grantGuard           gin.HandlerFunc
 	grantRolePermission  *authorizationhttp.GrantRolePermissionHandler
+	assignmentGuard      gin.HandlerFunc
+	revokeGuard          gin.HandlerFunc
+	roleAssignment       *authorizationhttp.RoleAssignmentHandler
 	systemAuthorizer     systemPermissionAuthorizer
 }
 
@@ -66,6 +69,24 @@ func buildAuthorizationRuntime(
 		return authorizationRuntime{}, err
 	}
 	grantHandler, err := authorizationhttp.NewGrantRolePermissionHandler(grantService)
+	if err != nil {
+		return authorizationRuntime{}, err
+	}
+	assignmentRepository, err := authorizationgorm.NewTransactionalRoleAssignmentRepository(
+		transactions,
+		db.Dialector.Name(),
+	)
+	if err != nil {
+		return authorizationRuntime{}, err
+	}
+	assignmentService, err := authorizationapp.NewRoleAssignmentService(
+		transactions,
+		assignmentRepository,
+	)
+	if err != nil {
+		return authorizationRuntime{}, err
+	}
+	assignmentHandler, err := authorizationhttp.NewRoleAssignmentHandler(assignmentService)
 	if err != nil {
 		return authorizationRuntime{}, err
 	}
@@ -135,11 +156,31 @@ func buildAuthorizationRuntime(
 	if err != nil {
 		return authorizationRuntime{}, err
 	}
+	assignmentGuard, err := newPermissionGuard(
+		resolveAccount,
+		evaluator,
+		authorizationmodule.PermissionRoleAssignmentAssign,
+		nil,
+	)
+	if err != nil {
+		return authorizationRuntime{}, err
+	}
+	revokeGuard, err := newPermissionGuard(
+		resolveAccount,
+		evaluator,
+		authorizationmodule.PermissionRoleAssignmentRevoke,
+		nil,
+	)
+	if err != nil {
+		return authorizationRuntime{}, err
+	}
 	return authorizationRuntime{
 		currentAccount: currentAccount, effectivePermissions: effective,
 		modules: moduleHandler, currentAccountGuard: currentAccountGuard,
 		effectiveGuard: effectiveGuard, modulesGuard: modulesGuard,
 		grantGuard: grantGuard, grantRolePermission: grantHandler,
+		assignmentGuard: assignmentGuard, revokeGuard: revokeGuard,
+		roleAssignment:   assignmentHandler,
 		systemAuthorizer: systemPermissionAuthorizer{evaluator: evaluator},
 	}, nil
 }

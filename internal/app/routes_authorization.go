@@ -25,4 +25,14 @@ func RegisterAuthorizationRoutes(
 		runtime.grantGuard,
 		runtime.grantRolePermission.Grant,
 	)
+	protected.POST(
+		"/authorization/roles/:role_id/assignments",
+		runtime.assignmentGuard,
+		runtime.roleAssignment.Assign,
+	)
+	protected.DELETE(
+		"/authorization/assignments/:assignment_id",
+		runtime.revokeGuard,
+		runtime.roleAssignment.Revoke,
+	)
 }

@@ -191,6 +191,7 @@ func (session *bootstrapSession) Create(
 				"account_id":    ids.account,
 				"membership_id": ids.membership,
 				"role_id":       ids.accountRole,
+				"assignment_id": ids.membershipRoleAssignment,
 			},
 		},
 		{
@@ -199,6 +200,7 @@ func (session *bootstrapSession) Create(
 				"user_id":         ids.user,
 				"role_owner_type": "system",
 				"role_id":         ids.systemRole,
+				"assignment_id":   ids.systemRoleAssignment,
 			},
 		},
 	}
@@ -321,11 +323,13 @@ func (session *bootstrapSession) connection(
 }
 
 type encodedBootstrapIDs struct {
-	account     any
-	user        any
-	membership  any
-	accountRole any
-	systemRole  any
+	account                  any
+	user                     any
+	membership               any
+	accountRole              any
+	systemRole               any
+	membershipRoleAssignment any
+	systemRoleAssignment     any
 }
 
 func (session *bootstrapSession) encodedRecordIDs(
@@ -337,10 +341,12 @@ func (session *bootstrapSession) encodedRecordIDs(
 		record.MembershipID,
 		record.AccountRoleID,
 		record.SystemRoleID,
+		record.MembershipRoleAssignmentID,
+		record.SystemRoleAssignmentID,
 	}
 	encoded := make([]any, len(values))
 	for index, value := range values {
-		if value == "" && index == 2 {
+		if value == "" && (index == 2 || index == 5 || index == 6) {
 			continue
 		}
 		converted, err := databaseid.Encode(session.dialect, value)
@@ -350,11 +356,13 @@ func (session *bootstrapSession) encodedRecordIDs(
 		encoded[index] = converted
 	}
 	return encodedBootstrapIDs{
-		account:     encoded[0],
-		user:        encoded[1],
-		membership:  encoded[2],
-		accountRole: encoded[3],
-		systemRole:  encoded[4],
+		account:                  encoded[0],
+		user:                     encoded[1],
+		membership:               encoded[2],
+		accountRole:              encoded[3],
+		systemRole:               encoded[4],
+		membershipRoleAssignment: encoded[5],
+		systemRoleAssignment:     encoded[6],
 	}, nil
 }
 

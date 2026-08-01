@@ -45,17 +45,19 @@ type BootstrapPermission struct {
 }
 
 type BootstrapRecord struct {
-	AccountID       string
-	AccountSlug     string
-	UserID          string
-	Email           string
-	PasswordHash    string
-	MembershipID    string
-	AccountRoleID   string
-	AccountRoleName string
-	SystemRoleID    string
-	SystemRoleName  string
-	Permissions     []BootstrapPermission
+	AccountID                  string
+	AccountSlug                string
+	UserID                     string
+	Email                      string
+	PasswordHash               string
+	MembershipID               string
+	MembershipRoleAssignmentID string
+	AccountRoleID              string
+	AccountRoleName            string
+	SystemRoleID               string
+	SystemRoleName             string
+	SystemRoleAssignmentID     string
+	Permissions                []BootstrapPermission
 }
 
 type BootstrapCommand struct {
@@ -243,6 +245,14 @@ func (bootstrap *Bootstrap) newRecord(
 	if err != nil {
 		return BootstrapRecord{}, ErrBootstrapFailed
 	}
+	membershipRoleAssignmentID, err := bootstrap.dependencies.NewID()
+	if err != nil {
+		return BootstrapRecord{}, ErrBootstrapFailed
+	}
+	systemRoleAssignmentID, err := bootstrap.dependencies.NewID()
+	if err != nil {
+		return BootstrapRecord{}, ErrBootstrapFailed
+	}
 	state := BootstrapState{
 		Status:    BootstrapPresent,
 		AccountID: accountID,
@@ -254,6 +264,8 @@ func (bootstrap *Bootstrap) newRecord(
 	}
 	record.PasswordHash = passwordHash
 	record.MembershipID = membershipID
+	record.MembershipRoleAssignmentID = membershipRoleAssignmentID
+	record.SystemRoleAssignmentID = systemRoleAssignmentID
 	return record, nil
 }
 
