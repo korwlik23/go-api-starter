@@ -18,6 +18,7 @@ import (
 	identitydomain "github.com/korwlik23/go-api-starter/internal/modules/identity/domain"
 	operationsmodule "github.com/korwlik23/go-api-starter/internal/modules/operations"
 	operationshttp "github.com/korwlik23/go-api-starter/internal/modules/operations/transport/http"
+	"github.com/korwlik23/go-api-starter/internal/platform/database"
 	platformmiddleware "github.com/korwlik23/go-api-starter/internal/platform/middleware"
 	gormdb "gorm.io/gorm"
 )
@@ -33,6 +34,8 @@ type authorizationRuntime struct {
 	currentAccountGuard  gin.HandlerFunc
 	effectiveGuard       gin.HandlerFunc
 	modulesGuard         gin.HandlerFunc
+	grantGuard           gin.HandlerFunc
+	grantRolePermission  *authorizationhttp.GrantRolePermissionHandler
 	systemAuthorizer     systemPermissionAuthorizer
 }
 
@@ -41,6 +44,28 @@ func buildAuthorizationRuntime(
 	modules moduleProjectionReader,
 ) (authorizationRuntime, error) {
 	accounts, err := accountsgorm.NewAccountRepository(db)
+	if err != nil {
+		return authorizationRuntime{}, err
+	}
+	transactions, err := database.NewTransactionManager(db)
+	if err != nil {
+		return authorizationRuntime{}, err
+	}
+	grantRepository, err := authorizationgorm.NewTransactionalGrantRolePermissionRepository(
+		transactions,
+		db.Dialector.Name(),
+	)
+	if err != nil {
+		return authorizationRuntime{}, err
+	}
+	grantService, err := authorizationapp.NewGrantRolePermissionService(
+		transactions,
+		grantRepository,
+	)
+	if err != nil {
+		return authorizationRuntime{}, err
+	}
+	grantHandler, err := authorizationhttp.NewGrantRolePermissionHandler(grantService)
 	if err != nil {
 		return authorizationRuntime{}, err
 	}
@@ -101,10 +126,20 @@ func buildAuthorizationRuntime(
 	if err != nil {
 		return authorizationRuntime{}, err
 	}
+	grantGuard, err := newPermissionGuard(
+		resolveAccount,
+		evaluator,
+		authorizationmodule.PermissionRolePermissionGrant,
+		nil,
+	)
+	if err != nil {
+		return authorizationRuntime{}, err
+	}
 	return authorizationRuntime{
 		currentAccount: currentAccount, effectivePermissions: effective,
 		modules: moduleHandler, currentAccountGuard: currentAccountGuard,
 		effectiveGuard: effectiveGuard, modulesGuard: modulesGuard,
+		grantGuard: grantGuard, grantRolePermission: grantHandler,
 		systemAuthorizer: systemPermissionAuthorizer{evaluator: evaluator},
 	}, nil
 }
