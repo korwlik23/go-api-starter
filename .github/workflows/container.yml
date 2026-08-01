@@ -1,0 +1,33 @@
+name: API container
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: api-container-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+
+      - name: Build image
+        run: docker build --tag go-api-starter:verify .
+
+      - name: Verify immutable runtime contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(docker image inspect --format '{{.Config.User}}' go-api-starter:verify)" = "65532:65532"
+          test "$(docker image inspect --format '{{json .Config.ExposedPorts}}' go-api-starter:verify)" = '{"8080/tcp":{}}'
+          test "$(docker image inspect --format '{{json .Config.Healthcheck.Test}}' go-api-starter:verify)" = '["CMD","/app/healthcheck"]'
+          test "$(docker image inspect --format '{{json .Config.Entrypoint}}' go-api-starter:verify)" = '["/app/api"]'
