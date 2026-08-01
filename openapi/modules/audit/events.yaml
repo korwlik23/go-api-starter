@@ -1,0 +1,66 @@
+paths:
+  /audit/events:
+    get:
+      tags: [Audit]
+      summary: List redacted system audit events.
+      operationId: listAuditEvents
+      x-surfaces: [admin]
+      x-required-permission: audit.events.read.system
+      security:
+        - SessionCookie: []
+      parameters:
+        - name: cursor
+          in: query
+          required: false
+          schema: { type: string, minLength: 1, maxLength: 512 }
+        - name: limit
+          in: query
+          required: false
+          schema: { type: integer, minimum: 1, maximum: 200, default: 50 }
+        - name: action
+          in: query
+          required: false
+          schema: { type: string, minLength: 1, maxLength: 128 }
+        - name: actor_id
+          in: query
+          required: false
+          schema: { type: string, minLength: 1 }
+      responses:
+        '200':
+          description: A redacted append-only audit page.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AuditEventListResponse' }
+        '401': { $ref: ../../common/errors.yaml#/components/responses/Unauthorized }
+        '403': { $ref: ../../common/errors.yaml#/components/responses/Forbidden }
+        '400': { $ref: ../../common/errors.yaml#/components/responses/BadRequest }
+components:
+  schemas:
+    AuditEvent:
+      type: object
+      additionalProperties: false
+      required: [id, scope, actor_type, action, operation_id, occurred_at, recorded_at, data]
+      properties:
+        id: { type: string, minLength: 1 }
+        scope: { type: string, enum: [system] }
+        actor_type: { type: string, enum: [user, system, anonymous] }
+        actor_id: { type: string, nullable: true }
+        action: { type: string, minLength: 1 }
+        operation_id: { type: string, minLength: 1 }
+        request_id: { type: string, nullable: true }
+        occurred_at: { type: string, format: date-time }
+        recorded_at: { type: string, format: date-time }
+        data:
+          type: object
+          additionalProperties: true
+    AuditEventListResponse:
+      type: object
+      additionalProperties: false
+      required: [items]
+      properties:
+        items:
+          type: array
+          items: { $ref: '#/components/schemas/AuditEvent' }
+        next_cursor:
+          type: string
+          nullable: true

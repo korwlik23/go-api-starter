@@ -31,3 +31,14 @@ type EventRepository interface {
 		int,
 	) (EventPage, error)
 }
+
+type SystemEventFilter struct {
+	Cursor  *Cursor
+	Limit   int
+	Action  string
+	ActorID string
+}
+
+type SystemEventQuery interface {
+	ListSystemFiltered(context.Context, SystemEventFilter) (EventPage, error)
+}

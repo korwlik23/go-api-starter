@@ -74,6 +74,8 @@ paths:
     $ref: ./modules/localization/catalog.yaml#/paths/~1localization~1catalog
   /operations/modules:
     $ref: ./modules/operations/modules.yaml#/paths/~1operations~1modules
+  /audit/events:
+    $ref: ./modules/audit/events.yaml#/paths/~1audit~1events
   /livez:
     $ref: ./modules/system/health.yaml#/paths/~1livez
   /readyz:

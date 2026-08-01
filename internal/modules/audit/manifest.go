@@ -9,7 +9,11 @@ func Manifest() modular.Manifest {
 		Dependencies:         []string{"accounts", "identity"},
 		RequiredCapabilities: []string{"accounts.resolve", "database.sql", "identity.sessions"},
 		ProvidedCapabilities: []string{"audit.append"},
-		Permissions:          Permissions(),
-		Migrations:           modular.SQLMigrations(),
+		Routes: []modular.Route{{
+			Method: "GET", Path: "/api/v1/audit/events",
+			Permission: PermissionEventsReadSystem,
+		}},
+		Permissions: Permissions(),
+		Migrations:  modular.SQLMigrations(),
 	}
 }

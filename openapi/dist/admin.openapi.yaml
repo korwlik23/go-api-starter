@@ -120,6 +120,57 @@ paths:
       tags:
         - Accounts
       x-required-permission: accounts.memberships.manage.system
+  /audit/events:
+    get:
+      operationId: listAuditEvents
+      parameters:
+        - in: query
+          name: cursor
+          required: false
+          schema:
+            maxLength: 512
+            minLength: 1
+            type: string
+        - in: query
+          name: limit
+          required: false
+          schema:
+            default: 50
+            maximum: 200
+            minimum: 1
+            type: integer
+        - in: query
+          name: action
+          required: false
+          schema:
+            maxLength: 128
+            minLength: 1
+            type: string
+        - in: query
+          name: actor_id
+          required: false
+          schema:
+            minLength: 1
+            type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuditEventListResponse'
+          description: A redacted append-only audit page.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+      security:
+        - SessionCookie: []
+      summary: List redacted system audit events.
+      tags:
+        - Audit
+      x-required-permission: audit.events.read.system
   /auth/csrf:
     get:
       operationId: getCSRFToken
@@ -1374,6 +1425,66 @@ components:
       required:
         - status
         - expected_version
+      type: object
+    AuditEvent:
+      additionalProperties: false
+      properties:
+        action:
+          minLength: 1
+          type: string
+        actor_id:
+          nullable: true
+          type: string
+        actor_type:
+          enum:
+            - user
+            - system
+            - anonymous
+          type: string
+        data:
+          additionalProperties: true
+          type: object
+        id:
+          minLength: 1
+          type: string
+        occurred_at:
+          format: date-time
+          type: string
+        operation_id:
+          minLength: 1
+          type: string
+        recorded_at:
+          format: date-time
+          type: string
+        request_id:
+          nullable: true
+          type: string
+        scope:
+          enum:
+            - system
+          type: string
+      required:
+        - id
+        - scope
+        - actor_type
+        - action
+        - operation_id
+        - occurred_at
+        - recorded_at
+        - data
+      type: object
+    AuditEventListResponse:
+      additionalProperties: false
+      properties:
+        items:
+          items:
+            $ref: '#/components/schemas/AuditEvent'
+          type: array
+        next_cursor:
+          nullable: true
+          type: string
+      required:
+        - items
       type: object
     CSRFTokenResponse:
       additionalProperties: false

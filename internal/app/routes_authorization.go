@@ -79,4 +79,5 @@ func RegisterAdministrationRoutes(
 	protected.PATCH("/users/:user_id/status", runtime.adminUserManageGuard, runtime.adminUsers.UpdateStatus)
 	protected.GET("/accounts/:account_id/memberships", runtime.membershipReadGuard, runtime.memberships.List)
 	protected.PATCH("/accounts/:account_id/memberships/:membership_id/status", runtime.membershipManageGuard, runtime.memberships.UpdateStatus)
+	protected.GET("/audit/events", runtime.auditEventsReadGuard, runtime.auditEvents.List)
 }

@@ -13,6 +13,7 @@ import (
 	accountshttp "github.com/korwlik23/go-api-starter/internal/modules/accounts/transport/http"
 	auditgorm "github.com/korwlik23/go-api-starter/internal/modules/audit/adapters/gorm"
 	auditapp "github.com/korwlik23/go-api-starter/internal/modules/audit/application"
+	audithttp "github.com/korwlik23/go-api-starter/internal/modules/audit/transport/http"
 	authorizationmodule "github.com/korwlik23/go-api-starter/internal/modules/authorization"
 	authorizationgorm "github.com/korwlik23/go-api-starter/internal/modules/authorization/adapters/gorm"
 	authorizationapp "github.com/korwlik23/go-api-starter/internal/modules/authorization/application"
@@ -57,6 +58,8 @@ type authorizationRuntime struct {
 	memberships              *accountshttp.MembershipHandler
 	membershipReadGuard      gin.HandlerFunc
 	membershipManageGuard    gin.HandlerFunc
+	auditEvents              *audithttp.EventHandler
+	auditEventsReadGuard     gin.HandlerFunc
 	systemAuthorizer         systemPermissionAuthorizer
 }
 
@@ -162,6 +165,14 @@ func buildAuthorizationRuntime(
 		return authorizationRuntime{}, err
 	}
 	roleHandler, err := authorizationhttp.NewRoleHandler(roleQueryRepository, roleManagement)
+	if err != nil {
+		return authorizationRuntime{}, err
+	}
+	auditQuery, err := auditapp.NewListSystemEvents(systemAuthorizer, auditRepository)
+	if err != nil {
+		return authorizationRuntime{}, err
+	}
+	auditEvents, err := audithttp.NewEventHandler(auditQuery)
 	if err != nil {
 		return authorizationRuntime{}, err
 	}
@@ -356,6 +367,15 @@ func buildAuthorizationRuntime(
 	if err != nil {
 		return authorizationRuntime{}, err
 	}
+	auditEventsReadGuard, err := newPermissionGuard(
+		resolveAccount,
+		evaluator,
+		"audit.events.read.system",
+		nil,
+	)
+	if err != nil {
+		return authorizationRuntime{}, err
+	}
 	return authorizationRuntime{
 		currentAccount: currentAccount, effectivePermissions: effective,
 		modules: moduleHandler, currentAccountGuard: currentAccountGuard,
@@ -373,6 +393,8 @@ func buildAuthorizationRuntime(
 		memberships:              memberships,
 		membershipReadGuard:      membershipReadGuard,
 		membershipManageGuard:    membershipManageGuard,
+		auditEvents:              auditEvents,
+		auditEventsReadGuard:     auditEventsReadGuard,
 		systemAuthorizer:         systemAuthorizer,
 	}, nil
 }

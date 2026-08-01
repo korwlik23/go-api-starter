@@ -106,6 +106,42 @@ func (e AdminUserStatusRequestStatus) Valid() bool {
 	}
 }
 
+// Defines values for AuditEventActorType.
+const (
+	AuditEventActorTypeAnonymous AuditEventActorType = "anonymous"
+	AuditEventActorTypeSystem    AuditEventActorType = "system"
+	AuditEventActorTypeUser      AuditEventActorType = "user"
+)
+
+// Valid indicates whether the value is a known member of the AuditEventActorType enum.
+func (e AuditEventActorType) Valid() bool {
+	switch e {
+	case AuditEventActorTypeAnonymous:
+		return true
+	case AuditEventActorTypeSystem:
+		return true
+	case AuditEventActorTypeUser:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for AuditEventScope.
+const (
+	AuditEventScopeSystem AuditEventScope = "system"
+)
+
+// Valid indicates whether the value is a known member of the AuditEventScope enum.
+func (e AuditEventScope) Valid() bool {
+	switch e {
+	case AuditEventScopeSystem:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for CreateRoleRequestScope.
 const (
 	CreateRoleRequestScopeAccount CreateRoleRequestScope = "account"
@@ -651,6 +687,32 @@ type AdminUserStatusRequest struct {
 // AdminUserStatusRequestStatus defines model for AdminUserStatusRequest.Status.
 type AdminUserStatusRequestStatus string
 
+// AuditEvent defines model for AuditEvent.
+type AuditEvent struct {
+	Action      string                 `json:"action"`
+	ActorId     *string                `json:"actor_id,omitempty"`
+	ActorType   AuditEventActorType    `json:"actor_type"`
+	Data        map[string]interface{} `json:"data"`
+	Id          string                 `json:"id"`
+	OccurredAt  time.Time              `json:"occurred_at"`
+	OperationId string                 `json:"operation_id"`
+	RecordedAt  time.Time              `json:"recorded_at"`
+	RequestId   *string                `json:"request_id,omitempty"`
+	Scope       AuditEventScope        `json:"scope"`
+}
+
+// AuditEventActorType defines model for AuditEvent.ActorType.
+type AuditEventActorType string
+
+// AuditEventScope defines model for AuditEvent.Scope.
+type AuditEventScope string
+
+// AuditEventListResponse defines model for AuditEventListResponse.
+type AuditEventListResponse struct {
+	Items      []AuditEvent `json:"items"`
+	NextCursor *string      `json:"next_cursor,omitempty"`
+}
+
 // CSRFTokenResponse defines model for CSRFTokenResponse.
 type CSRFTokenResponse struct {
 	// CsrfToken Session-bound CSRF token for the immediately following unsafe request.
@@ -1178,6 +1240,14 @@ type ListAccountMembershipsParams struct {
 // ListAccountMembershipsParamsStatus defines parameters for ListAccountMemberships.
 type ListAccountMembershipsParamsStatus string
 
+// ListAuditEventsParams defines parameters for ListAuditEvents.
+type ListAuditEventsParams struct {
+	Cursor  *string `form:"cursor,omitempty" json:"cursor,omitempty"`
+	Limit   *int    `form:"limit,omitempty" json:"limit,omitempty"`
+	Action  *string `form:"action,omitempty" json:"action,omitempty"`
+	ActorId *string `form:"actor_id,omitempty" json:"actor_id,omitempty"`
+}
+
 // ListAuthorizationRolesParams defines parameters for ListAuthorizationRoles.
 type ListAuthorizationRolesParams struct {
 	Scope     *ListAuthorizationRolesParamsScope `form:"scope,omitempty" json:"scope,omitempty"`
@@ -1475,6 +1545,11 @@ type ClientInterface interface {
 	//
 	// Corresponds with PATCH /accounts/{account_id}/memberships/{membership_id}/status (the `UpdateMembershipStatus` operationId).
 	UpdateMembershipStatus(ctx context.Context, accountId string, membershipId string, body UpdateMembershipStatusJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ListAuditEvents List redacted system audit events.
+	//
+	// Corresponds with GET /audit/events (the `ListAuditEvents` operationId).
+	ListAuditEvents(ctx context.Context, params *ListAuditEventsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetCSRFToken Create or rotate an anonymous pre-auth session and issue a CSRF token.
 	//
@@ -1854,6 +1929,21 @@ func (c *Client) UpdateMembershipStatusWithBody(ctx context.Context, accountId s
 // Corresponds with PATCH /accounts/{account_id}/memberships/{membership_id}/status (the `UpdateMembershipStatus` operationId).
 func (c *Client) UpdateMembershipStatus(ctx context.Context, accountId string, membershipId string, body UpdateMembershipStatusJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewUpdateMembershipStatusRequest(c.Server, accountId, membershipId, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// ListAuditEvents List redacted system audit events.
+//
+// Corresponds with GET /audit/events (the `ListAuditEvents` operationId).
+func (c *Client) ListAuditEvents(ctx context.Context, params *ListAuditEventsParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewListAuditEventsRequest(c.Server, params)
 	if err != nil {
 		return nil, err
 	}
@@ -2859,6 +2949,96 @@ func NewUpdateMembershipStatusRequestWithBody(server string, accountId string, m
 	}
 
 	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewListAuditEventsRequest constructs an http.Request for the ListAuditEvents method
+func NewListAuditEventsRequest(server string, params *ListAuditEventsParams) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/audit/events")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		// queryValues collects non-styled parameters (passthrough, JSON)
+		// that are safe to round-trip through url.Values.Encode().
+		queryValues := queryURL.Query()
+		// rawQueryFragments collects pre-encoded query fragments from
+		// styled parameters, preserving literal commas as delimiters
+		// per the OpenAPI spec (e.g. "color=blue,black,brown").
+		var rawQueryFragments []string
+
+		if params.Cursor != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "cursor", *params.Cursor, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.Limit != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "limit", *params.Limit, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "integer", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.Action != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "action", *params.Action, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.ActorId != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "actor_id", *params.ActorId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if encoded := queryValues.Encode(); encoded != "" {
+			rawQueryFragments = append(rawQueryFragments, encoded)
+		}
+		queryURL.RawQuery = strings.Join(rawQueryFragments, "&")
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
 
 	return req, nil
 }
@@ -4361,6 +4541,13 @@ type ClientWithResponsesInterface interface {
 	// Corresponds with PATCH /accounts/{account_id}/memberships/{membership_id}/status (the `UpdateMembershipStatus` operationId).
 	UpdateMembershipStatusWithResponse(ctx context.Context, accountId string, membershipId string, body UpdateMembershipStatusJSONRequestBody, reqEditors ...RequestEditorFn) (*UpdateMembershipStatusResponse, error)
 
+	// ListAuditEventsWithResponse List redacted system audit events.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /audit/events (the `ListAuditEvents` operationId).
+	ListAuditEventsWithResponse(ctx context.Context, params *ListAuditEventsParams, reqEditors ...RequestEditorFn) (*ListAuditEventsResponse, error)
+
 	// GetCSRFTokenWithResponse Create or rotate an anonymous pre-auth session and issue a CSRF token.
 	//
 	// Returns a wrapper object for the known response body format(s).
@@ -4899,6 +5086,68 @@ func (r UpdateMembershipStatusResponse) StatusCode() int {
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
 func (r UpdateMembershipStatusResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type ListAuditEventsResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *AuditEventListResponse
+	// JSON400 the response for an HTTP 400 `application/json` response
+	JSON400 *BadRequest
+	// JSON401 the response for an HTTP 401 `application/json` response
+	JSON401 *Unauthorized
+	// JSON403 the response for an HTTP 403 `application/json` response
+	JSON403 *Forbidden
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r ListAuditEventsResponse) GetJSON200() *AuditEventListResponse {
+	return r.JSON200
+}
+
+// GetJSON400 returns the response for an HTTP 400 `application/json` response
+func (r ListAuditEventsResponse) GetJSON400() *BadRequest {
+	return r.JSON400
+}
+
+// GetJSON401 returns the response for an HTTP 401 `application/json` response
+func (r ListAuditEventsResponse) GetJSON401() *Unauthorized {
+	return r.JSON401
+}
+
+// GetJSON403 returns the response for an HTTP 403 `application/json` response
+func (r ListAuditEventsResponse) GetJSON403() *Forbidden {
+	return r.JSON403
+}
+
+// GetBody returns the raw response body bytes
+func (r ListAuditEventsResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r ListAuditEventsResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ListAuditEventsResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r ListAuditEventsResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
@@ -7002,6 +7251,19 @@ func (c *ClientWithResponses) UpdateMembershipStatusWithResponse(ctx context.Con
 	return ParseUpdateMembershipStatusResponse(rsp)
 }
 
+// ListAuditEventsWithResponse List redacted system audit events.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /audit/events (the `ListAuditEvents` operationId).
+func (c *ClientWithResponses) ListAuditEventsWithResponse(ctx context.Context, params *ListAuditEventsParams, reqEditors ...RequestEditorFn) (*ListAuditEventsResponse, error) {
+	rsp, err := c.ListAuditEvents(ctx, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseListAuditEventsResponse(rsp)
+}
+
 // GetCSRFTokenWithResponse Create or rotate an anonymous pre-auth session and issue a CSRF token.
 //
 // Returns a wrapper object for the known response body format(s).
@@ -7806,6 +8068,53 @@ func ParseUpdateMembershipStatusResponse(rsp *http.Response) (*UpdateMembershipS
 			return nil, err
 		}
 		response.JSON409 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseListAuditEventsResponse parses an HTTP response from a ListAuditEventsWithResponse call
+func ParseListAuditEventsResponse(rsp *http.Response) (*ListAuditEventsResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ListAuditEventsResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest AuditEventListResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest BadRequest
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest Unauthorized
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest Forbidden
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
 
 	}
 

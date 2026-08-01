@@ -165,6 +165,32 @@ func (repository *EventRepository) ListSystem(
 	return repository.list(ctx, query, cursor, limit)
 }
 
+func (repository *EventRepository) ListSystemFiltered(
+	ctx context.Context,
+	filter auditports.SystemEventFilter,
+) (auditports.EventPage, error) {
+	if repository == nil || repository.connections == nil || ctx == nil {
+		return auditports.EventPage{}, ErrInvalidEventRepository
+	}
+	db, err := repository.connections.Connection(ctx)
+	if err != nil {
+		return auditports.EventPage{}, ErrEventRepositoryFailed
+	}
+	query := db.WithContext(ctx).Table("audit_events").
+		Where("scope = ? AND account_id IS NULL", string(auditdomain.ScopeSystem))
+	if filter.Action != "" {
+		query = query.Where("action = ?", filter.Action)
+	}
+	if filter.ActorID != "" {
+		encoded, encodeErr := databaseid.Encode(repository.dialect, filter.ActorID)
+		if encodeErr != nil {
+			return auditports.EventPage{}, ErrInvalidEventRepository
+		}
+		query = query.Where("actor_type = ? AND actor_id = ?", string(auditdomain.ActorUser), encoded)
+	}
+	return repository.list(ctx, query, filter.Cursor, filter.Limit)
+}
+
 func (repository *EventRepository) list(
 	ctx context.Context,
 	query *gormdb.DB,
@@ -280,6 +306,7 @@ func stringValue(value *string) string {
 }
 
 var _ auditports.EventRepository = (*EventRepository)(nil)
+var _ auditports.SystemEventQuery = (*EventRepository)(nil)
 
 type staticConnectionProvider struct {
 	db *gormdb.DB
