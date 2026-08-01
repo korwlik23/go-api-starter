@@ -1,0 +1,23 @@
+{
+  "eyebrow": "Production-minded starter",
+  "headline": "Build secure multilingual products faster",
+  "summary": "A reusable Go, Vue, and Astro foundation with runtime localization and permission-driven administration.",
+  "primary_cta": "Explore the foundation",
+  "features_eyebrow": "Foundation",
+  "features_title": "Three focused applications, one reliable suite",
+  "features_summary": "Each application keeps its own version history while sharing immutable API contracts and release pins.",
+  "feature_api_title": "Secure API core",
+  "feature_api_body": "Go and Gin with permission-driven authorization, runtime localization, and portable database boundaries.",
+  "feature_admin_title": "Operational back office",
+  "feature_admin_body": "Vue administration built around secure sessions, exact permissions, and accessible workflows.",
+  "feature_site_title": "Search-ready public site",
+  "feature_site_body": "Astro SSR with locale URLs, semantic HTML, canonical links, hreflang, and structured data.",
+  "architecture_eyebrow": "Architecture",
+  "architecture_title": "Independent repos. Explicit contracts. Predictable releases.",
+  "faq_title": "Questions the starter answers early",
+  "faq_language_question": "Can the system add and edit more than two languages?",
+  "faq_language_answer": "Yes. Locale availability and translated values come from the runtime API, so system operators can add languages and correct wording without changing application code.",
+  "faq_database_question": "Which databases does the starter target?",
+  "faq_database_answer": "PostgreSQL is the primary database. MariaDB, including XAMPP workflows, is a supported portability target, with separate evidence required before claiming support for other engines.",
+  "footer_note": "A practical foundation for CMS, back-office, and future SaaS products."
+}

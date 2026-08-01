@@ -1,0 +1,23 @@
+{
+  "eyebrow": "Starter ที่พร้อมต่อยอดจริง",
+  "headline": "พัฒนาระบบหลายภาษาอย่างปลอดภัยได้เร็วขึ้น",
+  "summary": "ฐานระบบ Go, Vue และ Astro ที่นำกลับมาใช้ใหม่ได้ พร้อมภาษาที่แก้ไขขณะระบบทำงานและสิทธิ์หลังบ้านแบบ permission-driven",
+  "primary_cta": "ดูโครงสร้างระบบ",
+  "features_eyebrow": "ฐานระบบ",
+  "features_title": "สามแอปที่แยกหน้าที่ชัด แต่ทำงานเป็นชุดเดียวกัน",
+  "features_summary": "แต่ละแอปมีประวัติเวอร์ชันของตัวเอง และเชื่อมกันด้วย API contract กับ release pin ที่ตรวจสอบได้",
+  "feature_api_title": "แกน API ที่ปลอดภัย",
+  "feature_api_body": "Go และ Gin พร้อมสิทธิ์แบบ permission-driven ภาษาที่แก้ไขขณะระบบทำงาน และขอบเขตฐานข้อมูลที่ย้ายได้",
+  "feature_admin_title": "ระบบหลังบ้านสำหรับงานจริง",
+  "feature_admin_body": "Vue Admin ที่ออกแบบรอบ secure session สิทธิ์แบบระบุชัด และขั้นตอนใช้งานที่เข้าถึงได้",
+  "feature_site_title": "Public site ที่พร้อมสำหรับการค้นหา",
+  "feature_site_body": "Astro SSR พร้อม URL ภาษา semantic HTML canonical hreflang และ structured data",
+  "architecture_eyebrow": "สถาปัตยกรรม",
+  "architecture_title": "แยก repository ชัดเจน เชื่อมด้วย contract และออกรุ่นได้อย่างคาดการณ์",
+  "faq_title": "คำถามที่ starter ตอบให้ตั้งแต่ต้น",
+  "faq_language_question": "ระบบเพิ่มและแก้ไขภาษาได้มากกว่าสองภาษาหรือไม่",
+  "faq_language_answer": "ได้ สถานะภาษาและคำแปลมาจาก API ขณะระบบทำงาน ผู้ดูแลระบบจึงเพิ่มภาษาและแก้ถ้อยคำที่แปลผิดได้โดยไม่ต้องแก้โค้ด",
+  "faq_database_question": "Starter นี้รองรับฐานข้อมูลใด",
+  "faq_database_answer": "PostgreSQL เป็นฐานข้อมูลหลัก และออกแบบให้รองรับ MariaDB รวมถึงขั้นตอนทำงานกับ XAMPP ส่วนฐานข้อมูลอื่นต้องมีผลทดสอบแยกก่อนประกาศว่ารองรับ",
+  "footer_note": "ฐานที่พร้อมต่อยอดเป็น CMS, Back Office และ SaaS ในอนาคต"
+}
