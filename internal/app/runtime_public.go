@@ -63,6 +63,10 @@ func buildPublicRuntime(
 	if err := moduleProbe(ctx); err != nil {
 		return fail(err)
 	}
+	authorization, err := buildAuthorizationRuntime(db, moduleRepository)
+	if err != nil {
+		return fail(err)
+	}
 
 	localeRepository, err := localizationgorm.NewLocaleRepository(db)
 	if err != nil {
@@ -175,6 +179,7 @@ func buildPublicRuntime(
 		catalogHandler,
 	)
 	RegisterIdentityRoutes(router.Group("/api/v1"), identity)
+	RegisterAuthorizationRoutes(router.Group("/api/v1"), authorization)
 	server := httpserver.NewServer(httpserver.ServerConfig{
 		Address: cfg.HTTP.Address, ReadHeaderTimeout: cfg.HTTP.ReadHeaderTimeout,
 		ShutdownTimeout: cfg.HTTP.ShutdownTimeout,
