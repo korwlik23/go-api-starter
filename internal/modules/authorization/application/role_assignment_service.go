@@ -27,18 +27,23 @@ type AssignRoleCommand struct {
 	Scope           string
 	AccountID       string
 	TargetUserID    string
+	RequestID       string
 	ExpectedVersion int64
 }
 
 type RevokeRoleCommand struct {
 	GrantorUserID   string
 	AssignmentID    string
+	RequestID       string
 	ExpectedVersion int64
 }
 
 type RoleAssignmentResult struct {
 	AssignmentID       string
 	RoleID             string
+	Scope              string
+	AccountID          string
+	AffectedUserID     string
 	Version            int64
 	AffectedPrincipals int
 }
@@ -46,6 +51,8 @@ type RoleAssignmentResult struct {
 type RoleRevokeResult struct {
 	AssignmentID       string
 	RoleID             string
+	Scope              string
+	AccountID          string
 	AffectedUserID     string
 	Version            int64
 	Revoked            bool
@@ -57,19 +64,45 @@ type RoleAssignmentRepository interface {
 	RevokeRole(context.Context, RevokeRoleCommand) (RoleRevokeResult, error)
 }
 
+type RoleAssignmentAuditEvent struct {
+	Scope        string
+	AccountID    string
+	ActorUserID  string
+	RequestID    string
+	Action       string
+	AssignmentID string
+	RoleID       string
+	TargetUserID string
+}
+
+type RoleAssignmentAuditor interface {
+	RecordRoleAssignment(context.Context, RoleAssignmentAuditEvent) error
+}
+
 type RoleAssignmentService struct {
 	transactions database.Transactor
 	repository   RoleAssignmentRepository
+	auditor      RoleAssignmentAuditor
 }
 
 func NewRoleAssignmentService(
 	transactions database.Transactor,
 	repository RoleAssignmentRepository,
+	auditors ...RoleAssignmentAuditor,
 ) (*RoleAssignmentService, error) {
 	if transactions == nil || repository == nil {
 		return nil, ErrInvalidRoleAssignmentService
 	}
-	return &RoleAssignmentService{transactions: transactions, repository: repository}, nil
+	if len(auditors) > 1 {
+		return nil, ErrInvalidRoleAssignmentService
+	}
+	var auditor RoleAssignmentAuditor
+	if len(auditors) == 1 {
+		auditor = auditors[0]
+	}
+	return &RoleAssignmentService{
+		transactions: transactions, repository: repository, auditor: auditor,
+	}, nil
 }
 
 func (service *RoleAssignmentService) Assign(
@@ -81,7 +114,22 @@ func (service *RoleAssignmentService) Assign(
 	}
 	err = service.transactions.WithinTransaction(ctx, func(transactionContext context.Context) error {
 		result, err = service.repository.AssignRole(transactionContext, command)
-		return err
+		if err != nil {
+			return err
+		}
+		if service.auditor == nil {
+			return nil
+		}
+		return service.auditor.RecordRoleAssignment(transactionContext, RoleAssignmentAuditEvent{
+			Scope:        result.Scope,
+			AccountID:    result.AccountID,
+			ActorUserID:  command.GrantorUserID,
+			RequestID:    command.RequestID,
+			Action:       "authorization.role.assignment.assigned",
+			AssignmentID: result.AssignmentID,
+			RoleID:       result.RoleID,
+			TargetUserID: result.AffectedUserID,
+		})
 	})
 	if err != nil {
 		return RoleAssignmentResult{}, err
@@ -98,7 +146,22 @@ func (service *RoleAssignmentService) Revoke(
 	}
 	err = service.transactions.WithinTransaction(ctx, func(transactionContext context.Context) error {
 		result, err = service.repository.RevokeRole(transactionContext, command)
-		return err
+		if err != nil {
+			return err
+		}
+		if service.auditor == nil {
+			return nil
+		}
+		return service.auditor.RecordRoleAssignment(transactionContext, RoleAssignmentAuditEvent{
+			Scope:        result.Scope,
+			AccountID:    result.AccountID,
+			ActorUserID:  command.GrantorUserID,
+			RequestID:    command.RequestID,
+			Action:       "authorization.role.assignment.revoked",
+			AssignmentID: result.AssignmentID,
+			RoleID:       result.RoleID,
+			TargetUserID: result.AffectedUserID,
+		})
 	})
 	if err != nil {
 		return RoleRevokeResult{}, err

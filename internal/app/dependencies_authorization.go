@@ -3,6 +3,7 @@ package app
 import (
 	"context"
 	"errors"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	accountsmodule "github.com/korwlik23/go-api-starter/internal/modules/accounts"
@@ -10,6 +11,8 @@ import (
 	accountsapp "github.com/korwlik23/go-api-starter/internal/modules/accounts/application"
 	accountsports "github.com/korwlik23/go-api-starter/internal/modules/accounts/ports"
 	accountshttp "github.com/korwlik23/go-api-starter/internal/modules/accounts/transport/http"
+	auditgorm "github.com/korwlik23/go-api-starter/internal/modules/audit/adapters/gorm"
+	auditapp "github.com/korwlik23/go-api-starter/internal/modules/audit/application"
 	authorizationmodule "github.com/korwlik23/go-api-starter/internal/modules/authorization"
 	authorizationgorm "github.com/korwlik23/go-api-starter/internal/modules/authorization/adapters/gorm"
 	authorizationapp "github.com/korwlik23/go-api-starter/internal/modules/authorization/application"
@@ -54,6 +57,21 @@ func buildAuthorizationRuntime(
 	if err != nil {
 		return authorizationRuntime{}, err
 	}
+	auditRepository, err := auditgorm.NewTransactionalEventRepository(
+		transactions,
+		db.Dialector.Name(),
+	)
+	if err != nil {
+		return authorizationRuntime{}, err
+	}
+	auditor, err := auditapp.NewAppendEvent(auditapp.AppendDependencies{
+		Repository: auditRepository,
+		NewID:      newRuntimeID,
+		Now:        time.Now,
+	})
+	if err != nil {
+		return authorizationRuntime{}, err
+	}
 	grantRepository, err := authorizationgorm.NewTransactionalGrantRolePermissionRepository(
 		transactions,
 		db.Dialector.Name(),
@@ -64,6 +82,7 @@ func buildAuthorizationRuntime(
 	grantService, err := authorizationapp.NewGrantRolePermissionService(
 		transactions,
 		grantRepository,
+		authorizationAuditAdapter{appender: auditor},
 	)
 	if err != nil {
 		return authorizationRuntime{}, err
@@ -82,6 +101,7 @@ func buildAuthorizationRuntime(
 	assignmentService, err := authorizationapp.NewRoleAssignmentService(
 		transactions,
 		assignmentRepository,
+		authorizationAuditAdapter{appender: auditor},
 	)
 	if err != nil {
 		return authorizationRuntime{}, err

@@ -51,7 +51,7 @@ func (handler *RoleAssignmentHandler) Assign(ctx *gin.Context) {
 		return
 	}
 	accountID := request.AccountID
-	if accountID == "" {
+	if request.Scope == authorizationapp.AssignmentScopeAccount && accountID == "" {
 		if resolved, resolvedOK := ResolvedAccountFromContext(ctx.Request.Context()); resolvedOK {
 			accountID = resolved.Account.ID
 		}
@@ -62,6 +62,7 @@ func (handler *RoleAssignmentHandler) Assign(ctx *gin.Context) {
 		Scope:           request.Scope,
 		AccountID:       accountID,
 		TargetUserID:    strings.TrimSpace(request.TargetUserID),
+		RequestID:       platformmiddleware.RequestIDFromContext(ctx.Request.Context()),
 		ExpectedVersion: request.ExpectedVersion,
 	})
 	if err != nil {
@@ -97,6 +98,7 @@ func (handler *RoleAssignmentHandler) Revoke(ctx *gin.Context) {
 	result, err := handler.service.Revoke(ctx.Request.Context(), authorizationapp.RevokeRoleCommand{
 		GrantorUserID:   *session.UserID,
 		AssignmentID:    assignmentID,
+		RequestID:       platformmiddleware.RequestIDFromContext(ctx.Request.Context()),
 		ExpectedVersion: int64(request.ExpectedVersion),
 	})
 	if err != nil {

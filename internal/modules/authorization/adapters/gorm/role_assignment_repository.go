@@ -175,7 +175,9 @@ func (repository *RoleAssignmentRepository) AssignRole(
 	}
 	return authorizationapp.RoleAssignmentResult{
 		AssignmentID: assignmentID, RoleID: command.RoleID,
-		Version: command.ExpectedVersion + 1, AffectedPrincipals: 1,
+		Scope: command.Scope, AccountID: command.AccountID,
+		AffectedUserID: command.TargetUserID,
+		Version:        command.ExpectedVersion + 1, AffectedPrincipals: 1,
 	}, nil
 }
 
@@ -266,6 +268,8 @@ func (repository *RoleAssignmentRepository) RevokeRole(
 	return authorizationapp.RoleRevokeResult{
 		AssignmentID:       command.AssignmentID,
 		RoleID:             roleIDString(roleID),
+		Scope:              scope,
+		AccountID:          accountID,
 		AffectedUserID:     roleIDString(userID),
 		Version:            command.ExpectedVersion + 1,
 		Revoked:            true,

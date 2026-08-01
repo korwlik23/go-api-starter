@@ -69,6 +69,49 @@ func TestRoleAssignmentServiceRejectsInvalidCommands(t *testing.T) {
 	require.False(t, repository.assignCalled)
 }
 
+func TestRoleAssignmentServiceRecordsAuditBeforeTransactionCommits(t *testing.T) {
+	t.Parallel()
+
+	transactions := &assignmentTransactorFake{}
+	repository := &roleAssignmentRepositoryFake{
+		assignResult: RoleAssignmentResult{
+			AssignmentID: "assignment-1", RoleID: "role-1", Scope: AssignmentScopeSystem,
+			AffectedUserID: "user-2", Version: 2,
+		},
+	}
+	auditor := &roleAssignmentAuditorFake{}
+	service, err := NewRoleAssignmentService(transactions, repository, auditor)
+	require.NoError(t, err)
+
+	_, err = service.Assign(context.Background(), AssignRoleCommand{
+		GrantorUserID: "user-1", RoleID: "role-1", Scope: AssignmentScopeSystem,
+		TargetUserID: "user-2", RequestID: "request-1", ExpectedVersion: 1,
+	})
+	require.NoError(t, err)
+	require.True(t, auditor.called)
+	require.Equal(t, "authorization.role.assignment.assigned", auditor.event.Action)
+	require.Equal(t, "request-1", auditor.event.RequestID)
+	require.Equal(t, "user-1", auditor.event.ActorUserID)
+}
+
+func TestRoleAssignmentServiceRollsBackWhenAuditFails(t *testing.T) {
+	t.Parallel()
+
+	transactions := &assignmentTransactorFake{}
+	repository := &roleAssignmentRepositoryFake{}
+	auditor := &roleAssignmentAuditorFake{err: ErrRoleAssignmentConflict}
+	service, err := NewRoleAssignmentService(transactions, repository, auditor)
+	require.NoError(t, err)
+
+	_, err = service.Revoke(context.Background(), RevokeRoleCommand{
+		GrantorUserID: "user-1", AssignmentID: "assignment-1",
+		RequestID: "request-2", ExpectedVersion: 1,
+	})
+	require.ErrorIs(t, err, ErrRoleAssignmentConflict)
+	require.True(t, transactions.rolledBack)
+	require.True(t, auditor.called)
+}
+
 type assignmentTransactorFake struct {
 	called     bool
 	rolledBack bool
@@ -95,6 +138,21 @@ type roleAssignmentRepositoryFake struct {
 	assignErr    error
 	revokeResult RoleRevokeResult
 	revokeErr    error
+}
+
+type roleAssignmentAuditorFake struct {
+	called bool
+	event  RoleAssignmentAuditEvent
+	err    error
+}
+
+func (fake *roleAssignmentAuditorFake) RecordRoleAssignment(
+	_ context.Context,
+	event RoleAssignmentAuditEvent,
+) error {
+	fake.called = true
+	fake.event = event
+	return fake.err
 }
 
 func (fake *roleAssignmentRepositoryFake) AssignRole(

@@ -49,6 +49,44 @@ func TestGrantRolePermissionReturnsRepositoryErrorAndRollsBack(t *testing.T) {
 	require.True(t, transactor.rolledBack)
 }
 
+func TestGrantRolePermissionRecordsAuditBeforeCommit(t *testing.T) {
+	t.Parallel()
+
+	transactor := &grantTransactorFake{}
+	repository := &grantRepositoryFake{result: GrantRolePermissionResult{RoleID: "role-1", Version: 2}}
+	auditor := &grantRolePermissionAuditorFake{}
+	service, err := NewGrantRolePermissionService(transactor, repository, auditor)
+	require.NoError(t, err)
+
+	_, err = service.Execute(context.Background(), GrantRolePermissionCommand{
+		GrantorUserID: "user-1", RoleID: "role-1", PermissionKey: "content.items.read.system",
+		RequestID: "request-1", ExpectedVersion: 1,
+	})
+	require.NoError(t, err)
+	require.True(t, auditor.called)
+	require.Equal(t, "authorization.role.permission.granted", auditor.event.Action)
+	require.Equal(t, "request-1", auditor.event.RequestID)
+	require.Equal(t, "user-1", auditor.event.ActorUserID)
+}
+
+func TestGrantRolePermissionRollsBackWhenAuditFails(t *testing.T) {
+	t.Parallel()
+
+	transactor := &grantTransactorFake{}
+	repository := &grantRepositoryFake{result: GrantRolePermissionResult{RoleID: "role-1", Version: 2}}
+	auditor := &grantRolePermissionAuditorFake{err: ErrGrantConflict}
+	service, err := NewGrantRolePermissionService(transactor, repository, auditor)
+	require.NoError(t, err)
+
+	_, err = service.Execute(context.Background(), GrantRolePermissionCommand{
+		GrantorUserID: "user-1", RoleID: "role-1", PermissionKey: "content.items.read.system",
+		ExpectedVersion: 1,
+	})
+	require.ErrorIs(t, err, ErrGrantConflict)
+	require.True(t, transactor.rolledBack)
+	require.True(t, auditor.called)
+}
+
 type grantTransactorFake struct {
 	called     bool
 	rolledBack bool
@@ -72,6 +110,21 @@ type grantRepositoryFake struct {
 	called bool
 	result GrantRolePermissionResult
 	err    error
+}
+
+type grantRolePermissionAuditorFake struct {
+	called bool
+	event  GrantRolePermissionAuditEvent
+	err    error
+}
+
+func (fake *grantRolePermissionAuditorFake) RecordRolePermissionGrant(
+	_ context.Context,
+	event GrantRolePermissionAuditEvent,
+) error {
+	fake.called = true
+	fake.event = event
+	return fake.err
 }
 
 func (fake *grantRepositoryFake) GrantRolePermission(

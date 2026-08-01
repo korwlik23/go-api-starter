@@ -65,6 +65,7 @@ func (handler *GrantRolePermissionHandler) Grant(ctx *gin.Context) {
 		AccountID:       accountID,
 		RoleID:          roleID,
 		PermissionKey:   strings.TrimSpace(request.PermissionKey),
+		RequestID:       platformmiddleware.RequestIDFromContext(ctx.Request.Context()),
 		ExpectedVersion: int64(request.ExpectedVersion),
 	})
 	if err != nil {

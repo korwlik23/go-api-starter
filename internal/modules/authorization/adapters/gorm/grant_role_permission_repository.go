@@ -136,6 +136,8 @@ func (repository *GrantRolePermissionRepository) GrantRolePermission(
 	return authorizationapp.GrantRolePermissionResult{
 		RoleID:             command.RoleID,
 		PermissionKey:      command.PermissionKey,
+		Scope:              string(roleOwner),
+		AccountID:          roleAccountString(role.AccountID),
 		Version:            command.ExpectedVersion + 1,
 		AffectedPrincipals: affected,
 	}, nil
