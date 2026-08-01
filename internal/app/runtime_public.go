@@ -8,11 +8,6 @@ import (
 	"os"
 	"time"
 
-	"github.com/korwlik23/go-api-starter/internal/modules/localization/adapters/bundle"
-	localizationgorm "github.com/korwlik23/go-api-starter/internal/modules/localization/adapters/gorm"
-	localizationapp "github.com/korwlik23/go-api-starter/internal/modules/localization/application"
-	catalogapp "github.com/korwlik23/go-api-starter/internal/modules/localization/application/catalog"
-	localizationhttp "github.com/korwlik23/go-api-starter/internal/modules/localization/transport/http"
 	operationsgorm "github.com/korwlik23/go-api-starter/internal/modules/operations/adapters/gorm"
 	"github.com/korwlik23/go-api-starter/internal/platform/config"
 	"github.com/korwlik23/go-api-starter/internal/platform/database"
@@ -67,28 +62,10 @@ func buildPublicRuntime(
 	if err != nil {
 		return fail(err)
 	}
-
-	localeRepository, err := localizationgorm.NewLocaleRepository(db)
-	if err != nil {
-		return fail(err)
-	}
-	catalogRepository, err := localizationgorm.NewCatalogRepository(db, time.Now)
-	if err != nil {
-		return fail(err)
-	}
-	listLocales, err := localizationapp.NewListLocales(localeRepository)
-	if err != nil {
-		return fail(err)
-	}
-	mergeCatalog, err := catalogapp.NewMerge(catalogRepository, bundle.Repository{})
-	if err != nil {
-		return fail(err)
-	}
-	localeHandler, err := localizationhttp.NewLocaleHandler(listLocales)
-	if err != nil {
-		return fail(err)
-	}
-	catalogHandler, err := localizationhttp.NewCatalogReadHandler(mergeCatalog)
+	localization, err := buildLocalizationRuntime(
+		db,
+		authorization.systemAuthorizer,
+	)
 	if err != nil {
 		return fail(err)
 	}
@@ -175,11 +152,19 @@ func buildPublicRuntime(
 	router.Use(platformmiddleware.RequestID(nil), cors, identity.rateLimits.Baseline)
 	RegisterPublicSystemRoutes(
 		router.Group("/api/v1"),
-		localeHandler,
-		catalogHandler,
+		localization.locales,
+		localization.catalog,
 	)
 	RegisterIdentityRoutes(router.Group("/api/v1"), identity)
 	RegisterAuthorizationRoutes(router.Group("/api/v1"), authorization)
+	protectedSystem := router.Group("/api/v1")
+	protectedSystem.Use(identity.authenticate, identity.csrf)
+	RegisterProtectedSystemRoutes(
+		protectedSystem,
+		localization.management,
+		localization.catalog,
+		localization.preferences,
+	)
 	server := httpserver.NewServer(httpserver.ServerConfig{
 		Address: cfg.HTTP.Address, ReadHeaderTimeout: cfg.HTTP.ReadHeaderTimeout,
 		ShutdownTimeout: cfg.HTTP.ShutdownTimeout,

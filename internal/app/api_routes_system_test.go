@@ -42,6 +42,28 @@ func TestW2CPublicLocalizationRoutes(t *testing.T) {
 	}
 }
 
+func TestW2CProtectedLocalizationRoutes(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	router := gin.New()
+
+	RegisterProtectedSystemRoutes(
+		router.Group("/api/v1"),
+		&localizationhttp.LocaleManagementHandler{},
+		&localizationhttp.CatalogHandler{},
+		&localizationhttp.PreferenceHandler{},
+	)
+
+	require.ElementsMatch(t, []string{
+		"POST /api/v1/locales",
+		"PATCH /api/v1/locales/:locale_id",
+		"PATCH /api/v1/locales/:locale_id/status",
+		"PUT /api/v1/locales/:locale_id/default",
+		"PUT /api/v1/localization/catalog",
+		"GET /api/v1/locales/preferences",
+		"PUT /api/v1/locales/preferences",
+	}, routeKeys(router))
+}
+
 type stubLocaleLister struct{}
 
 func (stubLocaleLister) Execute(context.Context) ([]localizationdomain.Locale, error) {

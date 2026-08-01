@@ -33,6 +33,7 @@ type authorizationRuntime struct {
 	currentAccountGuard  gin.HandlerFunc
 	effectiveGuard       gin.HandlerFunc
 	modulesGuard         gin.HandlerFunc
+	systemAuthorizer     systemPermissionAuthorizer
 }
 
 func buildAuthorizationRuntime(
@@ -104,6 +105,7 @@ func buildAuthorizationRuntime(
 		currentAccount: currentAccount, effectivePermissions: effective,
 		modules: moduleHandler, currentAccountGuard: currentAccountGuard,
 		effectiveGuard: effectiveGuard, modulesGuard: modulesGuard,
+		systemAuthorizer: systemPermissionAuthorizer{evaluator: evaluator},
 	}, nil
 }
 
@@ -144,6 +146,26 @@ type accountResolver interface {
 
 type principalOwnership struct {
 	accounts accountResolver
+}
+
+type systemPermissionAuthorizer struct {
+	evaluator *authorizationapp.EvaluatePermission
+}
+
+func (authorizer systemPermissionAuthorizer) Allowed(
+	ctx context.Context,
+	userID string,
+	permission authorizationdomain.PermissionKey,
+) (bool, error) {
+	if authorizer.evaluator == nil {
+		return false, errAuthorizationComposition
+	}
+	return authorizer.evaluator.Execute(
+		ctx,
+		authorizationapp.PermissionRequest{
+			UserID: userID, Permission: permission,
+		},
+	)
 }
 
 func (ownership principalOwnership) OwnerWithinAccount(
