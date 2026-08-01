@@ -1,4 +1,102 @@
 paths:
+  /authorization/roles:
+    get:
+      tags: [Authorization]
+      summary: List roles visible to the system administration surface.
+      operationId: listAuthorizationRoles
+      x-surfaces: [admin]
+      security:
+        - SessionCookie: []
+      parameters:
+        - name: scope
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [system, account]
+        - name: account_id
+          in: query
+          required: false
+          schema:
+            type: string
+            minLength: 1
+        - $ref: ../../common/pagination.yaml#/components/parameters/Page
+        - $ref: ../../common/pagination.yaml#/components/parameters/PerPage
+      responses:
+        '200':
+          description: A bounded role page.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RoleListResponse'
+        '401':
+          $ref: ../../common/errors.yaml#/components/responses/Unauthorized
+        '403':
+          $ref: ../../common/errors.yaml#/components/responses/Forbidden
+    post:
+      tags: [Authorization]
+      summary: Create an account-owned role.
+      operationId: createAuthorizationRole
+      x-surfaces: [admin]
+      security:
+        - SessionCookie: []
+          CSRFToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateRoleRequest'
+      responses:
+        '201':
+          description: The account role was created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RoleResponse'
+        '401':
+          $ref: ../../common/errors.yaml#/components/responses/Unauthorized
+        '403':
+          $ref: ../../common/errors.yaml#/components/responses/Forbidden
+        '409':
+          $ref: ../../common/errors.yaml#/components/responses/Conflict
+  /authorization/roles/{role_id}:
+    patch:
+      tags: [Authorization]
+      summary: Rename an account-owned role with optimistic concurrency.
+      operationId: updateAuthorizationRole
+      x-surfaces: [admin]
+      security:
+        - SessionCookie: []
+          CSRFToken: []
+      parameters:
+        - name: role_id
+          in: path
+          required: true
+          schema:
+            type: string
+            minLength: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateRoleRequest'
+      responses:
+        '200':
+          description: The account role was renamed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RoleResponse'
+        '401':
+          $ref: ../../common/errors.yaml#/components/responses/Unauthorized
+        '403':
+          $ref: ../../common/errors.yaml#/components/responses/Forbidden
+        '404':
+          $ref: ../../common/errors.yaml#/components/responses/NotFound
+        '409':
+          $ref: ../../common/errors.yaml#/components/responses/Conflict
   /authorization/effective-permissions:
     get:
       tags: [Authorization]
@@ -22,6 +120,33 @@ paths:
         '401':
           $ref: ../../common/errors.yaml#/components/responses/Unauthorized
   /authorization/roles/{role_id}/permissions:
+    get:
+      tags: [Authorization]
+      summary: List permissions granted to a role.
+      operationId: listRolePermissions
+      x-surfaces: [admin]
+      security:
+        - SessionCookie: []
+      parameters:
+        - name: role_id
+          in: path
+          required: true
+          schema:
+            type: string
+            minLength: 1
+      responses:
+        '200':
+          description: The role permission projection.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RolePermissionListResponse'
+        '401':
+          $ref: ../../common/errors.yaml#/components/responses/Unauthorized
+        '403':
+          $ref: ../../common/errors.yaml#/components/responses/Forbidden
+        '404':
+          $ref: ../../common/errors.yaml#/components/responses/NotFound
     post:
       tags: [Authorization]
       summary: Grant a permission key to a role using optimistic concurrency.
@@ -57,6 +182,35 @@ paths:
         '409':
           $ref: ../../common/errors.yaml#/components/responses/Conflict
   /authorization/roles/{role_id}/assignments:
+    get:
+      tags: [Authorization]
+      summary: List principals assigned to a role.
+      operationId: listRoleAssignments
+      x-surfaces: [admin]
+      security:
+        - SessionCookie: []
+      parameters:
+        - name: role_id
+          in: path
+          required: true
+          schema:
+            type: string
+            minLength: 1
+        - $ref: ../../common/pagination.yaml#/components/parameters/Page
+        - $ref: ../../common/pagination.yaml#/components/parameters/PerPage
+      responses:
+        '200':
+          description: A bounded assignment page.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RoleAssignmentListResponse'
+        '401':
+          $ref: ../../common/errors.yaml#/components/responses/Unauthorized
+        '403':
+          $ref: ../../common/errors.yaml#/components/responses/Forbidden
+        '404':
+          $ref: ../../common/errors.yaml#/components/responses/NotFound
     post:
       tags: [Authorization]
       summary: Assign a role in account or system scope using optimistic concurrency.
@@ -128,6 +282,135 @@ paths:
           $ref: ../../common/errors.yaml#/components/responses/Conflict
 components:
   schemas:
+    RoleResponse:
+      type: object
+      additionalProperties: false
+      required: [id, owner_type, name, version, created_at, updated_at]
+      properties:
+        id:
+          type: string
+          minLength: 1
+        owner_type:
+          type: string
+          enum: [system, account]
+        account_id:
+          type: string
+          nullable: true
+        name:
+          type: string
+          minLength: 1
+          maxLength: 128
+        version:
+          type: integer
+          minimum: 1
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    RoleListResponse:
+      type: object
+      additionalProperties: false
+      required: [items, page]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/RoleResponse'
+        page:
+          $ref: ../../common/pagination.yaml#/components/schemas/PageInfo
+    CreateRoleRequest:
+      type: object
+      additionalProperties: false
+      required: [scope, account_id, name]
+      properties:
+        scope:
+          type: string
+          enum: [account]
+        account_id:
+          type: string
+          minLength: 1
+        name:
+          type: string
+          minLength: 1
+          maxLength: 128
+    UpdateRoleRequest:
+      type: object
+      additionalProperties: false
+      required: [name, expected_version]
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 128
+        expected_version:
+          type: integer
+          minimum: 1
+    RolePermissionItem:
+      type: object
+      additionalProperties: false
+      required: [permission_key, active, delegable, tier]
+      properties:
+        permission_key:
+          type: string
+          minLength: 1
+        active:
+          type: boolean
+        delegable:
+          type: boolean
+        tier:
+          type: string
+          enum: [core, default, optional]
+    RolePermissionListResponse:
+      type: object
+      additionalProperties: false
+      required: [role_id, role_version, items]
+      properties:
+        role_id:
+          type: string
+          minLength: 1
+        role_version:
+          type: integer
+          minimum: 1
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/RolePermissionItem'
+    RoleAssignmentItem:
+      type: object
+      additionalProperties: false
+      required: [assignment_id, role_id, scope, user_id, created_at]
+      properties:
+        assignment_id:
+          type: string
+          minLength: 1
+        role_id:
+          type: string
+          minLength: 1
+        scope:
+          type: string
+          enum: [system, account]
+        account_id:
+          type: string
+          nullable: true
+        user_id:
+          type: string
+          minLength: 1
+        created_at:
+          type: string
+          format: date-time
+    RoleAssignmentListResponse:
+      type: object
+      additionalProperties: false
+      required: [items, page]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/RoleAssignmentItem'
+        page:
+          $ref: ../../common/pagination.yaml#/components/schemas/PageInfo
     EffectivePermissionsResponse:
       type: object
       additionalProperties: false

@@ -17,9 +17,34 @@ func Manifest() modular.Manifest {
 				Permission: PermissionEffectiveReadOwn,
 			},
 			{
+				Method:     "GET",
+				Path:       "/api/v1/authorization/roles",
+				Permission: PermissionRolesReadSystem,
+			},
+			{
+				Method:     "POST",
+				Path:       "/api/v1/authorization/roles",
+				Permission: PermissionRolesManageSystem,
+			},
+			{
+				Method:     "PATCH",
+				Path:       "/api/v1/authorization/roles/:role_id",
+				Permission: PermissionRolesManageSystem,
+			},
+			{
+				Method:     "GET",
+				Path:       "/api/v1/authorization/roles/:role_id/permissions",
+				Permission: PermissionRolePermissionsReadSystem,
+			},
+			{
 				Method:     "POST",
 				Path:       "/api/v1/authorization/roles/:role_id/permissions",
 				Permission: PermissionRolePermissionGrant,
+			},
+			{
+				Method:     "GET",
+				Path:       "/api/v1/authorization/roles/:role_id/assignments",
+				Permission: PermissionRoleAssignmentsReadSystem,
 			},
 			{
 				Method:     "POST",

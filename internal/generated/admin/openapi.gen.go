@@ -21,13 +21,28 @@ import (
 
 // Defines values for AccountRoleAssignmentRequestScope.
 const (
-	Account AccountRoleAssignmentRequestScope = "account"
+	AccountRoleAssignmentRequestScopeAccount AccountRoleAssignmentRequestScope = "account"
 )
 
 // Valid indicates whether the value is a known member of the AccountRoleAssignmentRequestScope enum.
 func (e AccountRoleAssignmentRequestScope) Valid() bool {
 	switch e {
-	case Account:
+	case AccountRoleAssignmentRequestScopeAccount:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for CreateRoleRequestScope.
+const (
+	CreateRoleRequestScopeAccount CreateRoleRequestScope = "account"
+)
+
+// Valid indicates whether the value is a known member of the CreateRoleRequestScope enum.
+func (e CreateRoleRequestScope) Valid() bool {
+	switch e {
+	case CreateRoleRequestScopeAccount:
 		return true
 	default:
 		return false
@@ -262,6 +277,63 @@ func (e RecoveryAcceptedResponseStatus) Valid() bool {
 	}
 }
 
+// Defines values for RoleAssignmentItemScope.
+const (
+	RoleAssignmentItemScopeAccount RoleAssignmentItemScope = "account"
+	RoleAssignmentItemScopeSystem  RoleAssignmentItemScope = "system"
+)
+
+// Valid indicates whether the value is a known member of the RoleAssignmentItemScope enum.
+func (e RoleAssignmentItemScope) Valid() bool {
+	switch e {
+	case RoleAssignmentItemScopeAccount:
+		return true
+	case RoleAssignmentItemScopeSystem:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for RolePermissionItemTier.
+const (
+	Core     RolePermissionItemTier = "core"
+	Default  RolePermissionItemTier = "default"
+	Optional RolePermissionItemTier = "optional"
+)
+
+// Valid indicates whether the value is a known member of the RolePermissionItemTier enum.
+func (e RolePermissionItemTier) Valid() bool {
+	switch e {
+	case Core:
+		return true
+	case Default:
+		return true
+	case Optional:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for RoleResponseOwnerType.
+const (
+	RoleResponseOwnerTypeAccount RoleResponseOwnerType = "account"
+	RoleResponseOwnerTypeSystem  RoleResponseOwnerType = "system"
+)
+
+// Valid indicates whether the value is a known member of the RoleResponseOwnerType enum.
+func (e RoleResponseOwnerType) Valid() bool {
+	switch e {
+	case RoleResponseOwnerTypeAccount:
+		return true
+	case RoleResponseOwnerTypeSystem:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for RoleRevokeResponseRevoked.
 const (
 	RoleRevokeResponseRevokedTrue RoleRevokeResponseRevoked = true
@@ -330,13 +402,31 @@ func (e SessionRevocationResultRevoked) Valid() bool {
 
 // Defines values for SystemRoleAssignmentRequestScope.
 const (
-	System SystemRoleAssignmentRequestScope = "system"
+	SystemRoleAssignmentRequestScopeSystem SystemRoleAssignmentRequestScope = "system"
 )
 
 // Valid indicates whether the value is a known member of the SystemRoleAssignmentRequestScope enum.
 func (e SystemRoleAssignmentRequestScope) Valid() bool {
 	switch e {
-	case System:
+	case SystemRoleAssignmentRequestScopeSystem:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for ListAuthorizationRolesParamsScope.
+const (
+	ListAuthorizationRolesParamsScopeAccount ListAuthorizationRolesParamsScope = "account"
+	ListAuthorizationRolesParamsScopeSystem  ListAuthorizationRolesParamsScope = "system"
+)
+
+// Valid indicates whether the value is a known member of the ListAuthorizationRolesParamsScope enum.
+func (e ListAuthorizationRolesParamsScope) Valid() bool {
+	switch e {
+	case ListAuthorizationRolesParamsScopeAccount:
+		return true
+	case ListAuthorizationRolesParamsScopeSystem:
 		return true
 	default:
 		return false
@@ -359,6 +449,16 @@ type CSRFTokenResponse struct {
 	// CsrfToken Session-bound CSRF token for the immediately following unsafe request.
 	CsrfToken string `json:"csrf_token"`
 }
+
+// CreateRoleRequest defines model for CreateRoleRequest.
+type CreateRoleRequest struct {
+	AccountId string                 `json:"account_id"`
+	Name      string                 `json:"name"`
+	Scope     CreateRoleRequestScope `json:"scope"`
+}
+
+// CreateRoleRequestScope defines model for CreateRoleRequest.Scope.
+type CreateRoleRequestScope string
 
 // CurrentAccountResponse defines model for CurrentAccountResponse.
 type CurrentAccountResponse struct {
@@ -575,6 +675,14 @@ type ModuleState struct {
 	ReconcileRevision int    `json:"reconcile_revision"`
 }
 
+// PageInfo defines model for PageInfo.
+type PageInfo struct {
+	Page       int `json:"page"`
+	PerPage    int `json:"per_page"`
+	TotalItems int `json:"total_items"`
+	TotalPages int `json:"total_pages"`
+}
+
 // PasswordResetRequest defines model for PasswordResetRequest.
 type PasswordResetRequest struct {
 	NewPassword *string `json:"new_password,omitempty"`
@@ -631,6 +739,25 @@ type RecoveryRequest struct {
 	Email openapi_types.Email `json:"email"`
 }
 
+// RoleAssignmentItem defines model for RoleAssignmentItem.
+type RoleAssignmentItem struct {
+	AccountId    *string                 `json:"account_id,omitempty"`
+	AssignmentId string                  `json:"assignment_id"`
+	CreatedAt    time.Time               `json:"created_at"`
+	RoleId       string                  `json:"role_id"`
+	Scope        RoleAssignmentItemScope `json:"scope"`
+	UserId       string                  `json:"user_id"`
+}
+
+// RoleAssignmentItemScope defines model for RoleAssignmentItem.Scope.
+type RoleAssignmentItemScope string
+
+// RoleAssignmentListResponse defines model for RoleAssignmentListResponse.
+type RoleAssignmentListResponse struct {
+	Items []RoleAssignmentItem `json:"items"`
+	Page  PageInfo             `json:"page"`
+}
+
 // RoleAssignmentRequest defines model for RoleAssignmentRequest.
 type RoleAssignmentRequest struct {
 	union json.RawMessage
@@ -644,6 +771,44 @@ type RoleAssignmentResponse struct {
 	SessionOutcome     SessionInvalidationOutcome `json:"session_outcome"`
 	Version            int                        `json:"version"`
 }
+
+// RoleListResponse defines model for RoleListResponse.
+type RoleListResponse struct {
+	Items []RoleResponse `json:"items"`
+	Page  PageInfo       `json:"page"`
+}
+
+// RolePermissionItem defines model for RolePermissionItem.
+type RolePermissionItem struct {
+	Active        bool                   `json:"active"`
+	Delegable     bool                   `json:"delegable"`
+	PermissionKey string                 `json:"permission_key"`
+	Tier          RolePermissionItemTier `json:"tier"`
+}
+
+// RolePermissionItemTier defines model for RolePermissionItem.Tier.
+type RolePermissionItemTier string
+
+// RolePermissionListResponse defines model for RolePermissionListResponse.
+type RolePermissionListResponse struct {
+	Items       []RolePermissionItem `json:"items"`
+	RoleId      string               `json:"role_id"`
+	RoleVersion int                  `json:"role_version"`
+}
+
+// RoleResponse defines model for RoleResponse.
+type RoleResponse struct {
+	AccountId *string               `json:"account_id,omitempty"`
+	CreatedAt time.Time             `json:"created_at"`
+	Id        string                `json:"id"`
+	Name      string                `json:"name"`
+	OwnerType RoleResponseOwnerType `json:"owner_type"`
+	UpdatedAt time.Time             `json:"updated_at"`
+	Version   int                   `json:"version"`
+}
+
+// RoleResponseOwnerType defines model for RoleResponse.OwnerType.
+type RoleResponseOwnerType string
 
 // RoleRevokeRequest defines model for RoleRevokeRequest.
 type RoleRevokeRequest struct {
@@ -731,6 +896,18 @@ type TranslationCatalogUpdateResponse struct {
 	Version  int    `json:"version"`
 }
 
+// UpdateRoleRequest defines model for UpdateRoleRequest.
+type UpdateRoleRequest struct {
+	ExpectedVersion int    `json:"expected_version"`
+	Name            string `json:"name"`
+}
+
+// Page defines model for Page.
+type Page = int
+
+// PerPage defines model for PerPage.
+type PerPage = int
+
 // BadRequest defines model for BadRequest.
 type BadRequest = ErrorEnvelope
 
@@ -748,6 +925,30 @@ type TooManyRequests = ErrorEnvelope
 
 // Unauthorized defines model for Unauthorized.
 type Unauthorized = ErrorEnvelope
+
+// ListAuthorizationRolesParams defines parameters for ListAuthorizationRoles.
+type ListAuthorizationRolesParams struct {
+	Scope     *ListAuthorizationRolesParamsScope `form:"scope,omitempty" json:"scope,omitempty"`
+	AccountId *string                            `form:"account_id,omitempty" json:"account_id,omitempty"`
+
+	// Page One-based page number.
+	Page *Page `form:"page,omitempty" json:"page,omitempty"`
+
+	// PerPage Requested page size. The API enforces the upper bound.
+	PerPage *PerPage `form:"per_page,omitempty" json:"per_page,omitempty"`
+}
+
+// ListAuthorizationRolesParamsScope defines parameters for ListAuthorizationRoles.
+type ListAuthorizationRolesParamsScope string
+
+// ListRoleAssignmentsParams defines parameters for ListRoleAssignments.
+type ListRoleAssignmentsParams struct {
+	// Page One-based page number.
+	Page *Page `form:"page,omitempty" json:"page,omitempty"`
+
+	// PerPage Requested page size. The API enforces the upper bound.
+	PerPage *PerPage `form:"per_page,omitempty" json:"per_page,omitempty"`
+}
 
 // GetTranslationCatalogParams defines parameters for GetTranslationCatalog.
 type GetTranslationCatalogParams struct {
@@ -772,6 +973,12 @@ type ResetPasswordJSONRequestBody = PasswordResetRequest
 
 // RevokeRoleAssignmentJSONRequestBody defines body for RevokeRoleAssignment for application/json ContentType.
 type RevokeRoleAssignmentJSONRequestBody = RoleRevokeRequest
+
+// CreateAuthorizationRoleJSONRequestBody defines body for CreateAuthorizationRole for application/json ContentType.
+type CreateAuthorizationRoleJSONRequestBody = CreateRoleRequest
+
+// UpdateAuthorizationRoleJSONRequestBody defines body for UpdateAuthorizationRole for application/json ContentType.
+type UpdateAuthorizationRoleJSONRequestBody = UpdateRoleRequest
 
 // AssignRoleJSONRequestBody defines body for AssignRole for application/json ContentType.
 type AssignRoleJSONRequestBody = RoleAssignmentRequest
@@ -1101,6 +1308,44 @@ type ClientInterface interface {
 	// Corresponds with GET /authorization/effective-permissions (the `GetEffectivePermissions` operationId).
 	GetEffectivePermissions(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// ListAuthorizationRoles List roles visible to the system administration surface.
+	//
+	// Corresponds with GET /authorization/roles (the `ListAuthorizationRoles` operationId).
+	ListAuthorizationRoles(ctx context.Context, params *ListAuthorizationRolesParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// CreateAuthorizationRoleWithBody Create an account-owned role.
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with POST /authorization/roles (the `CreateAuthorizationRole` operationId).
+	CreateAuthorizationRoleWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// CreateAuthorizationRole Create an account-owned role.
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with POST /authorization/roles (the `CreateAuthorizationRole` operationId).
+	CreateAuthorizationRole(ctx context.Context, body CreateAuthorizationRoleJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// UpdateAuthorizationRoleWithBody Rename an account-owned role with optimistic concurrency.
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with PATCH /authorization/roles/{role_id} (the `UpdateAuthorizationRole` operationId).
+	UpdateAuthorizationRoleWithBody(ctx context.Context, roleId string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// UpdateAuthorizationRole Rename an account-owned role with optimistic concurrency.
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with PATCH /authorization/roles/{role_id} (the `UpdateAuthorizationRole` operationId).
+	UpdateAuthorizationRole(ctx context.Context, roleId string, body UpdateAuthorizationRoleJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ListRoleAssignments List principals assigned to a role.
+	//
+	// Corresponds with GET /authorization/roles/{role_id}/assignments (the `ListRoleAssignments` operationId).
+	ListRoleAssignments(ctx context.Context, roleId string, params *ListRoleAssignmentsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// AssignRoleWithBody Assign a role in account or system scope using optimistic concurrency.
 	//
 	// Takes any type of body and a specified content type.
@@ -1114,6 +1359,11 @@ type ClientInterface interface {
 	//
 	// Corresponds with POST /authorization/roles/{role_id}/assignments (the `AssignRole` operationId).
 	AssignRole(ctx context.Context, roleId string, body AssignRoleJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ListRolePermissions List permissions granted to a role.
+	//
+	// Corresponds with GET /authorization/roles/{role_id}/permissions (the `ListRolePermissions` operationId).
+	ListRolePermissions(ctx context.Context, roleId string, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GrantRolePermissionWithBody Grant a permission key to a role using optimistic concurrency.
 	//
@@ -1573,6 +1823,104 @@ func (c *Client) GetEffectivePermissions(ctx context.Context, reqEditors ...Requ
 	return c.Client.Do(req)
 }
 
+// ListAuthorizationRoles List roles visible to the system administration surface.
+//
+// Corresponds with GET /authorization/roles (the `ListAuthorizationRoles` operationId).
+func (c *Client) ListAuthorizationRoles(ctx context.Context, params *ListAuthorizationRolesParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewListAuthorizationRolesRequest(c.Server, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// CreateAuthorizationRoleWithBody Create an account-owned role.
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with POST /authorization/roles (the `CreateAuthorizationRole` operationId).
+func (c *Client) CreateAuthorizationRoleWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCreateAuthorizationRoleRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// CreateAuthorizationRole Create an account-owned role.
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with POST /authorization/roles (the `CreateAuthorizationRole` operationId).
+func (c *Client) CreateAuthorizationRole(ctx context.Context, body CreateAuthorizationRoleJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCreateAuthorizationRoleRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// UpdateAuthorizationRoleWithBody Rename an account-owned role with optimistic concurrency.
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with PATCH /authorization/roles/{role_id} (the `UpdateAuthorizationRole` operationId).
+func (c *Client) UpdateAuthorizationRoleWithBody(ctx context.Context, roleId string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewUpdateAuthorizationRoleRequestWithBody(c.Server, roleId, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// UpdateAuthorizationRole Rename an account-owned role with optimistic concurrency.
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with PATCH /authorization/roles/{role_id} (the `UpdateAuthorizationRole` operationId).
+func (c *Client) UpdateAuthorizationRole(ctx context.Context, roleId string, body UpdateAuthorizationRoleJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewUpdateAuthorizationRoleRequest(c.Server, roleId, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// ListRoleAssignments List principals assigned to a role.
+//
+// Corresponds with GET /authorization/roles/{role_id}/assignments (the `ListRoleAssignments` operationId).
+func (c *Client) ListRoleAssignments(ctx context.Context, roleId string, params *ListRoleAssignmentsParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewListRoleAssignmentsRequest(c.Server, roleId, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
 // AssignRoleWithBody Assign a role in account or system scope using optimistic concurrency.
 //
 // Takes any type of body and a specified content type.
@@ -1597,6 +1945,21 @@ func (c *Client) AssignRoleWithBody(ctx context.Context, roleId string, contentT
 // Corresponds with POST /authorization/roles/{role_id}/assignments (the `AssignRole` operationId).
 func (c *Client) AssignRole(ctx context.Context, roleId string, body AssignRoleJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewAssignRoleRequest(c.Server, roleId, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// ListRolePermissions List permissions granted to a role.
+//
+// Corresponds with GET /authorization/roles/{role_id}/permissions (the `ListRolePermissions` operationId).
+func (c *Client) ListRolePermissions(ctx context.Context, roleId string, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewListRolePermissionsRequest(c.Server, roleId)
 	if err != nil {
 		return nil, err
 	}
@@ -2409,6 +2772,256 @@ func NewGetEffectivePermissionsRequest(server string) (*http.Request, error) {
 	return req, nil
 }
 
+// NewListAuthorizationRolesRequest constructs an http.Request for the ListAuthorizationRoles method
+func NewListAuthorizationRolesRequest(server string, params *ListAuthorizationRolesParams) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/authorization/roles")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		// queryValues collects non-styled parameters (passthrough, JSON)
+		// that are safe to round-trip through url.Values.Encode().
+		queryValues := queryURL.Query()
+		// rawQueryFragments collects pre-encoded query fragments from
+		// styled parameters, preserving literal commas as delimiters
+		// per the OpenAPI spec (e.g. "color=blue,black,brown").
+		var rawQueryFragments []string
+
+		if params.Scope != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "scope", *params.Scope, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.AccountId != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "account_id", *params.AccountId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.Page != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "page", *params.Page, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "integer", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.PerPage != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "per_page", *params.PerPage, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "integer", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if encoded := queryValues.Encode(); encoded != "" {
+			rawQueryFragments = append(rawQueryFragments, encoded)
+		}
+		queryURL.RawQuery = strings.Join(rawQueryFragments, "&")
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewCreateAuthorizationRoleRequest calls the generic CreateAuthorizationRole builder with application/json body
+func NewCreateAuthorizationRoleRequest(server string, body CreateAuthorizationRoleJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewCreateAuthorizationRoleRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewCreateAuthorizationRoleRequestWithBody constructs an http.Request for the CreateAuthorizationRole method, with any body, and a specified content type
+func NewCreateAuthorizationRoleRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/authorization/roles")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPost, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewUpdateAuthorizationRoleRequest calls the generic UpdateAuthorizationRole builder with application/json body
+func NewUpdateAuthorizationRoleRequest(server string, roleId string, body UpdateAuthorizationRoleJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewUpdateAuthorizationRoleRequestWithBody(server, roleId, "application/json", bodyReader)
+}
+
+// NewUpdateAuthorizationRoleRequestWithBody constructs an http.Request for the UpdateAuthorizationRole method, with any body, and a specified content type
+func NewUpdateAuthorizationRoleRequestWithBody(server string, roleId string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "role_id", roleId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/authorization/roles/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPatch, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewListRoleAssignmentsRequest constructs an http.Request for the ListRoleAssignments method
+func NewListRoleAssignmentsRequest(server string, roleId string, params *ListRoleAssignmentsParams) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "role_id", roleId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/authorization/roles/%s/assignments", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		// queryValues collects non-styled parameters (passthrough, JSON)
+		// that are safe to round-trip through url.Values.Encode().
+		queryValues := queryURL.Query()
+		// rawQueryFragments collects pre-encoded query fragments from
+		// styled parameters, preserving literal commas as delimiters
+		// per the OpenAPI spec (e.g. "color=blue,black,brown").
+		var rawQueryFragments []string
+
+		if params.Page != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "page", *params.Page, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "integer", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.PerPage != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "per_page", *params.PerPage, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "integer", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if encoded := queryValues.Encode(); encoded != "" {
+			rawQueryFragments = append(rawQueryFragments, encoded)
+		}
+		queryURL.RawQuery = strings.Join(rawQueryFragments, "&")
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
 // NewAssignRoleRequest calls the generic AssignRole builder with application/json body
 func NewAssignRoleRequest(server string, roleId string, body AssignRoleJSONRequestBody) (*http.Request, error) {
 	var bodyReader io.Reader
@@ -2452,6 +3065,40 @@ func NewAssignRoleRequestWithBody(server string, roleId string, contentType stri
 	}
 
 	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewListRolePermissionsRequest constructs an http.Request for the ListRolePermissions method
+func NewListRolePermissionsRequest(server string, roleId string) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "role_id", roleId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/authorization/roles/%s/permissions", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
 
 	return req, nil
 }
@@ -3094,6 +3741,48 @@ type ClientWithResponsesInterface interface {
 	// Corresponds with GET /authorization/effective-permissions (the `GetEffectivePermissions` operationId).
 	GetEffectivePermissionsWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetEffectivePermissionsResponse, error)
 
+	// ListAuthorizationRolesWithResponse List roles visible to the system administration surface.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /authorization/roles (the `ListAuthorizationRoles` operationId).
+	ListAuthorizationRolesWithResponse(ctx context.Context, params *ListAuthorizationRolesParams, reqEditors ...RequestEditorFn) (*ListAuthorizationRolesResponse, error)
+
+	// CreateAuthorizationRoleWithBodyWithResponse Create an account-owned role.
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /authorization/roles (the `CreateAuthorizationRole` operationId).
+	CreateAuthorizationRoleWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateAuthorizationRoleResponse, error)
+
+	// CreateAuthorizationRoleWithResponse Create an account-owned role.
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /authorization/roles (the `CreateAuthorizationRole` operationId).
+	CreateAuthorizationRoleWithResponse(ctx context.Context, body CreateAuthorizationRoleJSONRequestBody, reqEditors ...RequestEditorFn) (*CreateAuthorizationRoleResponse, error)
+
+	// UpdateAuthorizationRoleWithBodyWithResponse Rename an account-owned role with optimistic concurrency.
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with PATCH /authorization/roles/{role_id} (the `UpdateAuthorizationRole` operationId).
+	UpdateAuthorizationRoleWithBodyWithResponse(ctx context.Context, roleId string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*UpdateAuthorizationRoleResponse, error)
+
+	// UpdateAuthorizationRoleWithResponse Rename an account-owned role with optimistic concurrency.
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with PATCH /authorization/roles/{role_id} (the `UpdateAuthorizationRole` operationId).
+	UpdateAuthorizationRoleWithResponse(ctx context.Context, roleId string, body UpdateAuthorizationRoleJSONRequestBody, reqEditors ...RequestEditorFn) (*UpdateAuthorizationRoleResponse, error)
+
+	// ListRoleAssignmentsWithResponse List principals assigned to a role.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /authorization/roles/{role_id}/assignments (the `ListRoleAssignments` operationId).
+	ListRoleAssignmentsWithResponse(ctx context.Context, roleId string, params *ListRoleAssignmentsParams, reqEditors ...RequestEditorFn) (*ListRoleAssignmentsResponse, error)
+
 	// AssignRoleWithBodyWithResponse Assign a role in account or system scope using optimistic concurrency.
 	//
 	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
@@ -3107,6 +3796,13 @@ type ClientWithResponsesInterface interface {
 	//
 	// Corresponds with POST /authorization/roles/{role_id}/assignments (the `AssignRole` operationId).
 	AssignRoleWithResponse(ctx context.Context, roleId string, body AssignRoleJSONRequestBody, reqEditors ...RequestEditorFn) (*AssignRoleResponse, error)
+
+	// ListRolePermissionsWithResponse List permissions granted to a role.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /authorization/roles/{role_id}/permissions (the `ListRolePermissions` operationId).
+	ListRolePermissionsWithResponse(ctx context.Context, roleId string, reqEditors ...RequestEditorFn) (*ListRolePermissionsResponse, error)
 
 	// GrantRolePermissionWithBodyWithResponse Grant a permission key to a role using optimistic concurrency.
 	//
@@ -4151,6 +4847,254 @@ func (r GetEffectivePermissionsResponse) ContentType() string {
 	return ""
 }
 
+type ListAuthorizationRolesResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *RoleListResponse
+	// JSON401 the response for an HTTP 401 `application/json` response
+	JSON401 *Unauthorized
+	// JSON403 the response for an HTTP 403 `application/json` response
+	JSON403 *Forbidden
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r ListAuthorizationRolesResponse) GetJSON200() *RoleListResponse {
+	return r.JSON200
+}
+
+// GetJSON401 returns the response for an HTTP 401 `application/json` response
+func (r ListAuthorizationRolesResponse) GetJSON401() *Unauthorized {
+	return r.JSON401
+}
+
+// GetJSON403 returns the response for an HTTP 403 `application/json` response
+func (r ListAuthorizationRolesResponse) GetJSON403() *Forbidden {
+	return r.JSON403
+}
+
+// GetBody returns the raw response body bytes
+func (r ListAuthorizationRolesResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r ListAuthorizationRolesResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ListAuthorizationRolesResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r ListAuthorizationRolesResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type CreateAuthorizationRoleResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON201 the response for an HTTP 201 `application/json` response
+	JSON201 *RoleResponse
+	// JSON401 the response for an HTTP 401 `application/json` response
+	JSON401 *Unauthorized
+	// JSON403 the response for an HTTP 403 `application/json` response
+	JSON403 *Forbidden
+	// JSON409 the response for an HTTP 409 `application/json` response
+	JSON409 *Conflict
+}
+
+// GetJSON201 returns the response for an HTTP 201 `application/json` response
+func (r CreateAuthorizationRoleResponse) GetJSON201() *RoleResponse {
+	return r.JSON201
+}
+
+// GetJSON401 returns the response for an HTTP 401 `application/json` response
+func (r CreateAuthorizationRoleResponse) GetJSON401() *Unauthorized {
+	return r.JSON401
+}
+
+// GetJSON403 returns the response for an HTTP 403 `application/json` response
+func (r CreateAuthorizationRoleResponse) GetJSON403() *Forbidden {
+	return r.JSON403
+}
+
+// GetJSON409 returns the response for an HTTP 409 `application/json` response
+func (r CreateAuthorizationRoleResponse) GetJSON409() *Conflict {
+	return r.JSON409
+}
+
+// GetBody returns the raw response body bytes
+func (r CreateAuthorizationRoleResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r CreateAuthorizationRoleResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r CreateAuthorizationRoleResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r CreateAuthorizationRoleResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type UpdateAuthorizationRoleResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *RoleResponse
+	// JSON401 the response for an HTTP 401 `application/json` response
+	JSON401 *Unauthorized
+	// JSON403 the response for an HTTP 403 `application/json` response
+	JSON403 *Forbidden
+	// JSON404 the response for an HTTP 404 `application/json` response
+	JSON404 *NotFound
+	// JSON409 the response for an HTTP 409 `application/json` response
+	JSON409 *Conflict
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r UpdateAuthorizationRoleResponse) GetJSON200() *RoleResponse {
+	return r.JSON200
+}
+
+// GetJSON401 returns the response for an HTTP 401 `application/json` response
+func (r UpdateAuthorizationRoleResponse) GetJSON401() *Unauthorized {
+	return r.JSON401
+}
+
+// GetJSON403 returns the response for an HTTP 403 `application/json` response
+func (r UpdateAuthorizationRoleResponse) GetJSON403() *Forbidden {
+	return r.JSON403
+}
+
+// GetJSON404 returns the response for an HTTP 404 `application/json` response
+func (r UpdateAuthorizationRoleResponse) GetJSON404() *NotFound {
+	return r.JSON404
+}
+
+// GetJSON409 returns the response for an HTTP 409 `application/json` response
+func (r UpdateAuthorizationRoleResponse) GetJSON409() *Conflict {
+	return r.JSON409
+}
+
+// GetBody returns the raw response body bytes
+func (r UpdateAuthorizationRoleResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r UpdateAuthorizationRoleResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r UpdateAuthorizationRoleResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r UpdateAuthorizationRoleResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type ListRoleAssignmentsResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *RoleAssignmentListResponse
+	// JSON401 the response for an HTTP 401 `application/json` response
+	JSON401 *Unauthorized
+	// JSON403 the response for an HTTP 403 `application/json` response
+	JSON403 *Forbidden
+	// JSON404 the response for an HTTP 404 `application/json` response
+	JSON404 *NotFound
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r ListRoleAssignmentsResponse) GetJSON200() *RoleAssignmentListResponse {
+	return r.JSON200
+}
+
+// GetJSON401 returns the response for an HTTP 401 `application/json` response
+func (r ListRoleAssignmentsResponse) GetJSON401() *Unauthorized {
+	return r.JSON401
+}
+
+// GetJSON403 returns the response for an HTTP 403 `application/json` response
+func (r ListRoleAssignmentsResponse) GetJSON403() *Forbidden {
+	return r.JSON403
+}
+
+// GetJSON404 returns the response for an HTTP 404 `application/json` response
+func (r ListRoleAssignmentsResponse) GetJSON404() *NotFound {
+	return r.JSON404
+}
+
+// GetBody returns the raw response body bytes
+func (r ListRoleAssignmentsResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r ListRoleAssignmentsResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ListRoleAssignmentsResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r ListRoleAssignmentsResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
 type AssignRoleResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -4207,6 +5151,68 @@ func (r AssignRoleResponse) StatusCode() int {
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
 func (r AssignRoleResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type ListRolePermissionsResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *RolePermissionListResponse
+	// JSON401 the response for an HTTP 401 `application/json` response
+	JSON401 *Unauthorized
+	// JSON403 the response for an HTTP 403 `application/json` response
+	JSON403 *Forbidden
+	// JSON404 the response for an HTTP 404 `application/json` response
+	JSON404 *NotFound
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r ListRolePermissionsResponse) GetJSON200() *RolePermissionListResponse {
+	return r.JSON200
+}
+
+// GetJSON401 returns the response for an HTTP 401 `application/json` response
+func (r ListRolePermissionsResponse) GetJSON401() *Unauthorized {
+	return r.JSON401
+}
+
+// GetJSON403 returns the response for an HTTP 403 `application/json` response
+func (r ListRolePermissionsResponse) GetJSON403() *Forbidden {
+	return r.JSON403
+}
+
+// GetJSON404 returns the response for an HTTP 404 `application/json` response
+func (r ListRolePermissionsResponse) GetJSON404() *NotFound {
+	return r.JSON404
+}
+
+// GetBody returns the raw response body bytes
+func (r ListRolePermissionsResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r ListRolePermissionsResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ListRolePermissionsResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r ListRolePermissionsResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
@@ -5119,6 +6125,84 @@ func (c *ClientWithResponses) GetEffectivePermissionsWithResponse(ctx context.Co
 	return ParseGetEffectivePermissionsResponse(rsp)
 }
 
+// ListAuthorizationRolesWithResponse List roles visible to the system administration surface.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /authorization/roles (the `ListAuthorizationRoles` operationId).
+func (c *ClientWithResponses) ListAuthorizationRolesWithResponse(ctx context.Context, params *ListAuthorizationRolesParams, reqEditors ...RequestEditorFn) (*ListAuthorizationRolesResponse, error) {
+	rsp, err := c.ListAuthorizationRoles(ctx, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseListAuthorizationRolesResponse(rsp)
+}
+
+// CreateAuthorizationRoleWithBodyWithResponse Create an account-owned role.
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /authorization/roles (the `CreateAuthorizationRole` operationId).
+func (c *ClientWithResponses) CreateAuthorizationRoleWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateAuthorizationRoleResponse, error) {
+	rsp, err := c.CreateAuthorizationRoleWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseCreateAuthorizationRoleResponse(rsp)
+}
+
+// CreateAuthorizationRoleWithResponse Create an account-owned role.
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /authorization/roles (the `CreateAuthorizationRole` operationId).
+func (c *ClientWithResponses) CreateAuthorizationRoleWithResponse(ctx context.Context, body CreateAuthorizationRoleJSONRequestBody, reqEditors ...RequestEditorFn) (*CreateAuthorizationRoleResponse, error) {
+	rsp, err := c.CreateAuthorizationRole(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseCreateAuthorizationRoleResponse(rsp)
+}
+
+// UpdateAuthorizationRoleWithBodyWithResponse Rename an account-owned role with optimistic concurrency.
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with PATCH /authorization/roles/{role_id} (the `UpdateAuthorizationRole` operationId).
+func (c *ClientWithResponses) UpdateAuthorizationRoleWithBodyWithResponse(ctx context.Context, roleId string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*UpdateAuthorizationRoleResponse, error) {
+	rsp, err := c.UpdateAuthorizationRoleWithBody(ctx, roleId, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseUpdateAuthorizationRoleResponse(rsp)
+}
+
+// UpdateAuthorizationRoleWithResponse Rename an account-owned role with optimistic concurrency.
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with PATCH /authorization/roles/{role_id} (the `UpdateAuthorizationRole` operationId).
+func (c *ClientWithResponses) UpdateAuthorizationRoleWithResponse(ctx context.Context, roleId string, body UpdateAuthorizationRoleJSONRequestBody, reqEditors ...RequestEditorFn) (*UpdateAuthorizationRoleResponse, error) {
+	rsp, err := c.UpdateAuthorizationRole(ctx, roleId, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseUpdateAuthorizationRoleResponse(rsp)
+}
+
+// ListRoleAssignmentsWithResponse List principals assigned to a role.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /authorization/roles/{role_id}/assignments (the `ListRoleAssignments` operationId).
+func (c *ClientWithResponses) ListRoleAssignmentsWithResponse(ctx context.Context, roleId string, params *ListRoleAssignmentsParams, reqEditors ...RequestEditorFn) (*ListRoleAssignmentsResponse, error) {
+	rsp, err := c.ListRoleAssignments(ctx, roleId, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseListRoleAssignmentsResponse(rsp)
+}
+
 // AssignRoleWithBodyWithResponse Assign a role in account or system scope using optimistic concurrency.
 //
 // Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
@@ -5143,6 +6227,19 @@ func (c *ClientWithResponses) AssignRoleWithResponse(ctx context.Context, roleId
 		return nil, err
 	}
 	return ParseAssignRoleResponse(rsp)
+}
+
+// ListRolePermissionsWithResponse List permissions granted to a role.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /authorization/roles/{role_id}/permissions (the `ListRolePermissions` operationId).
+func (c *ClientWithResponses) ListRolePermissionsWithResponse(ctx context.Context, roleId string, reqEditors ...RequestEditorFn) (*ListRolePermissionsResponse, error) {
+	rsp, err := c.ListRolePermissions(ctx, roleId, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseListRolePermissionsResponse(rsp)
 }
 
 // GrantRolePermissionWithBodyWithResponse Grant a permission key to a role using optimistic concurrency.
@@ -6196,6 +7293,194 @@ func ParseGetEffectivePermissionsResponse(rsp *http.Response) (*GetEffectivePerm
 	return response, nil
 }
 
+// ParseListAuthorizationRolesResponse parses an HTTP response from a ListAuthorizationRolesWithResponse call
+func ParseListAuthorizationRolesResponse(rsp *http.Response) (*ListAuthorizationRolesResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ListAuthorizationRolesResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest RoleListResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest Unauthorized
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest Forbidden
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseCreateAuthorizationRoleResponse parses an HTTP response from a CreateAuthorizationRoleWithResponse call
+func ParseCreateAuthorizationRoleResponse(rsp *http.Response) (*CreateAuthorizationRoleResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &CreateAuthorizationRoleResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 201:
+		var dest RoleResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON201 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest Unauthorized
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest Forbidden
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest Conflict
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON409 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseUpdateAuthorizationRoleResponse parses an HTTP response from a UpdateAuthorizationRoleWithResponse call
+func ParseUpdateAuthorizationRoleResponse(rsp *http.Response) (*UpdateAuthorizationRoleResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &UpdateAuthorizationRoleResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest RoleResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest Unauthorized
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest Forbidden
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest Conflict
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON409 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseListRoleAssignmentsResponse parses an HTTP response from a ListRoleAssignmentsWithResponse call
+func ParseListRoleAssignmentsResponse(rsp *http.Response) (*ListRoleAssignmentsResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ListRoleAssignmentsResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest RoleAssignmentListResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest Unauthorized
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest Forbidden
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	}
+
+	return response, nil
+}
+
 // ParseAssignRoleResponse parses an HTTP response from a AssignRoleWithResponse call
 func ParseAssignRoleResponse(rsp *http.Response) (*AssignRoleResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
@@ -6237,6 +7522,53 @@ func ParseAssignRoleResponse(rsp *http.Response) (*AssignRoleResponse, error) {
 			return nil, err
 		}
 		response.JSON409 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseListRolePermissionsResponse parses an HTTP response from a ListRolePermissionsWithResponse call
+func ParseListRolePermissionsResponse(rsp *http.Response) (*ListRolePermissionsResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ListRolePermissionsResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest RolePermissionListResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest Unauthorized
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest Forbidden
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
 
 	}
 

@@ -108,6 +108,38 @@ func TestRoleRevokeContract(t *testing.T) {
 	require.NotNil(t, operation.Responses.Value("409"), "last-manager and version conflicts must use the stable conflict response")
 }
 
+func TestRoleAdministrationContract(t *testing.T) {
+	loader := openapi3.NewLoader()
+	loader.IsExternalRefsAllowed = true
+	document, err := loader.LoadFromFile(filepath.Join("..", "..", "openapi", "root.yaml"))
+	require.NoError(t, err)
+	require.NoError(t, document.Validate(context.Background()))
+
+	roles := document.Paths.Find("/authorization/roles")
+	require.NotNil(t, roles)
+	require.NotNil(t, roles.Get)
+	require.NotNil(t, roles.Post)
+	require.Equal(t, "listAuthorizationRoles", roles.Get.OperationID)
+	require.Equal(t, "createAuthorizationRole", roles.Post.OperationID)
+	require.Equal(t, []interface{}{"admin"}, roles.Get.Extensions["x-surfaces"])
+	require.Equal(t, []interface{}{"admin"}, roles.Post.Extensions["x-surfaces"])
+
+	role := document.Paths.Find("/authorization/roles/{role_id}")
+	require.NotNil(t, role)
+	require.NotNil(t, role.Patch)
+	require.Equal(t, "updateAuthorizationRole", role.Patch.OperationID)
+
+	permissions := document.Paths.Find("/authorization/roles/{role_id}/permissions")
+	require.NotNil(t, permissions)
+	require.NotNil(t, permissions.Get)
+	require.Equal(t, "listRolePermissions", permissions.Get.OperationID)
+
+	assignments := document.Paths.Find("/authorization/roles/{role_id}/assignments")
+	require.NotNil(t, assignments)
+	require.NotNil(t, assignments.Get)
+	require.Equal(t, "listRoleAssignments", assignments.Get.OperationID)
+}
+
 func TestPrivilegeChangeSessionOutcomeContract(t *testing.T) {
 	loader := openapi3.NewLoader()
 	loader.IsExternalRefsAllowed = true

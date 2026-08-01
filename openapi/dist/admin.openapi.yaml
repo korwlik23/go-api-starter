@@ -484,7 +484,136 @@ paths:
       summary: Read active permission keys for the resolved account and principal.
       tags:
         - Authorization
+  /authorization/roles:
+    get:
+      operationId: listAuthorizationRoles
+      parameters:
+        - in: query
+          name: scope
+          required: false
+          schema:
+            enum:
+              - system
+              - account
+            type: string
+        - in: query
+          name: account_id
+          required: false
+          schema:
+            minLength: 1
+            type: string
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PerPage'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RoleListResponse'
+          description: A bounded role page.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+      security:
+        - SessionCookie: []
+      summary: List roles visible to the system administration surface.
+      tags:
+        - Authorization
+    post:
+      operationId: createAuthorizationRole
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateRoleRequest'
+        required: true
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RoleResponse'
+          description: The account role was created.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+      security:
+        - CSRFToken: []
+          SessionCookie: []
+      summary: Create an account-owned role.
+      tags:
+        - Authorization
+  /authorization/roles/{role_id}:
+    patch:
+      operationId: updateAuthorizationRole
+      parameters:
+        - in: path
+          name: role_id
+          required: true
+          schema:
+            minLength: 1
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateRoleRequest'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RoleResponse'
+          description: The account role was renamed.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+      security:
+        - CSRFToken: []
+          SessionCookie: []
+      summary: Rename an account-owned role with optimistic concurrency.
+      tags:
+        - Authorization
   /authorization/roles/{role_id}/assignments:
+    get:
+      operationId: listRoleAssignments
+      parameters:
+        - in: path
+          name: role_id
+          required: true
+          schema:
+            minLength: 1
+            type: string
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PerPage'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RoleAssignmentListResponse'
+          description: A bounded assignment page.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+      security:
+        - SessionCookie: []
+      summary: List principals assigned to a role.
+      tags:
+        - Authorization
     post:
       operationId: assignRole
       parameters:
@@ -520,6 +649,33 @@ paths:
       tags:
         - Authorization
   /authorization/roles/{role_id}/permissions:
+    get:
+      operationId: listRolePermissions
+      parameters:
+        - in: path
+          name: role_id
+          required: true
+          schema:
+            minLength: 1
+            type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RolePermissionListResponse'
+          description: The role permission projection.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+      security:
+        - SessionCookie: []
+      summary: List permissions granted to a role.
+      tags:
+        - Authorization
     post:
       operationId: grantRolePermission
       parameters:
@@ -832,6 +988,26 @@ paths:
       tags:
         - Operations
 components:
+  parameters:
+    Page:
+      description: One-based page number.
+      in: query
+      name: page
+      required: false
+      schema:
+        default: 1
+        minimum: 1
+        type: integer
+    PerPage:
+      description: Requested page size. The API enforces the upper bound.
+      in: query
+      name: per_page
+      required: false
+      schema:
+        default: 25
+        maximum: 100
+        minimum: 1
+        type: integer
   responses:
     BadRequest:
       content:
@@ -901,6 +1077,25 @@ components:
           type: string
       required:
         - csrf_token
+      type: object
+    CreateRoleRequest:
+      additionalProperties: false
+      properties:
+        account_id:
+          minLength: 1
+          type: string
+        name:
+          maxLength: 128
+          minLength: 1
+          type: string
+        scope:
+          enum:
+            - account
+          type: string
+      required:
+        - scope
+        - account_id
+        - name
       type: object
     CurrentAccountResponse:
       additionalProperties: false
@@ -1346,6 +1541,28 @@ components:
         - enabled
         - reconcile_revision
       type: object
+    PageInfo:
+      additionalProperties: false
+      properties:
+        page:
+          minimum: 1
+          type: integer
+        per_page:
+          maximum: 100
+          minimum: 1
+          type: integer
+        total_items:
+          minimum: 0
+          type: integer
+        total_pages:
+          minimum: 0
+          type: integer
+      required:
+        - page
+        - per_page
+        - total_items
+        - total_pages
+      type: object
     PasswordResetRequest:
       additionalProperties: false
       properties:
@@ -1452,6 +1669,49 @@ components:
       required:
         - email
       type: object
+    RoleAssignmentItem:
+      additionalProperties: false
+      properties:
+        account_id:
+          nullable: true
+          type: string
+        assignment_id:
+          minLength: 1
+          type: string
+        created_at:
+          format: date-time
+          type: string
+        role_id:
+          minLength: 1
+          type: string
+        scope:
+          enum:
+            - system
+            - account
+          type: string
+        user_id:
+          minLength: 1
+          type: string
+      required:
+        - assignment_id
+        - role_id
+        - scope
+        - user_id
+        - created_at
+      type: object
+    RoleAssignmentListResponse:
+      additionalProperties: false
+      properties:
+        items:
+          items:
+            $ref: '#/components/schemas/RoleAssignmentItem'
+          type: array
+        page:
+          $ref: '#/components/schemas/PageInfo'
+      required:
+        - items
+        - page
+      type: object
     RoleAssignmentRequest:
       discriminator:
         mapping:
@@ -1484,6 +1744,94 @@ components:
         - version
         - affected_principals
         - session_outcome
+      type: object
+    RoleListResponse:
+      additionalProperties: false
+      properties:
+        items:
+          items:
+            $ref: '#/components/schemas/RoleResponse'
+          type: array
+        page:
+          $ref: '#/components/schemas/PageInfo'
+      required:
+        - items
+        - page
+      type: object
+    RolePermissionItem:
+      additionalProperties: false
+      properties:
+        active:
+          type: boolean
+        delegable:
+          type: boolean
+        permission_key:
+          minLength: 1
+          type: string
+        tier:
+          enum:
+            - core
+            - default
+            - optional
+          type: string
+      required:
+        - permission_key
+        - active
+        - delegable
+        - tier
+      type: object
+    RolePermissionListResponse:
+      additionalProperties: false
+      properties:
+        items:
+          items:
+            $ref: '#/components/schemas/RolePermissionItem'
+          type: array
+        role_id:
+          minLength: 1
+          type: string
+        role_version:
+          minimum: 1
+          type: integer
+      required:
+        - role_id
+        - role_version
+        - items
+      type: object
+    RoleResponse:
+      additionalProperties: false
+      properties:
+        account_id:
+          nullable: true
+          type: string
+        created_at:
+          format: date-time
+          type: string
+        id:
+          minLength: 1
+          type: string
+        name:
+          maxLength: 128
+          minLength: 1
+          type: string
+        owner_type:
+          enum:
+            - system
+            - account
+          type: string
+        updated_at:
+          format: date-time
+          type: string
+        version:
+          minimum: 1
+          type: integer
+      required:
+        - id
+        - owner_type
+        - name
+        - version
+        - created_at
+        - updated_at
       type: object
     RoleRevokeRequest:
       additionalProperties: false
@@ -1665,6 +2013,20 @@ components:
         - locale
         - category
         - version
+      type: object
+    UpdateRoleRequest:
+      additionalProperties: false
+      properties:
+        expected_version:
+          minimum: 1
+          type: integer
+        name:
+          maxLength: 128
+          minLength: 1
+          type: string
+      required:
+        - name
+        - expected_version
       type: object
   securitySchemes:
     CSRFToken:
