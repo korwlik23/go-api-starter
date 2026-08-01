@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	identitydomain "github.com/korwlik23/go-api-starter/internal/modules/identity/domain"
 	"github.com/korwlik23/go-api-starter/internal/modules/identity/ports"
@@ -21,6 +22,8 @@ type userRecord struct {
 	NormalizedEmail      string     `gorm:"column:normalized_email"`
 	Status               string     `gorm:"column:status"`
 	AuthorizationVersion int64      `gorm:"column:authorization_version"`
+	CreatedAt            time.Time  `gorm:"column:created_at"`
+	UpdatedAt            time.Time  `gorm:"column:updated_at"`
 }
 
 func (userRecord) TableName() string {
@@ -55,6 +58,8 @@ func (repository *UserRepository) FindByNormalizedEmail(
 		Email:                record.NormalizedEmail,
 		Status:               identitydomain.UserStatus(record.Status),
 		AuthorizationVersion: record.AuthorizationVersion,
+		CreatedAt:            record.CreatedAt,
+		UpdatedAt:            record.UpdatedAt,
 	}, nil
 }
 
@@ -110,6 +115,8 @@ func userFromRecord(record userRecord) identitydomain.User {
 		Email:                record.NormalizedEmail,
 		Status:               identitydomain.UserStatus(record.Status),
 		AuthorizationVersion: record.AuthorizationVersion,
+		CreatedAt:            record.CreatedAt,
+		UpdatedAt:            record.UpdatedAt,
 	}
 }
 

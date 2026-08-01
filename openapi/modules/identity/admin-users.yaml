@@ -1,0 +1,140 @@
+paths:
+  /users:
+    get:
+      tags: [Identity]
+      summary: List users for system administration.
+      operationId: listAdminUsers
+      x-surfaces: [admin]
+      x-required-permission: identity.users.read.system
+      security:
+        - SessionCookie: []
+      parameters:
+        - name: status
+          in: query
+          required: false
+          schema: { type: string, enum: [active, disabled] }
+        - name: email
+          in: query
+          required: false
+          schema: { type: string, minLength: 1, maxLength: 320 }
+        - $ref: ../../common/pagination.yaml#/components/parameters/Page
+        - $ref: ../../common/pagination.yaml#/components/parameters/PerPage
+      responses:
+        '200':
+          description: A bounded user page.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AdminUserListResponse' }
+        '401': { $ref: ../../common/errors.yaml#/components/responses/Unauthorized }
+        '403': { $ref: ../../common/errors.yaml#/components/responses/Forbidden }
+  /users/{user_id}:
+    get:
+      tags: [Identity]
+      summary: Read a user and visible membership summary.
+      operationId: getAdminUser
+      x-surfaces: [admin]
+      x-required-permission: identity.users.read.system
+      security:
+        - SessionCookie: []
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          schema: { type: string, minLength: 1 }
+      responses:
+        '200':
+          description: The user detail.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AdminUserDetailResponse' }
+        '401': { $ref: ../../common/errors.yaml#/components/responses/Unauthorized }
+        '403': { $ref: ../../common/errors.yaml#/components/responses/Forbidden }
+        '404': { $ref: ../../common/errors.yaml#/components/responses/NotFound }
+  /users/{user_id}/status:
+    patch:
+      tags: [Identity]
+      summary: Change user status with optimistic concurrency.
+      operationId: updateAdminUserStatus
+      x-surfaces: [admin]
+      x-required-permission: identity.users.manage.system
+      security:
+        - SessionCookie: []
+          CSRFToken: []
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          schema: { type: string, minLength: 1 }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AdminUserStatusRequest' }
+      responses:
+        '200':
+          description: The user status changed and sessions were invalidated.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AdminUserResponse' }
+        '401': { $ref: ../../common/errors.yaml#/components/responses/Unauthorized }
+        '403': { $ref: ../../common/errors.yaml#/components/responses/Forbidden }
+        '404': { $ref: ../../common/errors.yaml#/components/responses/NotFound }
+        '409': { $ref: ../../common/errors.yaml#/components/responses/Conflict }
+components:
+  schemas:
+    AdminUserResponse:
+      type: object
+      additionalProperties: false
+      required: [id, email, status, authorization_version, created_at, updated_at]
+      properties:
+        id: { type: string, minLength: 1 }
+        email: { type: string, format: email }
+        status: { type: string, enum: [active, disabled] }
+        authorization_version: { type: integer, minimum: 1 }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+    AdminUserListItem:
+      allOf:
+        - $ref: '#/components/schemas/AdminUserResponse'
+        - type: object
+          required: [membership_count, active_membership_count]
+          properties:
+            membership_count: { type: integer, minimum: 0 }
+            active_membership_count: { type: integer, minimum: 0 }
+    AdminUserListResponse:
+      type: object
+      additionalProperties: false
+      required: [items, page]
+      properties:
+        items:
+          type: array
+          items: { $ref: '#/components/schemas/AdminUserListItem' }
+        page: { $ref: ../../common/pagination.yaml#/components/schemas/PageInfo }
+    AdminUserMembershipSummary:
+      type: object
+      additionalProperties: false
+      required: [id, account_id, account_slug, status, authorization_version, created_at, updated_at]
+      properties:
+        id: { type: string, minLength: 1 }
+        account_id: { type: string, minLength: 1 }
+        account_slug: { type: string, minLength: 1 }
+        status: { type: string, enum: [active, disabled] }
+        authorization_version: { type: integer, minimum: 1 }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+    AdminUserDetailResponse:
+      type: object
+      additionalProperties: false
+      required: [user, memberships]
+      properties:
+        user: { $ref: '#/components/schemas/AdminUserResponse' }
+        memberships:
+          type: array
+          items: { $ref: '#/components/schemas/AdminUserMembershipSummary' }
+    AdminUserStatusRequest:
+      type: object
+      additionalProperties: false
+      required: [status, expected_version]
+      properties:
+        status: { type: string, enum: [active, disabled] }
+        expected_version: { type: integer, minimum: 1 }

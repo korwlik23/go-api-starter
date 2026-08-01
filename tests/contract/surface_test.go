@@ -45,11 +45,12 @@ func TestOpenAPISurfaceIsolation(t *testing.T) {
 		"getCurrentAccount", "getCurrentSession", "getEffectivePermissions",
 		"getLocalePreferences", "getMFAChallenge", "getTranslationCatalog",
 		"grantRolePermission", "listAuthorizationRoles", "listEnabledModules",
+		"getAdminUser", "listAdminUsers", "listAccountMemberships",
 		"listLocales", "listRoleAssignments", "listRolePermissions", "listSessions", "login", "logout", "requestPasswordRecovery",
 		"resetPassword", "revokeRoleAssignment", "revokeSession", "setDefaultLocale",
 		"updateAuthorizationRole", "updateLocale", "updateLocalePreferences", "updateLocaleStatus",
 		"createAuthorizationRole",
-		"updateTranslationCatalog", "verifyMFA",
+		"updateTranslationCatalog", "updateAdminUserStatus", "updateMembershipStatus", "verifyMFA",
 	}, surfaces["admin"])
 	require.ElementsMatch(t, []string{"getTranslationCatalog", "listLocales"}, surfaces["public"])
 	require.ElementsMatch(t, []string{
@@ -64,11 +65,12 @@ func TestGeneratedSurfaceBundlesContainOnlyTheirOperations(t *testing.T) {
 			"getCurrentAccount", "getCurrentSession", "getEffectivePermissions",
 			"getLocalePreferences", "getMFAChallenge", "getTranslationCatalog",
 			"grantRolePermission", "listAuthorizationRoles", "listEnabledModules",
+			"getAdminUser", "listAdminUsers", "listAccountMemberships",
 			"listLocales", "listRoleAssignments", "listRolePermissions", "listSessions", "login", "logout", "requestPasswordRecovery",
 			"resetPassword", "revokeRoleAssignment", "revokeSession", "setDefaultLocale",
 			"updateAuthorizationRole", "updateLocale", "updateLocalePreferences", "updateLocaleStatus",
 			"createAuthorizationRole",
-			"updateTranslationCatalog", "verifyMFA",
+			"updateTranslationCatalog", "updateAdminUserStatus", "updateMembershipStatus", "verifyMFA",
 		},
 		"public": {"getTranslationCatalog", "listLocales"},
 		"site-server": {

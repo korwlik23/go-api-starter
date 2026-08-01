@@ -40,6 +40,8 @@ func TestCoreModuleRegistryOwnsRequiredPermissionCatalog(t *testing.T) {
 
 	expected := []string{
 		"accounts.current.read.own",
+		"accounts.memberships.read.system",
+		"accounts.memberships.manage.system",
 		"audit.events.read.system",
 		"authorization.permissions.read.own",
 		"authorization.roles.read.system",
@@ -49,6 +51,8 @@ func TestCoreModuleRegistryOwnsRequiredPermissionCatalog(t *testing.T) {
 		"authorization.role_assignments.read.system",
 		"authorization.role_assignments.revoke.system",
 		"authorization.role_permissions.grant.system",
+		"identity.users.read.system",
+		"identity.users.manage.system",
 		"localization.locales.manage.system",
 		"localization.translations.update.system",
 		"operations.foundation.read.system",

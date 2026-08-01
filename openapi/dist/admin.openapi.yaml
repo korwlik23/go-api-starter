@@ -39,6 +39,87 @@ paths:
       summary: Read the account resolved for the authenticated principal.
       tags:
         - Accounts
+  /accounts/{account_id}/memberships:
+    get:
+      operationId: listAccountMemberships
+      parameters:
+        - in: path
+          name: account_id
+          required: true
+          schema:
+            minLength: 1
+            type: string
+        - in: query
+          name: status
+          required: false
+          schema:
+            enum:
+              - active
+              - disabled
+            type: string
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PerPage'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MembershipListResponse'
+          description: A bounded membership page.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+      security:
+        - SessionCookie: []
+      summary: List memberships for a specific account.
+      tags:
+        - Accounts
+      x-required-permission: accounts.memberships.read.system
+  /accounts/{account_id}/memberships/{membership_id}/status:
+    patch:
+      operationId: updateMembershipStatus
+      parameters:
+        - in: path
+          name: account_id
+          required: true
+          schema:
+            minLength: 1
+            type: string
+        - in: path
+          name: membership_id
+          required: true
+          schema:
+            minLength: 1
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MembershipStatusRequest'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MembershipResponse'
+          description: The membership status changed and affected sessions were invalidated.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+      security:
+        - CSRFToken: []
+          SessionCookie: []
+      summary: Change membership status with optimistic concurrency.
+      tags:
+        - Accounts
+      x-required-permission: accounts.memberships.manage.system
   /auth/csrf:
     get:
       operationId: getCSRFToken
@@ -987,6 +1068,111 @@ paths:
       summary: List the runtime module activation projection.
       tags:
         - Operations
+  /users:
+    get:
+      operationId: listAdminUsers
+      parameters:
+        - in: query
+          name: status
+          required: false
+          schema:
+            enum:
+              - active
+              - disabled
+            type: string
+        - in: query
+          name: email
+          required: false
+          schema:
+            maxLength: 320
+            minLength: 1
+            type: string
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PerPage'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminUserListResponse'
+          description: A bounded user page.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+      security:
+        - SessionCookie: []
+      summary: List users for system administration.
+      tags:
+        - Identity
+      x-required-permission: identity.users.read.system
+  /users/{user_id}:
+    get:
+      operationId: getAdminUser
+      parameters:
+        - in: path
+          name: user_id
+          required: true
+          schema:
+            minLength: 1
+            type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminUserDetailResponse'
+          description: The user detail.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+      security:
+        - SessionCookie: []
+      summary: Read a user and visible membership summary.
+      tags:
+        - Identity
+      x-required-permission: identity.users.read.system
+  /users/{user_id}/status:
+    patch:
+      operationId: updateAdminUserStatus
+      parameters:
+        - in: path
+          name: user_id
+          required: true
+          schema:
+            minLength: 1
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AdminUserStatusRequest'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminUserResponse'
+          description: The user status changed and sessions were invalidated.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+      security:
+        - CSRFToken: []
+          SessionCookie: []
+      summary: Change user status with optimistic concurrency.
+      tags:
+        - Identity
+      x-required-permission: identity.users.manage.system
 components:
   parameters:
     Page:
@@ -1066,6 +1252,127 @@ components:
         - scope
         - account_id
         - user_id
+        - expected_version
+      type: object
+    AdminUserDetailResponse:
+      additionalProperties: false
+      properties:
+        memberships:
+          items:
+            $ref: '#/components/schemas/AdminUserMembershipSummary'
+          type: array
+        user:
+          $ref: '#/components/schemas/AdminUserResponse'
+      required:
+        - user
+        - memberships
+      type: object
+    AdminUserListItem:
+      allOf:
+        - $ref: '#/components/schemas/AdminUserResponse'
+        - properties:
+            active_membership_count:
+              minimum: 0
+              type: integer
+            membership_count:
+              minimum: 0
+              type: integer
+          required:
+            - membership_count
+            - active_membership_count
+          type: object
+    AdminUserListResponse:
+      additionalProperties: false
+      properties:
+        items:
+          items:
+            $ref: '#/components/schemas/AdminUserListItem'
+          type: array
+        page:
+          $ref: '#/components/schemas/PageInfo'
+      required:
+        - items
+        - page
+      type: object
+    AdminUserMembershipSummary:
+      additionalProperties: false
+      properties:
+        account_id:
+          minLength: 1
+          type: string
+        account_slug:
+          minLength: 1
+          type: string
+        authorization_version:
+          minimum: 1
+          type: integer
+        created_at:
+          format: date-time
+          type: string
+        id:
+          minLength: 1
+          type: string
+        status:
+          enum:
+            - active
+            - disabled
+          type: string
+        updated_at:
+          format: date-time
+          type: string
+      required:
+        - id
+        - account_id
+        - account_slug
+        - status
+        - authorization_version
+        - created_at
+        - updated_at
+      type: object
+    AdminUserResponse:
+      additionalProperties: false
+      properties:
+        authorization_version:
+          minimum: 1
+          type: integer
+        created_at:
+          format: date-time
+          type: string
+        email:
+          format: email
+          type: string
+        id:
+          minLength: 1
+          type: string
+        status:
+          enum:
+            - active
+            - disabled
+          type: string
+        updated_at:
+          format: date-time
+          type: string
+      required:
+        - id
+        - email
+        - status
+        - authorization_version
+        - created_at
+        - updated_at
+      type: object
+    AdminUserStatusRequest:
+      additionalProperties: false
+      properties:
+        expected_version:
+          minimum: 1
+          type: integer
+        status:
+          enum:
+            - active
+            - disabled
+          type: string
+      required:
+        - status
         - expected_version
       type: object
     CSRFTokenResponse:
@@ -1514,6 +1821,77 @@ components:
       required:
         - status
         - csrf_token
+      type: object
+    MembershipListResponse:
+      additionalProperties: false
+      properties:
+        items:
+          items:
+            $ref: '#/components/schemas/MembershipResponse'
+          type: array
+        page:
+          $ref: '#/components/schemas/PageInfo'
+      required:
+        - items
+        - page
+      type: object
+    MembershipResponse:
+      additionalProperties: false
+      properties:
+        account_id:
+          minLength: 1
+          type: string
+        account_slug:
+          minLength: 1
+          type: string
+        authorization_version:
+          minimum: 1
+          type: integer
+        created_at:
+          format: date-time
+          type: string
+        id:
+          minLength: 1
+          type: string
+        status:
+          enum:
+            - active
+            - disabled
+          type: string
+        updated_at:
+          format: date-time
+          type: string
+        user_email:
+          format: email
+          type: string
+        user_id:
+          minLength: 1
+          type: string
+      required:
+        - id
+        - account_id
+        - account_slug
+        - user_id
+        - user_email
+        - status
+        - authorization_version
+        - created_at
+        - updated_at
+      type: object
+    MembershipStatusRequest:
+      additionalProperties: false
+      properties:
+        expected_version:
+          minimum: 1
+          type: integer
+        status:
+          enum:
+            - active
+            - disabled
+          type: string
+      required:
+        - status
+        - expected_version
       type: object
     ModuleListResponse:
       additionalProperties: false

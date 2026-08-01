@@ -18,7 +18,11 @@ import (
 	authorizationapp "github.com/korwlik23/go-api-starter/internal/modules/authorization/application"
 	authorizationdomain "github.com/korwlik23/go-api-starter/internal/modules/authorization/domain"
 	authorizationhttp "github.com/korwlik23/go-api-starter/internal/modules/authorization/transport/http"
+	identitymodule "github.com/korwlik23/go-api-starter/internal/modules/identity"
+	identitygorm "github.com/korwlik23/go-api-starter/internal/modules/identity/adapters/gorm"
+	identityapp "github.com/korwlik23/go-api-starter/internal/modules/identity/application"
 	identitydomain "github.com/korwlik23/go-api-starter/internal/modules/identity/domain"
+	identityhttp "github.com/korwlik23/go-api-starter/internal/modules/identity/transport/http"
 	operationsmodule "github.com/korwlik23/go-api-starter/internal/modules/operations"
 	operationshttp "github.com/korwlik23/go-api-starter/internal/modules/operations/transport/http"
 	"github.com/korwlik23/go-api-starter/internal/platform/database"
@@ -47,6 +51,12 @@ type authorizationRuntime struct {
 	rolePermissionsReadGuard gin.HandlerFunc
 	roleAssignmentsReadGuard gin.HandlerFunc
 	roleHandler              *authorizationhttp.RoleHandler
+	adminUsers               *identityhttp.AdminUserHandler
+	adminUserReadGuard       gin.HandlerFunc
+	adminUserManageGuard     gin.HandlerFunc
+	memberships              *accountshttp.MembershipHandler
+	membershipReadGuard      gin.HandlerFunc
+	membershipManageGuard    gin.HandlerFunc
 	systemAuthorizer         systemPermissionAuthorizer
 }
 
@@ -155,6 +165,56 @@ func buildAuthorizationRuntime(
 	if err != nil {
 		return authorizationRuntime{}, err
 	}
+	adminUserQuery, err := identitygorm.NewAdminUserQueryRepository(db)
+	if err != nil {
+		return authorizationRuntime{}, err
+	}
+	adminUserCommands, err := identitygorm.NewTransactionalAdminUserCommandRepository(
+		transactions,
+		db.Dialector.Name(),
+	)
+	if err != nil {
+		return authorizationRuntime{}, err
+	}
+	adminUsersService, err := identityapp.NewAdminUserService(
+		transactions,
+		systemAuthorizer,
+		adminUserQuery,
+		adminUserCommands,
+		authorizationAuditAdapter{appender: auditor},
+	)
+	if err != nil {
+		return authorizationRuntime{}, err
+	}
+	adminUsers, err := identityhttp.NewAdminUserHandler(adminUsersService)
+	if err != nil {
+		return authorizationRuntime{}, err
+	}
+	membershipQuery, err := accountsgorm.NewMembershipQueryRepository(db)
+	if err != nil {
+		return authorizationRuntime{}, err
+	}
+	membershipCommands, err := accountsgorm.NewTransactionalMembershipCommandRepository(
+		transactions,
+		db.Dialector.Name(),
+	)
+	if err != nil {
+		return authorizationRuntime{}, err
+	}
+	membershipService, err := accountsapp.NewMembershipService(
+		transactions,
+		systemAuthorizer,
+		membershipQuery,
+		membershipCommands,
+		authorizationAuditAdapter{appender: auditor},
+	)
+	if err != nil {
+		return authorizationRuntime{}, err
+	}
+	memberships, err := accountshttp.NewMembershipHandler(membershipService)
+	if err != nil {
+		return authorizationRuntime{}, err
+	}
 	currentAccount, err := accountshttp.NewCurrentAccountHandler(resolveAccount)
 	if err != nil {
 		return authorizationRuntime{}, err
@@ -260,6 +320,42 @@ func buildAuthorizationRuntime(
 	if err != nil {
 		return authorizationRuntime{}, err
 	}
+	adminUserReadGuard, err := newPermissionGuard(
+		resolveAccount,
+		evaluator,
+		identitymodule.PermissionUsersReadSystem,
+		nil,
+	)
+	if err != nil {
+		return authorizationRuntime{}, err
+	}
+	adminUserManageGuard, err := newPermissionGuard(
+		resolveAccount,
+		evaluator,
+		identitymodule.PermissionUsersManageSystem,
+		nil,
+	)
+	if err != nil {
+		return authorizationRuntime{}, err
+	}
+	membershipReadGuard, err := newPermissionGuard(
+		resolveAccount,
+		evaluator,
+		accountsmodule.PermissionMembershipsReadSystem,
+		nil,
+	)
+	if err != nil {
+		return authorizationRuntime{}, err
+	}
+	membershipManageGuard, err := newPermissionGuard(
+		resolveAccount,
+		evaluator,
+		accountsmodule.PermissionMembershipsManageSystem,
+		nil,
+	)
+	if err != nil {
+		return authorizationRuntime{}, err
+	}
 	return authorizationRuntime{
 		currentAccount: currentAccount, effectivePermissions: effective,
 		modules: moduleHandler, currentAccountGuard: currentAccountGuard,
@@ -271,6 +367,12 @@ func buildAuthorizationRuntime(
 		rolePermissionsReadGuard: rolePermissionsReadGuard,
 		roleAssignmentsReadGuard: roleAssignmentsReadGuard,
 		roleHandler:              roleHandler,
+		adminUsers:               adminUsers,
+		adminUserReadGuard:       adminUserReadGuard,
+		adminUserManageGuard:     adminUserManageGuard,
+		memberships:              memberships,
+		membershipReadGuard:      membershipReadGuard,
+		membershipManageGuard:    membershipManageGuard,
 		systemAuthorizer:         systemAuthorizer,
 	}, nil
 }

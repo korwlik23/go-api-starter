@@ -22,6 +22,9 @@ func Manifest() modular.Manifest {
 			{Method: "POST", Path: "/api/v1/auth/logout"},
 			{Method: "POST", Path: "/api/v1/auth/password/recovery"},
 			{Method: "POST", Path: "/api/v1/auth/password/reset"},
+			{Method: "GET", Path: "/api/v1/users", Permission: PermissionUsersReadSystem},
+			{Method: "GET", Path: "/api/v1/users/:user_id", Permission: PermissionUsersReadSystem},
+			{Method: "PATCH", Path: "/api/v1/users/:user_id/status", Permission: PermissionUsersManageSystem},
 		},
 		Migrations: modular.SQLMigrations(),
 		Health: []modular.HealthContributor{

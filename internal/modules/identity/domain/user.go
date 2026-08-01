@@ -1,6 +1,9 @@
 package domain
 
-import "strings"
+import (
+	"strings"
+	"time"
+)
 
 type UserStatus string
 
@@ -14,6 +17,8 @@ type User struct {
 	Email                string
 	Status               UserStatus
 	AuthorizationVersion int64
+	CreatedAt            time.Time
+	UpdatedAt            time.Time
 }
 
 func NormalizeEmail(value string) string {

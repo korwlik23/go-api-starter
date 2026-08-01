@@ -38,6 +38,16 @@ paths:
     $ref: ./modules/identity/recovery.yaml#/paths/~1auth~1password~1reset
   /accounts/current:
     $ref: ./modules/accounts/accounts.yaml#/paths/~1accounts~1current
+  /accounts/{account_id}/memberships:
+    $ref: ./modules/accounts/memberships.yaml#/paths/~1accounts~1{account_id}~1memberships
+  /accounts/{account_id}/memberships/{membership_id}/status:
+    $ref: ./modules/accounts/memberships.yaml#/paths/~1accounts~1{account_id}~1memberships~1{membership_id}~1status
+  /users:
+    $ref: ./modules/identity/admin-users.yaml#/paths/~1users
+  /users/{user_id}:
+    $ref: ./modules/identity/admin-users.yaml#/paths/~1users~1{user_id}
+  /users/{user_id}/status:
+    $ref: ./modules/identity/admin-users.yaml#/paths/~1users~1{user_id}~1status
   /authorization/effective-permissions:
     $ref: ./modules/authorization/permissions.yaml#/paths/~1authorization~1effective-permissions
   /authorization/roles:

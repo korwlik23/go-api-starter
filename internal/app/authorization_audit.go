@@ -4,9 +4,11 @@ import (
 	"context"
 	"errors"
 
+	accountsapp "github.com/korwlik23/go-api-starter/internal/modules/accounts/application"
 	auditapp "github.com/korwlik23/go-api-starter/internal/modules/audit/application"
 	auditdomain "github.com/korwlik23/go-api-starter/internal/modules/audit/domain"
 	authorizationapp "github.com/korwlik23/go-api-starter/internal/modules/authorization/application"
+	identityapp "github.com/korwlik23/go-api-starter/internal/modules/identity/application"
 )
 
 var ErrInvalidAuthorizationAuditAdapter = errors.New("invalid authorization audit adapter")
@@ -129,6 +131,40 @@ func (adapter authorizationAuditAdapter) RecordRoleChange(
 	return err
 }
 
+func (adapter authorizationAuditAdapter) RecordUserStatusChange(
+	ctx context.Context,
+	event identityapp.AdminUserAuditEvent,
+) error {
+	if adapter.appender == nil || ctx == nil || event.ActorUserID == "" || event.UserID == "" {
+		return ErrInvalidAuthorizationAuditAdapter
+	}
+	_, err := adapter.appender.Execute(ctx, auditapp.AppendCommand{
+		Scope:  auditdomain.ScopeSystem,
+		Actor:  auditdomain.Actor{Type: auditdomain.ActorUser, ID: event.ActorUserID},
+		Action: "identity.user.status.updated", RequestID: event.RequestID,
+		Data: map[string]any{"user_id": event.UserID, "status": string(event.Status)},
+	})
+	return err
+}
+
+func (adapter authorizationAuditAdapter) RecordMembershipStatusChange(
+	ctx context.Context,
+	event accountsapp.MembershipAuditEvent,
+) error {
+	if adapter.appender == nil || ctx == nil || event.ActorUserID == "" || event.AccountID == "" || event.MembershipID == "" {
+		return ErrInvalidAuthorizationAuditAdapter
+	}
+	_, err := adapter.appender.Execute(ctx, auditapp.AppendCommand{
+		Scope: auditdomain.ScopeAccount, AccountID: event.AccountID,
+		Actor:  auditdomain.Actor{Type: auditdomain.ActorUser, ID: event.ActorUserID},
+		Action: "accounts.membership.status.updated", RequestID: event.RequestID,
+		Data: map[string]any{"membership_id": event.MembershipID, "status": string(event.Status)},
+	})
+	return err
+}
+
 var _ authorizationapp.RoleAssignmentAuditor = authorizationAuditAdapter{}
 var _ authorizationapp.GrantRolePermissionAuditor = authorizationAuditAdapter{}
 var _ authorizationapp.RoleManagementAuditor = authorizationAuditAdapter{}
+var _ identityapp.AdminUserAuditor = authorizationAuditAdapter{}
+var _ accountsapp.MembershipAuditor = authorizationAuditAdapter{}

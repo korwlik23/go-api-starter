@@ -14,6 +14,14 @@ func Manifest() modular.Manifest {
 			Method:     "GET",
 			Path:       "/api/v1/accounts/current",
 			Permission: PermissionCurrentReadOwn,
+		}, {
+			Method:     "GET",
+			Path:       "/api/v1/accounts/:account_id/memberships",
+			Permission: PermissionMembershipsReadSystem,
+		}, {
+			Method:     "PATCH",
+			Path:       "/api/v1/accounts/:account_id/memberships/:membership_id/status",
+			Permission: PermissionMembershipsManageSystem,
 		}},
 		Migrations: modular.SQLMigrations(),
 	}

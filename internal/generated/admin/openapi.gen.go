@@ -34,6 +34,78 @@ func (e AccountRoleAssignmentRequestScope) Valid() bool {
 	}
 }
 
+// Defines values for AdminUserListItemStatus.
+const (
+	AdminUserListItemStatusActive   AdminUserListItemStatus = "active"
+	AdminUserListItemStatusDisabled AdminUserListItemStatus = "disabled"
+)
+
+// Valid indicates whether the value is a known member of the AdminUserListItemStatus enum.
+func (e AdminUserListItemStatus) Valid() bool {
+	switch e {
+	case AdminUserListItemStatusActive:
+		return true
+	case AdminUserListItemStatusDisabled:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for AdminUserMembershipSummaryStatus.
+const (
+	AdminUserMembershipSummaryStatusActive   AdminUserMembershipSummaryStatus = "active"
+	AdminUserMembershipSummaryStatusDisabled AdminUserMembershipSummaryStatus = "disabled"
+)
+
+// Valid indicates whether the value is a known member of the AdminUserMembershipSummaryStatus enum.
+func (e AdminUserMembershipSummaryStatus) Valid() bool {
+	switch e {
+	case AdminUserMembershipSummaryStatusActive:
+		return true
+	case AdminUserMembershipSummaryStatusDisabled:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for AdminUserResponseStatus.
+const (
+	AdminUserResponseStatusActive   AdminUserResponseStatus = "active"
+	AdminUserResponseStatusDisabled AdminUserResponseStatus = "disabled"
+)
+
+// Valid indicates whether the value is a known member of the AdminUserResponseStatus enum.
+func (e AdminUserResponseStatus) Valid() bool {
+	switch e {
+	case AdminUserResponseStatusActive:
+		return true
+	case AdminUserResponseStatusDisabled:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for AdminUserStatusRequestStatus.
+const (
+	AdminUserStatusRequestStatusActive   AdminUserStatusRequestStatus = "active"
+	AdminUserStatusRequestStatusDisabled AdminUserStatusRequestStatus = "disabled"
+)
+
+// Valid indicates whether the value is a known member of the AdminUserStatusRequestStatus enum.
+func (e AdminUserStatusRequestStatus) Valid() bool {
+	switch e {
+	case AdminUserStatusRequestStatusActive:
+		return true
+	case AdminUserStatusRequestStatusDisabled:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for CreateRoleRequestScope.
 const (
 	CreateRoleRequestScopeAccount CreateRoleRequestScope = "account"
@@ -247,6 +319,42 @@ func (e MFAVerificationResponseStatus) Valid() bool {
 	}
 }
 
+// Defines values for MembershipResponseStatus.
+const (
+	MembershipResponseStatusActive   MembershipResponseStatus = "active"
+	MembershipResponseStatusDisabled MembershipResponseStatus = "disabled"
+)
+
+// Valid indicates whether the value is a known member of the MembershipResponseStatus enum.
+func (e MembershipResponseStatus) Valid() bool {
+	switch e {
+	case MembershipResponseStatusActive:
+		return true
+	case MembershipResponseStatusDisabled:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for MembershipStatusRequestStatus.
+const (
+	MembershipStatusRequestStatusActive   MembershipStatusRequestStatus = "active"
+	MembershipStatusRequestStatusDisabled MembershipStatusRequestStatus = "disabled"
+)
+
+// Valid indicates whether the value is a known member of the MembershipStatusRequestStatus enum.
+func (e MembershipStatusRequestStatus) Valid() bool {
+	switch e {
+	case MembershipStatusRequestStatusActive:
+		return true
+	case MembershipStatusRequestStatusDisabled:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for PasswordResetResponseStatus.
 const (
 	PasswordReset PasswordResetResponseStatus = "password_reset"
@@ -415,6 +523,24 @@ func (e SystemRoleAssignmentRequestScope) Valid() bool {
 	}
 }
 
+// Defines values for ListAccountMembershipsParamsStatus.
+const (
+	ListAccountMembershipsParamsStatusActive   ListAccountMembershipsParamsStatus = "active"
+	ListAccountMembershipsParamsStatusDisabled ListAccountMembershipsParamsStatus = "disabled"
+)
+
+// Valid indicates whether the value is a known member of the ListAccountMembershipsParamsStatus enum.
+func (e ListAccountMembershipsParamsStatus) Valid() bool {
+	switch e {
+	case ListAccountMembershipsParamsStatusActive:
+		return true
+	case ListAccountMembershipsParamsStatusDisabled:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for ListAuthorizationRolesParamsScope.
 const (
 	ListAuthorizationRolesParamsScopeAccount ListAuthorizationRolesParamsScope = "account"
@@ -433,6 +559,24 @@ func (e ListAuthorizationRolesParamsScope) Valid() bool {
 	}
 }
 
+// Defines values for ListAdminUsersParamsStatus.
+const (
+	ListAdminUsersParamsStatusActive   ListAdminUsersParamsStatus = "active"
+	ListAdminUsersParamsStatusDisabled ListAdminUsersParamsStatus = "disabled"
+)
+
+// Valid indicates whether the value is a known member of the ListAdminUsersParamsStatus enum.
+func (e ListAdminUsersParamsStatus) Valid() bool {
+	switch e {
+	case ListAdminUsersParamsStatusActive:
+		return true
+	case ListAdminUsersParamsStatusDisabled:
+		return true
+	default:
+		return false
+	}
+}
+
 // AccountRoleAssignmentRequest defines model for AccountRoleAssignmentRequest.
 type AccountRoleAssignmentRequest struct {
 	AccountId       string                            `json:"account_id"`
@@ -443,6 +587,69 @@ type AccountRoleAssignmentRequest struct {
 
 // AccountRoleAssignmentRequestScope defines model for AccountRoleAssignmentRequest.Scope.
 type AccountRoleAssignmentRequestScope string
+
+// AdminUserDetailResponse defines model for AdminUserDetailResponse.
+type AdminUserDetailResponse struct {
+	Memberships []AdminUserMembershipSummary `json:"memberships"`
+	User        AdminUserResponse            `json:"user"`
+}
+
+// AdminUserListItem defines model for AdminUserListItem.
+type AdminUserListItem struct {
+	ActiveMembershipCount int                     `json:"active_membership_count"`
+	AuthorizationVersion  int                     `json:"authorization_version"`
+	CreatedAt             time.Time               `json:"created_at"`
+	Email                 openapi_types.Email     `json:"email"`
+	Id                    string                  `json:"id"`
+	MembershipCount       int                     `json:"membership_count"`
+	Status                AdminUserListItemStatus `json:"status"`
+	UpdatedAt             time.Time               `json:"updated_at"`
+}
+
+// AdminUserListItemStatus defines model for AdminUserListItem.Status.
+type AdminUserListItemStatus string
+
+// AdminUserListResponse defines model for AdminUserListResponse.
+type AdminUserListResponse struct {
+	Items []AdminUserListItem `json:"items"`
+	Page  PageInfo            `json:"page"`
+}
+
+// AdminUserMembershipSummary defines model for AdminUserMembershipSummary.
+type AdminUserMembershipSummary struct {
+	AccountId            string                           `json:"account_id"`
+	AccountSlug          string                           `json:"account_slug"`
+	AuthorizationVersion int                              `json:"authorization_version"`
+	CreatedAt            time.Time                        `json:"created_at"`
+	Id                   string                           `json:"id"`
+	Status               AdminUserMembershipSummaryStatus `json:"status"`
+	UpdatedAt            time.Time                        `json:"updated_at"`
+}
+
+// AdminUserMembershipSummaryStatus defines model for AdminUserMembershipSummary.Status.
+type AdminUserMembershipSummaryStatus string
+
+// AdminUserResponse defines model for AdminUserResponse.
+type AdminUserResponse struct {
+	AuthorizationVersion int                     `json:"authorization_version"`
+	CreatedAt            time.Time               `json:"created_at"`
+	Email                openapi_types.Email     `json:"email"`
+	Id                   string                  `json:"id"`
+	Status               AdminUserResponseStatus `json:"status"`
+	UpdatedAt            time.Time               `json:"updated_at"`
+}
+
+// AdminUserResponseStatus defines model for AdminUserResponse.Status.
+type AdminUserResponseStatus string
+
+// AdminUserStatusRequest defines model for AdminUserStatusRequest.
+type AdminUserStatusRequest struct {
+	ExpectedVersion int                          `json:"expected_version"`
+	Status          AdminUserStatusRequestStatus `json:"status"`
+}
+
+// AdminUserStatusRequestStatus defines model for AdminUserStatusRequest.Status.
+type AdminUserStatusRequestStatus string
 
 // CSRFTokenResponse defines model for CSRFTokenResponse.
 type CSRFTokenResponse struct {
@@ -662,6 +869,37 @@ type MFAVerificationResponse struct {
 
 // MFAVerificationResponseStatus defines model for MFAVerificationResponse.Status.
 type MFAVerificationResponseStatus string
+
+// MembershipListResponse defines model for MembershipListResponse.
+type MembershipListResponse struct {
+	Items []MembershipResponse `json:"items"`
+	Page  PageInfo             `json:"page"`
+}
+
+// MembershipResponse defines model for MembershipResponse.
+type MembershipResponse struct {
+	AccountId            string                   `json:"account_id"`
+	AccountSlug          string                   `json:"account_slug"`
+	AuthorizationVersion int                      `json:"authorization_version"`
+	CreatedAt            time.Time                `json:"created_at"`
+	Id                   string                   `json:"id"`
+	Status               MembershipResponseStatus `json:"status"`
+	UpdatedAt            time.Time                `json:"updated_at"`
+	UserEmail            openapi_types.Email      `json:"user_email"`
+	UserId               string                   `json:"user_id"`
+}
+
+// MembershipResponseStatus defines model for MembershipResponse.Status.
+type MembershipResponseStatus string
+
+// MembershipStatusRequest defines model for MembershipStatusRequest.
+type MembershipStatusRequest struct {
+	ExpectedVersion int                           `json:"expected_version"`
+	Status          MembershipStatusRequestStatus `json:"status"`
+}
+
+// MembershipStatusRequestStatus defines model for MembershipStatusRequest.Status.
+type MembershipStatusRequestStatus string
 
 // ModuleListResponse defines model for ModuleListResponse.
 type ModuleListResponse struct {
@@ -926,6 +1164,20 @@ type TooManyRequests = ErrorEnvelope
 // Unauthorized defines model for Unauthorized.
 type Unauthorized = ErrorEnvelope
 
+// ListAccountMembershipsParams defines parameters for ListAccountMemberships.
+type ListAccountMembershipsParams struct {
+	Status *ListAccountMembershipsParamsStatus `form:"status,omitempty" json:"status,omitempty"`
+
+	// Page One-based page number.
+	Page *Page `form:"page,omitempty" json:"page,omitempty"`
+
+	// PerPage Requested page size. The API enforces the upper bound.
+	PerPage *PerPage `form:"per_page,omitempty" json:"per_page,omitempty"`
+}
+
+// ListAccountMembershipsParamsStatus defines parameters for ListAccountMemberships.
+type ListAccountMembershipsParamsStatus string
+
 // ListAuthorizationRolesParams defines parameters for ListAuthorizationRoles.
 type ListAuthorizationRolesParams struct {
 	Scope     *ListAuthorizationRolesParamsScope `form:"scope,omitempty" json:"scope,omitempty"`
@@ -955,6 +1207,24 @@ type GetTranslationCatalogParams struct {
 	Locale   string `form:"locale" json:"locale"`
 	Category string `form:"category" json:"category"`
 }
+
+// ListAdminUsersParams defines parameters for ListAdminUsers.
+type ListAdminUsersParams struct {
+	Status *ListAdminUsersParamsStatus `form:"status,omitempty" json:"status,omitempty"`
+	Email  *string                     `form:"email,omitempty" json:"email,omitempty"`
+
+	// Page One-based page number.
+	Page *Page `form:"page,omitempty" json:"page,omitempty"`
+
+	// PerPage Requested page size. The API enforces the upper bound.
+	PerPage *PerPage `form:"per_page,omitempty" json:"per_page,omitempty"`
+}
+
+// ListAdminUsersParamsStatus defines parameters for ListAdminUsers.
+type ListAdminUsersParamsStatus string
+
+// UpdateMembershipStatusJSONRequestBody defines body for UpdateMembershipStatus for application/json ContentType.
+type UpdateMembershipStatusJSONRequestBody = MembershipStatusRequest
 
 // LoginJSONRequestBody defines body for Login for application/json ContentType.
 type LoginJSONRequestBody = LoginRequest
@@ -1003,6 +1273,9 @@ type UpdateLocaleStatusJSONRequestBody = LocaleStatusRequest
 
 // UpdateTranslationCatalogJSONRequestBody defines body for UpdateTranslationCatalog for application/json ContentType.
 type UpdateTranslationCatalogJSONRequestBody = TranslationCatalogUpdateRequest
+
+// UpdateAdminUserStatusJSONRequestBody defines body for UpdateAdminUserStatus for application/json ContentType.
+type UpdateAdminUserStatusJSONRequestBody = AdminUserStatusRequest
 
 // AsAccountRoleAssignmentRequest returns the union data inside the RoleAssignmentRequest as a AccountRoleAssignmentRequest
 func (t RoleAssignmentRequest) AsAccountRoleAssignmentRequest() (AccountRoleAssignmentRequest, error) {
@@ -1183,6 +1456,25 @@ type ClientInterface interface {
 	//
 	// Corresponds with GET /accounts/current (the `GetCurrentAccount` operationId).
 	GetCurrentAccount(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ListAccountMemberships List memberships for a specific account.
+	//
+	// Corresponds with GET /accounts/{account_id}/memberships (the `ListAccountMemberships` operationId).
+	ListAccountMemberships(ctx context.Context, accountId string, params *ListAccountMembershipsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// UpdateMembershipStatusWithBody Change membership status with optimistic concurrency.
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with PATCH /accounts/{account_id}/memberships/{membership_id}/status (the `UpdateMembershipStatus` operationId).
+	UpdateMembershipStatusWithBody(ctx context.Context, accountId string, membershipId string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// UpdateMembershipStatus Change membership status with optimistic concurrency.
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with PATCH /accounts/{account_id}/memberships/{membership_id}/status (the `UpdateMembershipStatus` operationId).
+	UpdateMembershipStatus(ctx context.Context, accountId string, membershipId string, body UpdateMembershipStatusJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetCSRFToken Create or rotate an anonymous pre-auth session and issue a CSRF token.
 	//
@@ -1482,6 +1774,30 @@ type ClientInterface interface {
 	//
 	// Corresponds with GET /operations/modules (the `ListEnabledModules` operationId).
 	ListEnabledModules(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ListAdminUsers List users for system administration.
+	//
+	// Corresponds with GET /users (the `ListAdminUsers` operationId).
+	ListAdminUsers(ctx context.Context, params *ListAdminUsersParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetAdminUser Read a user and visible membership summary.
+	//
+	// Corresponds with GET /users/{user_id} (the `GetAdminUser` operationId).
+	GetAdminUser(ctx context.Context, userId string, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// UpdateAdminUserStatusWithBody Change user status with optimistic concurrency.
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with PATCH /users/{user_id}/status (the `UpdateAdminUserStatus` operationId).
+	UpdateAdminUserStatusWithBody(ctx context.Context, userId string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// UpdateAdminUserStatus Change user status with optimistic concurrency.
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with PATCH /users/{user_id}/status (the `UpdateAdminUserStatus` operationId).
+	UpdateAdminUserStatus(ctx context.Context, userId string, body UpdateAdminUserStatusJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 }
 
 // GetCurrentAccount Read the account resolved for the authenticated principal.
@@ -1489,6 +1805,55 @@ type ClientInterface interface {
 // Corresponds with GET /accounts/current (the `GetCurrentAccount` operationId).
 func (c *Client) GetCurrentAccount(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewGetCurrentAccountRequest(c.Server)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// ListAccountMemberships List memberships for a specific account.
+//
+// Corresponds with GET /accounts/{account_id}/memberships (the `ListAccountMemberships` operationId).
+func (c *Client) ListAccountMemberships(ctx context.Context, accountId string, params *ListAccountMembershipsParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewListAccountMembershipsRequest(c.Server, accountId, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// UpdateMembershipStatusWithBody Change membership status with optimistic concurrency.
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with PATCH /accounts/{account_id}/memberships/{membership_id}/status (the `UpdateMembershipStatus` operationId).
+func (c *Client) UpdateMembershipStatusWithBody(ctx context.Context, accountId string, membershipId string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewUpdateMembershipStatusRequestWithBody(c.Server, accountId, membershipId, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// UpdateMembershipStatus Change membership status with optimistic concurrency.
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with PATCH /accounts/{account_id}/memberships/{membership_id}/status (the `UpdateMembershipStatus` operationId).
+func (c *Client) UpdateMembershipStatus(ctx context.Context, accountId string, membershipId string, body UpdateMembershipStatusJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewUpdateMembershipStatusRequest(c.Server, accountId, membershipId, body)
 	if err != nil {
 		return nil, err
 	}
@@ -2268,6 +2633,70 @@ func (c *Client) ListEnabledModules(ctx context.Context, reqEditors ...RequestEd
 	return c.Client.Do(req)
 }
 
+// ListAdminUsers List users for system administration.
+//
+// Corresponds with GET /users (the `ListAdminUsers` operationId).
+func (c *Client) ListAdminUsers(ctx context.Context, params *ListAdminUsersParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewListAdminUsersRequest(c.Server, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// GetAdminUser Read a user and visible membership summary.
+//
+// Corresponds with GET /users/{user_id} (the `GetAdminUser` operationId).
+func (c *Client) GetAdminUser(ctx context.Context, userId string, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetAdminUserRequest(c.Server, userId)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// UpdateAdminUserStatusWithBody Change user status with optimistic concurrency.
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with PATCH /users/{user_id}/status (the `UpdateAdminUserStatus` operationId).
+func (c *Client) UpdateAdminUserStatusWithBody(ctx context.Context, userId string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewUpdateAdminUserStatusRequestWithBody(c.Server, userId, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// UpdateAdminUserStatus Change user status with optimistic concurrency.
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with PATCH /users/{user_id}/status (the `UpdateAdminUserStatus` operationId).
+func (c *Client) UpdateAdminUserStatus(ctx context.Context, userId string, body UpdateAdminUserStatusJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewUpdateAdminUserStatusRequest(c.Server, userId, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
 // NewGetCurrentAccountRequest constructs an http.Request for the GetCurrentAccount method
 func NewGetCurrentAccountRequest(server string) (*http.Request, error) {
 	var err error
@@ -2291,6 +2720,145 @@ func NewGetCurrentAccountRequest(server string) (*http.Request, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	return req, nil
+}
+
+// NewListAccountMembershipsRequest constructs an http.Request for the ListAccountMemberships method
+func NewListAccountMembershipsRequest(server string, accountId string, params *ListAccountMembershipsParams) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "account_id", accountId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/accounts/%s/memberships", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		// queryValues collects non-styled parameters (passthrough, JSON)
+		// that are safe to round-trip through url.Values.Encode().
+		queryValues := queryURL.Query()
+		// rawQueryFragments collects pre-encoded query fragments from
+		// styled parameters, preserving literal commas as delimiters
+		// per the OpenAPI spec (e.g. "color=blue,black,brown").
+		var rawQueryFragments []string
+
+		if params.Status != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "status", *params.Status, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.Page != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "page", *params.Page, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "integer", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.PerPage != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "per_page", *params.PerPage, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "integer", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if encoded := queryValues.Encode(); encoded != "" {
+			rawQueryFragments = append(rawQueryFragments, encoded)
+		}
+		queryURL.RawQuery = strings.Join(rawQueryFragments, "&")
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewUpdateMembershipStatusRequest calls the generic UpdateMembershipStatus builder with application/json body
+func NewUpdateMembershipStatusRequest(server string, accountId string, membershipId string, body UpdateMembershipStatusJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewUpdateMembershipStatusRequestWithBody(server, accountId, membershipId, "application/json", bodyReader)
+}
+
+// NewUpdateMembershipStatusRequestWithBody constructs an http.Request for the UpdateMembershipStatus method, with any body, and a specified content type
+func NewUpdateMembershipStatusRequestWithBody(server string, accountId string, membershipId string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "account_id", accountId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "membership_id", membershipId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/accounts/%s/memberships/%s/status", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPatch, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
 
 	return req, nil
 }
@@ -3550,6 +4118,177 @@ func NewListEnabledModulesRequest(server string) (*http.Request, error) {
 	return req, nil
 }
 
+// NewListAdminUsersRequest constructs an http.Request for the ListAdminUsers method
+func NewListAdminUsersRequest(server string, params *ListAdminUsersParams) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/users")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		// queryValues collects non-styled parameters (passthrough, JSON)
+		// that are safe to round-trip through url.Values.Encode().
+		queryValues := queryURL.Query()
+		// rawQueryFragments collects pre-encoded query fragments from
+		// styled parameters, preserving literal commas as delimiters
+		// per the OpenAPI spec (e.g. "color=blue,black,brown").
+		var rawQueryFragments []string
+
+		if params.Status != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "status", *params.Status, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.Email != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "email", *params.Email, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.Page != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "page", *params.Page, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "integer", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.PerPage != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "per_page", *params.PerPage, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "integer", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if encoded := queryValues.Encode(); encoded != "" {
+			rawQueryFragments = append(rawQueryFragments, encoded)
+		}
+		queryURL.RawQuery = strings.Join(rawQueryFragments, "&")
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewGetAdminUserRequest constructs an http.Request for the GetAdminUser method
+func NewGetAdminUserRequest(server string, userId string) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "user_id", userId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/users/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewUpdateAdminUserStatusRequest calls the generic UpdateAdminUserStatus builder with application/json body
+func NewUpdateAdminUserStatusRequest(server string, userId string, body UpdateAdminUserStatusJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewUpdateAdminUserStatusRequestWithBody(server, userId, "application/json", bodyReader)
+}
+
+// NewUpdateAdminUserStatusRequestWithBody constructs an http.Request for the UpdateAdminUserStatus method, with any body, and a specified content type
+func NewUpdateAdminUserStatusRequestWithBody(server string, userId string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "user_id", userId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/users/%s/status", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPatch, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
 func (c *Client) applyEditors(ctx context.Context, req *http.Request, additionalEditors []RequestEditorFn) error {
 	for _, r := range c.RequestEditors {
 		if err := r(ctx, req); err != nil {
@@ -3600,6 +4339,27 @@ type ClientWithResponsesInterface interface {
 	//
 	// Corresponds with GET /accounts/current (the `GetCurrentAccount` operationId).
 	GetCurrentAccountWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetCurrentAccountResponse, error)
+
+	// ListAccountMembershipsWithResponse List memberships for a specific account.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /accounts/{account_id}/memberships (the `ListAccountMemberships` operationId).
+	ListAccountMembershipsWithResponse(ctx context.Context, accountId string, params *ListAccountMembershipsParams, reqEditors ...RequestEditorFn) (*ListAccountMembershipsResponse, error)
+
+	// UpdateMembershipStatusWithBodyWithResponse Change membership status with optimistic concurrency.
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with PATCH /accounts/{account_id}/memberships/{membership_id}/status (the `UpdateMembershipStatus` operationId).
+	UpdateMembershipStatusWithBodyWithResponse(ctx context.Context, accountId string, membershipId string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*UpdateMembershipStatusResponse, error)
+
+	// UpdateMembershipStatusWithResponse Change membership status with optimistic concurrency.
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with PATCH /accounts/{account_id}/memberships/{membership_id}/status (the `UpdateMembershipStatus` operationId).
+	UpdateMembershipStatusWithResponse(ctx context.Context, accountId string, membershipId string, body UpdateMembershipStatusJSONRequestBody, reqEditors ...RequestEditorFn) (*UpdateMembershipStatusResponse, error)
 
 	// GetCSRFTokenWithResponse Create or rotate an anonymous pre-auth session and issue a CSRF token.
 	//
@@ -3929,6 +4689,34 @@ type ClientWithResponsesInterface interface {
 	//
 	// Corresponds with GET /operations/modules (the `ListEnabledModules` operationId).
 	ListEnabledModulesWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*ListEnabledModulesResponse, error)
+
+	// ListAdminUsersWithResponse List users for system administration.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /users (the `ListAdminUsers` operationId).
+	ListAdminUsersWithResponse(ctx context.Context, params *ListAdminUsersParams, reqEditors ...RequestEditorFn) (*ListAdminUsersResponse, error)
+
+	// GetAdminUserWithResponse Read a user and visible membership summary.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /users/{user_id} (the `GetAdminUser` operationId).
+	GetAdminUserWithResponse(ctx context.Context, userId string, reqEditors ...RequestEditorFn) (*GetAdminUserResponse, error)
+
+	// UpdateAdminUserStatusWithBodyWithResponse Change user status with optimistic concurrency.
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with PATCH /users/{user_id}/status (the `UpdateAdminUserStatus` operationId).
+	UpdateAdminUserStatusWithBodyWithResponse(ctx context.Context, userId string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*UpdateAdminUserStatusResponse, error)
+
+	// UpdateAdminUserStatusWithResponse Change user status with optimistic concurrency.
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with PATCH /users/{user_id}/status (the `UpdateAdminUserStatus` operationId).
+	UpdateAdminUserStatusWithResponse(ctx context.Context, userId string, body UpdateAdminUserStatusJSONRequestBody, reqEditors ...RequestEditorFn) (*UpdateAdminUserStatusResponse, error)
 }
 
 // GetCurrentAccountResponse200Headers the declared response headers of an HTTP 200 response for GetCurrentAccount
@@ -3987,6 +4775,130 @@ func (r GetCurrentAccountResponse) StatusCode() int {
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
 func (r GetCurrentAccountResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type ListAccountMembershipsResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *MembershipListResponse
+	// JSON401 the response for an HTTP 401 `application/json` response
+	JSON401 *Unauthorized
+	// JSON403 the response for an HTTP 403 `application/json` response
+	JSON403 *Forbidden
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r ListAccountMembershipsResponse) GetJSON200() *MembershipListResponse {
+	return r.JSON200
+}
+
+// GetJSON401 returns the response for an HTTP 401 `application/json` response
+func (r ListAccountMembershipsResponse) GetJSON401() *Unauthorized {
+	return r.JSON401
+}
+
+// GetJSON403 returns the response for an HTTP 403 `application/json` response
+func (r ListAccountMembershipsResponse) GetJSON403() *Forbidden {
+	return r.JSON403
+}
+
+// GetBody returns the raw response body bytes
+func (r ListAccountMembershipsResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r ListAccountMembershipsResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ListAccountMembershipsResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r ListAccountMembershipsResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type UpdateMembershipStatusResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *MembershipResponse
+	// JSON401 the response for an HTTP 401 `application/json` response
+	JSON401 *Unauthorized
+	// JSON403 the response for an HTTP 403 `application/json` response
+	JSON403 *Forbidden
+	// JSON404 the response for an HTTP 404 `application/json` response
+	JSON404 *NotFound
+	// JSON409 the response for an HTTP 409 `application/json` response
+	JSON409 *Conflict
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r UpdateMembershipStatusResponse) GetJSON200() *MembershipResponse {
+	return r.JSON200
+}
+
+// GetJSON401 returns the response for an HTTP 401 `application/json` response
+func (r UpdateMembershipStatusResponse) GetJSON401() *Unauthorized {
+	return r.JSON401
+}
+
+// GetJSON403 returns the response for an HTTP 403 `application/json` response
+func (r UpdateMembershipStatusResponse) GetJSON403() *Forbidden {
+	return r.JSON403
+}
+
+// GetJSON404 returns the response for an HTTP 404 `application/json` response
+func (r UpdateMembershipStatusResponse) GetJSON404() *NotFound {
+	return r.JSON404
+}
+
+// GetJSON409 returns the response for an HTTP 409 `application/json` response
+func (r UpdateMembershipStatusResponse) GetJSON409() *Conflict {
+	return r.JSON409
+}
+
+// GetBody returns the raw response body bytes
+func (r UpdateMembershipStatusResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r UpdateMembershipStatusResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r UpdateMembershipStatusResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r UpdateMembershipStatusResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
@@ -5852,6 +6764,192 @@ func (r ListEnabledModulesResponse) ContentType() string {
 	return ""
 }
 
+type ListAdminUsersResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *AdminUserListResponse
+	// JSON401 the response for an HTTP 401 `application/json` response
+	JSON401 *Unauthorized
+	// JSON403 the response for an HTTP 403 `application/json` response
+	JSON403 *Forbidden
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r ListAdminUsersResponse) GetJSON200() *AdminUserListResponse {
+	return r.JSON200
+}
+
+// GetJSON401 returns the response for an HTTP 401 `application/json` response
+func (r ListAdminUsersResponse) GetJSON401() *Unauthorized {
+	return r.JSON401
+}
+
+// GetJSON403 returns the response for an HTTP 403 `application/json` response
+func (r ListAdminUsersResponse) GetJSON403() *Forbidden {
+	return r.JSON403
+}
+
+// GetBody returns the raw response body bytes
+func (r ListAdminUsersResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r ListAdminUsersResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ListAdminUsersResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r ListAdminUsersResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type GetAdminUserResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *AdminUserDetailResponse
+	// JSON401 the response for an HTTP 401 `application/json` response
+	JSON401 *Unauthorized
+	// JSON403 the response for an HTTP 403 `application/json` response
+	JSON403 *Forbidden
+	// JSON404 the response for an HTTP 404 `application/json` response
+	JSON404 *NotFound
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r GetAdminUserResponse) GetJSON200() *AdminUserDetailResponse {
+	return r.JSON200
+}
+
+// GetJSON401 returns the response for an HTTP 401 `application/json` response
+func (r GetAdminUserResponse) GetJSON401() *Unauthorized {
+	return r.JSON401
+}
+
+// GetJSON403 returns the response for an HTTP 403 `application/json` response
+func (r GetAdminUserResponse) GetJSON403() *Forbidden {
+	return r.JSON403
+}
+
+// GetJSON404 returns the response for an HTTP 404 `application/json` response
+func (r GetAdminUserResponse) GetJSON404() *NotFound {
+	return r.JSON404
+}
+
+// GetBody returns the raw response body bytes
+func (r GetAdminUserResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r GetAdminUserResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetAdminUserResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r GetAdminUserResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type UpdateAdminUserStatusResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *AdminUserResponse
+	// JSON401 the response for an HTTP 401 `application/json` response
+	JSON401 *Unauthorized
+	// JSON403 the response for an HTTP 403 `application/json` response
+	JSON403 *Forbidden
+	// JSON404 the response for an HTTP 404 `application/json` response
+	JSON404 *NotFound
+	// JSON409 the response for an HTTP 409 `application/json` response
+	JSON409 *Conflict
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r UpdateAdminUserStatusResponse) GetJSON200() *AdminUserResponse {
+	return r.JSON200
+}
+
+// GetJSON401 returns the response for an HTTP 401 `application/json` response
+func (r UpdateAdminUserStatusResponse) GetJSON401() *Unauthorized {
+	return r.JSON401
+}
+
+// GetJSON403 returns the response for an HTTP 403 `application/json` response
+func (r UpdateAdminUserStatusResponse) GetJSON403() *Forbidden {
+	return r.JSON403
+}
+
+// GetJSON404 returns the response for an HTTP 404 `application/json` response
+func (r UpdateAdminUserStatusResponse) GetJSON404() *NotFound {
+	return r.JSON404
+}
+
+// GetJSON409 returns the response for an HTTP 409 `application/json` response
+func (r UpdateAdminUserStatusResponse) GetJSON409() *Conflict {
+	return r.JSON409
+}
+
+// GetBody returns the raw response body bytes
+func (r UpdateAdminUserStatusResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r UpdateAdminUserStatusResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r UpdateAdminUserStatusResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r UpdateAdminUserStatusResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
 // GetCurrentAccountWithResponse Read the account resolved for the authenticated principal.
 //
 // Returns a wrapper object for the known response body format(s).
@@ -5863,6 +6961,45 @@ func (c *ClientWithResponses) GetCurrentAccountWithResponse(ctx context.Context,
 		return nil, err
 	}
 	return ParseGetCurrentAccountResponse(rsp)
+}
+
+// ListAccountMembershipsWithResponse List memberships for a specific account.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /accounts/{account_id}/memberships (the `ListAccountMemberships` operationId).
+func (c *ClientWithResponses) ListAccountMembershipsWithResponse(ctx context.Context, accountId string, params *ListAccountMembershipsParams, reqEditors ...RequestEditorFn) (*ListAccountMembershipsResponse, error) {
+	rsp, err := c.ListAccountMemberships(ctx, accountId, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseListAccountMembershipsResponse(rsp)
+}
+
+// UpdateMembershipStatusWithBodyWithResponse Change membership status with optimistic concurrency.
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with PATCH /accounts/{account_id}/memberships/{membership_id}/status (the `UpdateMembershipStatus` operationId).
+func (c *ClientWithResponses) UpdateMembershipStatusWithBodyWithResponse(ctx context.Context, accountId string, membershipId string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*UpdateMembershipStatusResponse, error) {
+	rsp, err := c.UpdateMembershipStatusWithBody(ctx, accountId, membershipId, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseUpdateMembershipStatusResponse(rsp)
+}
+
+// UpdateMembershipStatusWithResponse Change membership status with optimistic concurrency.
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with PATCH /accounts/{account_id}/memberships/{membership_id}/status (the `UpdateMembershipStatus` operationId).
+func (c *ClientWithResponses) UpdateMembershipStatusWithResponse(ctx context.Context, accountId string, membershipId string, body UpdateMembershipStatusJSONRequestBody, reqEditors ...RequestEditorFn) (*UpdateMembershipStatusResponse, error) {
+	rsp, err := c.UpdateMembershipStatus(ctx, accountId, membershipId, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseUpdateMembershipStatusResponse(rsp)
 }
 
 // GetCSRFTokenWithResponse Create or rotate an anonymous pre-auth session and issue a CSRF token.
@@ -6476,6 +7613,58 @@ func (c *ClientWithResponses) ListEnabledModulesWithResponse(ctx context.Context
 	return ParseListEnabledModulesResponse(rsp)
 }
 
+// ListAdminUsersWithResponse List users for system administration.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /users (the `ListAdminUsers` operationId).
+func (c *ClientWithResponses) ListAdminUsersWithResponse(ctx context.Context, params *ListAdminUsersParams, reqEditors ...RequestEditorFn) (*ListAdminUsersResponse, error) {
+	rsp, err := c.ListAdminUsers(ctx, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseListAdminUsersResponse(rsp)
+}
+
+// GetAdminUserWithResponse Read a user and visible membership summary.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /users/{user_id} (the `GetAdminUser` operationId).
+func (c *ClientWithResponses) GetAdminUserWithResponse(ctx context.Context, userId string, reqEditors ...RequestEditorFn) (*GetAdminUserResponse, error) {
+	rsp, err := c.GetAdminUser(ctx, userId, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetAdminUserResponse(rsp)
+}
+
+// UpdateAdminUserStatusWithBodyWithResponse Change user status with optimistic concurrency.
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with PATCH /users/{user_id}/status (the `UpdateAdminUserStatus` operationId).
+func (c *ClientWithResponses) UpdateAdminUserStatusWithBodyWithResponse(ctx context.Context, userId string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*UpdateAdminUserStatusResponse, error) {
+	rsp, err := c.UpdateAdminUserStatusWithBody(ctx, userId, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseUpdateAdminUserStatusResponse(rsp)
+}
+
+// UpdateAdminUserStatusWithResponse Change user status with optimistic concurrency.
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with PATCH /users/{user_id}/status (the `UpdateAdminUserStatus` operationId).
+func (c *ClientWithResponses) UpdateAdminUserStatusWithResponse(ctx context.Context, userId string, body UpdateAdminUserStatusJSONRequestBody, reqEditors ...RequestEditorFn) (*UpdateAdminUserStatusResponse, error) {
+	rsp, err := c.UpdateAdminUserStatus(ctx, userId, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseUpdateAdminUserStatusResponse(rsp)
+}
+
 // ParseGetCurrentAccountResponse parses an HTTP response from a GetCurrentAccountWithResponse call
 func ParseGetCurrentAccountResponse(rsp *http.Response) (*GetCurrentAccountResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
@@ -6524,6 +7713,100 @@ func ParseGetCurrentAccountResponse(rsp *http.Response) (*GetCurrentAccountRespo
 			headers.CacheControl = &value
 		}
 		response.Headers200 = &headers
+	}
+
+	return response, nil
+}
+
+// ParseListAccountMembershipsResponse parses an HTTP response from a ListAccountMembershipsWithResponse call
+func ParseListAccountMembershipsResponse(rsp *http.Response) (*ListAccountMembershipsResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ListAccountMembershipsResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest MembershipListResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest Unauthorized
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest Forbidden
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseUpdateMembershipStatusResponse parses an HTTP response from a UpdateMembershipStatusWithResponse call
+func ParseUpdateMembershipStatusResponse(rsp *http.Response) (*UpdateMembershipStatusResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &UpdateMembershipStatusResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest MembershipResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest Unauthorized
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest Forbidden
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest Conflict
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON409 = &dest
+
 	}
 
 	return response, nil
@@ -8044,6 +9327,147 @@ func ParseListEnabledModulesResponse(rsp *http.Response) (*ListEnabledModulesRes
 			headers.CacheControl = &value
 		}
 		response.Headers200 = &headers
+	}
+
+	return response, nil
+}
+
+// ParseListAdminUsersResponse parses an HTTP response from a ListAdminUsersWithResponse call
+func ParseListAdminUsersResponse(rsp *http.Response) (*ListAdminUsersResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ListAdminUsersResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest AdminUserListResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest Unauthorized
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest Forbidden
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetAdminUserResponse parses an HTTP response from a GetAdminUserWithResponse call
+func ParseGetAdminUserResponse(rsp *http.Response) (*GetAdminUserResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetAdminUserResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest AdminUserDetailResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest Unauthorized
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest Forbidden
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseUpdateAdminUserStatusResponse parses an HTTP response from a UpdateAdminUserStatusWithResponse call
+func ParseUpdateAdminUserStatusResponse(rsp *http.Response) (*UpdateAdminUserStatusResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &UpdateAdminUserStatusResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest AdminUserResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest Unauthorized
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest Forbidden
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest Conflict
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON409 = &dest
+
 	}
 
 	return response, nil

@@ -61,3 +61,22 @@ func RegisterAuthorizationRoutes(
 		runtime.roleAssignment.Revoke,
 	)
 }
+
+// RegisterAdministrationRoutes keeps the user and membership administration
+// endpoints behind the same session/CSRF boundary as the authorization surface.
+func RegisterAdministrationRoutes(
+	router *gin.RouterGroup,
+	runtime authorizationRuntime,
+	identity identityRuntime,
+) {
+	if runtime.adminUsers == nil || runtime.memberships == nil {
+		return
+	}
+	protected := router.Group("")
+	protected.Use(identity.authenticate, identity.csrf)
+	protected.GET("/users", runtime.adminUserReadGuard, runtime.adminUsers.List)
+	protected.GET("/users/:user_id", runtime.adminUserReadGuard, runtime.adminUsers.Get)
+	protected.PATCH("/users/:user_id/status", runtime.adminUserManageGuard, runtime.adminUsers.UpdateStatus)
+	protected.GET("/accounts/:account_id/memberships", runtime.membershipReadGuard, runtime.memberships.List)
+	protected.PATCH("/accounts/:account_id/memberships/:membership_id/status", runtime.membershipManageGuard, runtime.memberships.UpdateStatus)
+}
