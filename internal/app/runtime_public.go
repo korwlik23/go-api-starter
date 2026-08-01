@@ -156,7 +156,7 @@ func buildPublicRuntime(
 		localization.catalog,
 	)
 	RegisterIdentityRoutes(router.Group("/api/v1"), identity)
-	RegisterAuthorizationRoutes(router.Group("/api/v1"), authorization)
+	RegisterAuthorizationRoutes(router.Group("/api/v1"), authorization, identity)
 	protectedSystem := router.Group("/api/v1")
 	protectedSystem.Use(identity.authenticate, identity.csrf)
 	RegisterProtectedSystemRoutes(
