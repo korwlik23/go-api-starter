@@ -69,7 +69,7 @@ func TestM3B1LocalProviderRejectsTraversalAndSymlinks(t *testing.T) {
 	if runtime.GOOS == "windows" {
 		t.Skip("symlink permissions are not consistently available on Windows")
 	}
-	link := filepath.Join(root, "018f1f64-7b2a-7c10-8bf2-3c40d5f67585.blob")
+	link := filepath.Join(root, "018f1f647b2a7c108bf23c40d5f67585.blob")
 	require.NoError(t, os.Symlink(outside, link))
 	_, err = provider.Stat(context.Background(), filepath.Base(link))
 	require.ErrorIs(t, err, platformstorage.ErrInvalidObject)

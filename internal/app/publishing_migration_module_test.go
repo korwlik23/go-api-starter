@@ -10,7 +10,7 @@ func TestM3A2PublishingMigrationModuleIsRegistered(t *testing.T) {
 	t.Parallel()
 
 	modules := MigrationModules()
-	require.Len(t, modules, 7)
+	require.Len(t, modules, 8)
 	var found bool
 	for _, module := range modules {
 		if module.ID != "publishing" {
