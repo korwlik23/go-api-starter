@@ -5,6 +5,7 @@ import "github.com/gin-gonic/gin"
 type RouteHandlers struct {
 	Content   *ContentHandler
 	Revisions *RevisionHandler
+	Workflow  *WorkflowHandler
 }
 
 // RegisterRoutes exposes the draft content mutation surface. Authentication,
@@ -20,5 +21,8 @@ func RegisterRoutes(router *gin.RouterGroup, handlers RouteHandlers) {
 	if handlers.Revisions != nil {
 		router.GET("/publishing/content/:content_id/revisions", handlers.Revisions.List)
 		router.POST("/publishing/content/:content_id/revisions/:revision_id/rollback", handlers.Revisions.Rollback)
+	}
+	if handlers.Workflow != nil {
+		router.POST("/publishing/content/:content_id/workflow", handlers.Workflow.Transition)
 	}
 }
