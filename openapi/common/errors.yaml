@@ -37,6 +37,12 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/ErrorEnvelope'
+    UnsupportedMediaType:
+      description: The request content type is not supported.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
     Unauthorized:
       description: Authentication is required or no longer valid.
       content:

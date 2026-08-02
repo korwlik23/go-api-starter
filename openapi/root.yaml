@@ -110,6 +110,26 @@ paths:
     $ref: ./modules/publishing/public.yaml#/paths/~1public~1menus~1{locale}~1{location}
   /public/previews/exchange:
     $ref: ./modules/publishing/public.yaml#/paths/~1public~1previews~1exchange
+  /publishing/pages:
+    $ref: ./modules/publishing/content.yaml#/paths/~1publishing~1pages
+  /publishing/pages/{page_id}:
+    $ref: ./modules/publishing/content.yaml#/paths/~1publishing~1pages~1{page_id}
+  /publishing/posts:
+    $ref: ./modules/publishing/content.yaml#/paths/~1publishing~1posts
+  /publishing/posts/{post_id}:
+    $ref: ./modules/publishing/content.yaml#/paths/~1publishing~1posts~1{post_id}
+  /publishing/content/{content_id}/preview:
+    $ref: ./modules/publishing/content.yaml#/paths/~1publishing~1content~1{content_id}~1preview
+  /publishing/content/{content_id}/revisions:
+    $ref: ./modules/publishing/revisions.yaml#/paths/~1publishing~1content~1{content_id}~1revisions
+  /publishing/content/{content_id}/revisions/{revision_id}/rollback:
+    $ref: ./modules/publishing/revisions.yaml#/paths/~1publishing~1content~1{content_id}~1revisions~1{revision_id}~1rollback
+  /publishing/content/{content_id}/workflow:
+    $ref: ./modules/publishing/workflow.yaml#/paths/~1publishing~1content~1{content_id}~1workflow
+  /publishing/schedules:
+    $ref: ./modules/publishing/schedules.yaml#/paths/~1publishing~1schedules
+  /publishing/schedules/{schedule_id}:
+    $ref: ./modules/publishing/schedules.yaml#/paths/~1publishing~1schedules~1{schedule_id}
   /livez:
     $ref: ./modules/system/health.yaml#/paths/~1livez
   /readyz:

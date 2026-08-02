@@ -1899,6 +1899,575 @@ paths:
       summary: List the runtime module activation projection.
       tags:
         - Operations
+  /publishing/content/{content_id}/preview:
+    post:
+      operationId: issuePublishingPreview
+      parameters:
+        - in: path
+          name: content_id
+          required: true
+          schema:
+            format: uuid
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PreviewIssueRequest'
+        required: true
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PreviewIssueResponse'
+          description: One-time preview token; never persist or log the raw token.
+          headers:
+            Cache-Control:
+              schema:
+                enum:
+                  - no-store
+                type: string
+            X-Robots-Tag:
+              schema:
+                enum:
+                  - noindex, nofollow
+                type: string
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '415':
+          $ref: '#/components/responses/UnsupportedMediaType'
+        '422':
+          $ref: '#/components/responses/BadRequest'
+      security:
+        - CSRFToken: []
+          SessionCookie: []
+      summary: Issue a short-lived one-time public preview token.
+      tags:
+        - Publishing
+      x-required-permission: publishing.pages.read.own
+  /publishing/content/{content_id}/revisions:
+    get:
+      operationId: listPublishingRevisions
+      parameters:
+        - in: path
+          name: content_id
+          required: true
+          schema:
+            format: uuid
+            type: string
+        - in: query
+          name: translation_id
+          required: true
+          schema:
+            format: uuid
+            type: string
+        - in: query
+          name: limit
+          schema:
+            default: 25
+            maximum: 100
+            minimum: 1
+            type: integer
+        - in: query
+          name: after_created_at
+          schema:
+            format: date-time
+            type: string
+        - in: query
+          name: after_id
+          schema:
+            format: uuid
+            type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RevisionListResponse'
+          description: Immutable revisions in stable created-at/id order.
+          headers:
+            Cache-Control:
+              schema:
+                enum:
+                  - no-store
+                type: string
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+      security:
+        - SessionCookie: []
+      summary: List immutable revisions for one content translation.
+      tags:
+        - Publishing
+      x-required-permission: publishing.revisions.read.own
+  /publishing/content/{content_id}/revisions/{revision_id}/rollback:
+    post:
+      operationId: rollbackPublishingRevision
+      parameters:
+        - in: path
+          name: content_id
+          required: true
+          schema:
+            format: uuid
+            type: string
+        - in: path
+          name: revision_id
+          required: true
+          schema:
+            format: uuid
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RevisionRollbackRequest'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RevisionRollbackResponse'
+          description: The revision and restored content state.
+          headers:
+            Cache-Control:
+              schema:
+                enum:
+                  - no-store
+                type: string
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '415':
+          $ref: '#/components/responses/UnsupportedMediaType'
+      security:
+        - CSRFToken: []
+          SessionCookie: []
+      summary: Restore a revision into the current content translation.
+      tags:
+        - Publishing
+      x-required-permission: publishing.revisions.rollback.own
+  /publishing/content/{content_id}/workflow:
+    post:
+      operationId: transitionPublishingWorkflow
+      parameters:
+        - in: path
+          name: content_id
+          required: true
+          schema:
+            format: uuid
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WorkflowRequest'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkflowResponse'
+          description: The updated content workflow state.
+          headers:
+            Cache-Control:
+              schema:
+                enum:
+                  - no-store
+                type: string
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '415':
+          $ref: '#/components/responses/UnsupportedMediaType'
+        '422':
+          $ref: '#/components/responses/BadRequest'
+      security:
+        - CSRFToken: []
+          SessionCookie: []
+      summary: Transition content through review, publish, schedule or archive.
+      tags:
+        - Publishing
+      x-required-permission: publishing.pages.review.any
+  /publishing/pages:
+    post:
+      operationId: createPublishingPage
+      requestBody:
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/ContentMutationRequest'
+                - properties:
+                    content_key:
+                      maxLength: 128
+                      minLength: 1
+                      type: string
+                    kind:
+                      enum:
+                        - page
+                      type: string
+                  required:
+                    - kind
+                    - content_key
+                  type: object
+        required: true
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContentResponse'
+          description: The page was created.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '415':
+          $ref: '#/components/responses/UnsupportedMediaType'
+        '422':
+          $ref: '#/components/responses/BadRequest'
+      security:
+        - CSRFToken: []
+          SessionCookie: []
+      summary: Create a page translation in the current account.
+      tags:
+        - Publishing
+      x-required-permission: publishing.pages.write.own
+  /publishing/pages/{page_id}:
+    delete:
+      operationId: deletePublishingPage
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ContentDeleteRequest'
+        required: true
+      responses:
+        '204':
+          description: The page was deleted.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '415':
+          $ref: '#/components/responses/UnsupportedMediaType'
+      security:
+        - CSRFToken: []
+          SessionCookie: []
+      summary: Soft-delete a page translation using optimistic concurrency.
+      tags:
+        - Publishing
+      x-required-permission: publishing.pages.write.own
+    parameters:
+      - in: path
+        name: page_id
+        required: true
+        schema:
+          format: uuid
+          type: string
+    patch:
+      operationId: updatePublishingPage
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ContentUpdateRequest'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContentResponse'
+          description: The page was updated.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '415':
+          $ref: '#/components/responses/UnsupportedMediaType'
+        '422':
+          $ref: '#/components/responses/BadRequest'
+      security:
+        - CSRFToken: []
+          SessionCookie: []
+      summary: Update a page translation using optimistic concurrency.
+      tags:
+        - Publishing
+      x-required-permission: publishing.pages.write.own
+  /publishing/posts:
+    post:
+      operationId: createPublishingPost
+      requestBody:
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/ContentMutationRequest'
+                - properties:
+                    content_key:
+                      maxLength: 128
+                      minLength: 1
+                      type: string
+                    kind:
+                      enum:
+                        - post
+                      type: string
+                  required:
+                    - kind
+                    - content_key
+                  type: object
+        required: true
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContentResponse'
+          description: The post was created.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '415':
+          $ref: '#/components/responses/UnsupportedMediaType'
+        '422':
+          $ref: '#/components/responses/BadRequest'
+      security:
+        - CSRFToken: []
+          SessionCookie: []
+      summary: Create a post translation in the current account.
+      tags:
+        - Publishing
+      x-required-permission: publishing.pages.write.own
+  /publishing/posts/{post_id}:
+    delete:
+      operationId: deletePublishingPost
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ContentDeleteRequest'
+        required: true
+      responses:
+        '204':
+          description: The post was deleted.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '415':
+          $ref: '#/components/responses/UnsupportedMediaType'
+      security:
+        - CSRFToken: []
+          SessionCookie: []
+      summary: Soft-delete a post translation using optimistic concurrency.
+      tags:
+        - Publishing
+      x-required-permission: publishing.pages.write.own
+    parameters:
+      - in: path
+        name: post_id
+        required: true
+        schema:
+          format: uuid
+          type: string
+    patch:
+      operationId: updatePublishingPost
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ContentUpdateRequest'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContentResponse'
+          description: The post was updated.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '415':
+          $ref: '#/components/responses/UnsupportedMediaType'
+        '422':
+          $ref: '#/components/responses/BadRequest'
+      security:
+        - CSRFToken: []
+          SessionCookie: []
+      summary: Update a post translation using optimistic concurrency.
+      tags:
+        - Publishing
+      x-required-permission: publishing.pages.write.own
+  /publishing/schedules:
+    get:
+      operationId: listPublishingSchedules
+      parameters:
+        - in: query
+          name: limit
+          schema:
+            default: 25
+            maximum: 100
+            minimum: 1
+            type: integer
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScheduleListResponse'
+          description: Account-scoped publication schedules.
+          headers:
+            Cache-Control:
+              schema:
+                enum:
+                  - no-store
+                type: string
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+      security:
+        - SessionCookie: []
+      summary: List publication schedules for the current account.
+      tags:
+        - Publishing
+      x-required-permission: publishing.pages.read.own
+    post:
+      operationId: createPublishingSchedule
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ScheduleRequest'
+        required: true
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Schedule'
+          description: The schedule was created.
+          headers:
+            Cache-Control:
+              schema:
+                enum:
+                  - no-store
+                type: string
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '415':
+          $ref: '#/components/responses/UnsupportedMediaType'
+        '422':
+          $ref: '#/components/responses/BadRequest'
+      security:
+        - CSRFToken: []
+          SessionCookie: []
+      summary: Schedule a publish/unpublish operation with an idempotency key.
+      tags:
+        - Publishing
+      x-required-permission: publishing.pages.publish.any
+  /publishing/schedules/{schedule_id}:
+    delete:
+      operationId: cancelPublishingSchedule
+      parameters:
+        - in: path
+          name: schedule_id
+          required: true
+          schema:
+            format: uuid
+            type: string
+      responses:
+        '204':
+          description: The schedule was canceled.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '415':
+          $ref: '#/components/responses/UnsupportedMediaType'
+      security:
+        - CSRFToken: []
+          SessionCookie: []
+      summary: Cancel a pending publication schedule.
+      tags:
+        - Publishing
+      x-required-permission: publishing.pages.publish.any
   /users:
     get:
       operationId: listAdminUsers
@@ -2062,7 +2631,26 @@ components:
           schema:
             $ref: '#/components/schemas/ErrorEnvelope'
       description: Authentication is required or no longer valid.
+    UnsupportedMediaType:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+      description: The request content type is not supported.
   schemas:
+    AEOFields:
+      additionalProperties: false
+      properties:
+        answer:
+          maxLength: 20000
+          type: string
+        question:
+          maxLength: 255
+          type: string
+      required:
+        - question
+        - answer
+      type: object
     AccountRoleAssignmentRequest:
       additionalProperties: false
       properties:
@@ -2372,6 +2960,25 @@ components:
       required:
         - items
       type: object
+    Block:
+      additionalProperties: false
+      properties:
+        data:
+          additionalProperties: true
+          type: object
+        type:
+          enum:
+            - text
+            - image
+            - callout
+            - answer
+            - steps
+            - comparison
+          type: string
+      required:
+        - type
+        - data
+      type: object
     CSRFTokenResponse:
       additionalProperties: false
       properties:
@@ -2461,6 +3068,172 @@ components:
       required:
         - items
       type: object
+    ContentDeleteRequest:
+      additionalProperties: false
+      properties:
+        expected_version:
+          minimum: 1
+          type: integer
+        locale_id:
+          format: uuid
+          type: string
+        translation_id:
+          format: uuid
+          type: string
+      required:
+        - translation_id
+        - locale_id
+        - expected_version
+      type: object
+    ContentMutationRequest:
+      additionalProperties: false
+      properties:
+        aeo:
+          $ref: '#/components/schemas/AEOFields'
+        blocks:
+          items:
+            $ref: '#/components/schemas/Block'
+          maxItems: 500
+          minItems: 1
+          type: array
+        content_key:
+          maxLength: 128
+          minLength: 1
+          type: string
+        excerpt:
+          maxLength: 2000
+          type: string
+        expected_version:
+          minimum: 1
+          type: integer
+        geo:
+          $ref: '#/components/schemas/GEOFields'
+        kind:
+          enum:
+            - page
+            - post
+          type: string
+        locale:
+          maxLength: 255
+          minLength: 2
+          type: string
+        path:
+          maxLength: 512
+          minLength: 1
+          type: string
+        seo:
+          $ref: '#/components/schemas/SEOFields'
+        slug:
+          maxLength: 160
+          minLength: 1
+          type: string
+        title:
+          maxLength: 255
+          minLength: 1
+          type: string
+        translation_id:
+          format: uuid
+          type: string
+      required:
+        - locale
+        - slug
+        - path
+        - title
+        - excerpt
+        - blocks
+        - seo
+        - geo
+        - aeo
+      type: object
+    ContentResponse:
+      additionalProperties: false
+      properties:
+        account_id:
+          format: uuid
+          type: string
+        aeo:
+          $ref: '#/components/schemas/AEOFields'
+        blocks:
+          items:
+            $ref: '#/components/schemas/Block'
+          type: array
+        content_id:
+          format: uuid
+          type: string
+        content_key:
+          type: string
+        content_status:
+          enum:
+            - draft
+            - review
+            - published
+            - scheduled
+            - archived
+          type: string
+        content_version:
+          minimum: 1
+          type: integer
+        excerpt:
+          type: string
+        geo:
+          $ref: '#/components/schemas/GEOFields'
+        kind:
+          enum:
+            - page
+            - post
+          type: string
+        locale_id:
+          format: uuid
+          type: string
+        path:
+          type: string
+        seo:
+          $ref: '#/components/schemas/SEOFields'
+        slug:
+          type: string
+        title:
+          type: string
+        translation_id:
+          format: uuid
+          type: string
+        translation_status:
+          enum:
+            - draft
+            - review
+            - published
+            - scheduled
+            - archived
+          type: string
+        translation_version:
+          minimum: 1
+          type: integer
+      required:
+        - content_id
+        - translation_id
+        - account_id
+        - locale_id
+        - kind
+        - content_key
+        - content_status
+        - content_version
+        - translation_status
+        - translation_version
+        - slug
+        - path
+        - title
+        - excerpt
+        - blocks
+        - seo
+        - geo
+        - aeo
+      type: object
+    ContentUpdateRequest:
+      allOf:
+        - $ref: '#/components/schemas/ContentMutationRequest'
+        - required:
+            - translation_id
+            - expected_version
+          type: object
     CreateRoleRequest:
       additionalProperties: false
       properties:
@@ -2598,6 +3371,19 @@ components:
           type: integer
       required:
         - expected_version
+      type: object
+    GEOFields:
+      additionalProperties: false
+      properties:
+        locality:
+          maxLength: 128
+          type: string
+        region:
+          maxLength: 128
+          type: string
+      required:
+        - region
+        - locality
       type: object
     Locale:
       additionalProperties: false
@@ -3325,6 +4111,40 @@ components:
         - affected_principals
         - session_outcome
       type: object
+    PreviewIssueRequest:
+      additionalProperties: false
+      properties:
+        revision_id:
+          format: uuid
+          type: string
+        translation_id:
+          format: uuid
+          type: string
+      required:
+        - translation_id
+        - revision_id
+      type: object
+    PreviewIssueResponse:
+      additionalProperties: false
+      properties:
+        expires_at:
+          format: date-time
+          type: string
+        revision_id:
+          format: uuid
+          type: string
+        token:
+          minLength: 1
+          type: string
+        token_id:
+          format: uuid
+          type: string
+      required:
+        - token
+        - token_id
+        - revision_id
+        - expires_at
+      type: object
     Problem:
       additionalProperties: false
       properties:
@@ -3482,6 +4302,128 @@ components:
           required:
             - expected_version
           type: object
+    Revision:
+      additionalProperties: false
+      properties:
+        author_id:
+          format: uuid
+          type: string
+        change_summary:
+          maxLength: 1000
+          type: string
+        content_id:
+          format: uuid
+          type: string
+        created_at:
+          format: date-time
+          type: string
+        id:
+          format: uuid
+          type: string
+        snapshot_hash:
+          pattern: ^[a-f0-9]{64}$
+          type: string
+        source_version:
+          minimum: 1
+          type: integer
+        translation_id:
+          format: uuid
+          type: string
+      required:
+        - id
+        - content_id
+        - translation_id
+        - author_id
+        - snapshot_hash
+        - change_summary
+        - source_version
+        - created_at
+      type: object
+    RevisionCursor:
+      additionalProperties: false
+      properties:
+        created_at:
+          format: date-time
+          type: string
+        id:
+          format: uuid
+          type: string
+      required:
+        - created_at
+        - id
+      type: object
+    RevisionListResponse:
+      additionalProperties: false
+      properties:
+        items:
+          items:
+            $ref: '#/components/schemas/Revision'
+          type: array
+        next:
+          $ref: '#/components/schemas/RevisionCursor'
+      required:
+        - items
+      type: object
+    RevisionRollbackRequest:
+      additionalProperties: false
+      properties:
+        change_summary:
+          maxLength: 1000
+          type: string
+        expected_version:
+          minimum: 1
+          type: integer
+        locale_id:
+          format: uuid
+          type: string
+        translation_id:
+          format: uuid
+          type: string
+      required:
+        - translation_id
+        - locale_id
+        - expected_version
+        - change_summary
+      type: object
+    RevisionRollbackResponse:
+      additionalProperties: false
+      properties:
+        content:
+          additionalProperties: false
+          properties:
+            content_id:
+              format: uuid
+              type: string
+            content_version:
+              minimum: 1
+              type: integer
+            status:
+              enum:
+                - draft
+                - review
+                - published
+                - scheduled
+                - archived
+              type: string
+            translation_id:
+              format: uuid
+              type: string
+            translation_version:
+              minimum: 1
+              type: integer
+          required:
+            - content_id
+            - translation_id
+            - content_version
+            - translation_version
+            - status
+          type: object
+        revision:
+          $ref: '#/components/schemas/Revision'
+      required:
+        - revision
+        - content
+      type: object
     RoleAssignmentItem:
       additionalProperties: false
       properties:
@@ -3744,6 +4686,28 @@ components:
         - created_at
         - updated_at
       type: object
+    SEOFields:
+      additionalProperties: false
+      properties:
+        canonical_url:
+          type: string
+        description:
+          maxLength: 320
+          type: string
+        robots:
+          type: string
+        structured_data:
+          additionalProperties: true
+          type: object
+        title:
+          maxLength: 255
+          type: string
+      required:
+        - title
+        - description
+        - canonical_url
+        - robots
+      type: object
     SEOUpdateRequest:
       additionalProperties: false
       properties:
@@ -3779,6 +4743,85 @@ components:
         - canonical_base
         - robots
         - expected_version
+      type: object
+    Schedule:
+      additionalProperties: false
+      properties:
+        account_id:
+          format: uuid
+          type: string
+        attempts:
+          minimum: 0
+          type: integer
+        expected_version:
+          minimum: 1
+          type: integer
+        id:
+          format: uuid
+          type: string
+        idempotency_key:
+          type: string
+        publish_at:
+          format: date-time
+          type: string
+        state:
+          enum:
+            - pending
+            - leased
+            - succeeded
+            - failed
+            - canceled
+          type: string
+        translation_id:
+          format: uuid
+          type: string
+        unpublish_at:
+          format: date-time
+          type: string
+      required:
+        - id
+        - account_id
+        - translation_id
+        - publish_at
+        - expected_version
+        - idempotency_key
+        - state
+        - attempts
+      type: object
+    ScheduleListResponse:
+      additionalProperties: false
+      properties:
+        items:
+          items:
+            $ref: '#/components/schemas/Schedule'
+          type: array
+      required:
+        - items
+      type: object
+    ScheduleRequest:
+      additionalProperties: false
+      properties:
+        expected_version:
+          minimum: 1
+          type: integer
+        idempotency_key:
+          maxLength: 128
+          minLength: 1
+          type: string
+        publish_at:
+          format: date-time
+          type: string
+        translation_id:
+          format: uuid
+          type: string
+        unpublish_at:
+          format: date-time
+          type: string
+      required:
+        - translation_id
+        - publish_at
+        - expected_version
+        - idempotency_key
       type: object
     SessionInvalidationOutcome:
       additionalProperties: false
@@ -3990,6 +5033,71 @@ components:
         - state
         - version
         - expires_at
+      type: object
+    WorkflowRequest:
+      additionalProperties: false
+      properties:
+        action:
+          enum:
+            - submit_review
+            - approve
+            - publish
+            - schedule
+            - archive
+          type: string
+        expected_version:
+          minimum: 1
+          type: integer
+        locale_id:
+          format: uuid
+          type: string
+        translation_id:
+          format: uuid
+          type: string
+      required:
+        - translation_id
+        - locale_id
+        - expected_version
+        - action
+      type: object
+    WorkflowResponse:
+      additionalProperties: false
+      properties:
+        content_id:
+          format: uuid
+          type: string
+        content_status:
+          enum:
+            - draft
+            - review
+            - published
+            - scheduled
+            - archived
+          type: string
+        content_version:
+          minimum: 1
+          type: integer
+        translation_id:
+          format: uuid
+          type: string
+        translation_status:
+          enum:
+            - draft
+            - review
+            - published
+            - scheduled
+            - archived
+          type: string
+        translation_version:
+          minimum: 1
+          type: integer
+      required:
+        - content_id
+        - translation_id
+        - content_status
+        - translation_status
+        - content_version
+        - translation_version
       type: object
   securitySchemes:
     CSRFToken:

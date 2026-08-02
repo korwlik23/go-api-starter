@@ -1,0 +1,58 @@
+paths:
+  /publishing/content/{content_id}/workflow:
+    post:
+      tags: [Publishing]
+      summary: Transition content through review, publish, schedule or archive.
+      operationId: transitionPublishingWorkflow
+      x-surfaces: [admin]
+      x-required-permission: publishing.pages.review.any
+      security:
+        - SessionCookie: []
+          CSRFToken: []
+      parameters:
+        - name: content_id
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/WorkflowRequest'}
+      responses:
+        '200':
+          description: The updated content workflow state.
+          headers:
+            Cache-Control: {schema: {type: string, enum: [no-store]}}
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/WorkflowResponse'}
+        '400': {$ref: ../../common/errors.yaml#/components/responses/BadRequest}
+        '401': {$ref: ../../common/errors.yaml#/components/responses/Unauthorized}
+        '403': {$ref: ../../common/errors.yaml#/components/responses/Forbidden}
+        '404': {$ref: ../../common/errors.yaml#/components/responses/NotFound}
+        '409': {$ref: ../../common/errors.yaml#/components/responses/Conflict}
+        '415': {$ref: ../../common/errors.yaml#/components/responses/UnsupportedMediaType}
+        '422': {$ref: ../../common/errors.yaml#/components/responses/BadRequest}
+components:
+  schemas:
+    WorkflowRequest:
+      type: object
+      additionalProperties: false
+      required: [translation_id, locale_id, expected_version, action]
+      properties:
+        translation_id: {type: string, format: uuid}
+        locale_id: {type: string, format: uuid}
+        expected_version: {type: integer, minimum: 1}
+        action: {type: string, enum: [submit_review, approve, publish, schedule, archive]}
+    WorkflowResponse:
+      type: object
+      additionalProperties: false
+      required: [content_id, translation_id, content_status, translation_status, content_version, translation_version]
+      properties:
+        content_id: {type: string, format: uuid}
+        translation_id: {type: string, format: uuid}
+        content_status: {type: string, enum: [draft, review, published, scheduled, archived]}
+        translation_status: {type: string, enum: [draft, review, published, scheduled, archived]}
+        content_version: {type: integer, minimum: 1}
+        translation_version: {type: integer, minimum: 1}

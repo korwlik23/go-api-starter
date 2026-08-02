@@ -1,0 +1,322 @@
+paths:
+  /publishing/pages:
+    post:
+      tags: [Publishing]
+      summary: Create a page translation in the current account.
+      operationId: createPublishingPage
+      x-surfaces: [admin]
+      x-required-permission: publishing.pages.write.own
+      security:
+        - SessionCookie: []
+          CSRFToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - {$ref: '#/components/schemas/ContentMutationRequest'}
+                - type: object
+                  required: [kind, content_key]
+                  properties:
+                    kind: {type: string, enum: [page]}
+                    content_key: {type: string, minLength: 1, maxLength: 128}
+      responses:
+        '201':
+          description: The page was created.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ContentResponse'}
+        '400': {$ref: ../../common/errors.yaml#/components/responses/BadRequest}
+        '401': {$ref: ../../common/errors.yaml#/components/responses/Unauthorized}
+        '403': {$ref: ../../common/errors.yaml#/components/responses/Forbidden}
+        '409': {$ref: ../../common/errors.yaml#/components/responses/Conflict}
+        '415': {$ref: ../../common/errors.yaml#/components/responses/UnsupportedMediaType}
+        '422': {$ref: ../../common/errors.yaml#/components/responses/BadRequest}
+  /publishing/pages/{page_id}:
+    parameters:
+      - name: page_id
+        in: path
+        required: true
+        schema: {type: string, format: uuid}
+    patch:
+      tags: [Publishing]
+      summary: Update a page translation using optimistic concurrency.
+      operationId: updatePublishingPage
+      x-surfaces: [admin]
+      x-required-permission: publishing.pages.write.own
+      security:
+        - SessionCookie: []
+          CSRFToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/ContentUpdateRequest'}
+      responses:
+        '200':
+          description: The page was updated.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ContentResponse'}
+        '400': {$ref: ../../common/errors.yaml#/components/responses/BadRequest}
+        '401': {$ref: ../../common/errors.yaml#/components/responses/Unauthorized}
+        '403': {$ref: ../../common/errors.yaml#/components/responses/Forbidden}
+        '404': {$ref: ../../common/errors.yaml#/components/responses/NotFound}
+        '409': {$ref: ../../common/errors.yaml#/components/responses/Conflict}
+        '415': {$ref: ../../common/errors.yaml#/components/responses/UnsupportedMediaType}
+        '422': {$ref: ../../common/errors.yaml#/components/responses/BadRequest}
+    delete:
+      tags: [Publishing]
+      summary: Soft-delete a page translation using optimistic concurrency.
+      operationId: deletePublishingPage
+      x-surfaces: [admin]
+      x-required-permission: publishing.pages.write.own
+      security:
+        - SessionCookie: []
+          CSRFToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/ContentDeleteRequest'}
+      responses:
+        '204': {description: The page was deleted.}
+        '400': {$ref: ../../common/errors.yaml#/components/responses/BadRequest}
+        '401': {$ref: ../../common/errors.yaml#/components/responses/Unauthorized}
+        '403': {$ref: ../../common/errors.yaml#/components/responses/Forbidden}
+        '404': {$ref: ../../common/errors.yaml#/components/responses/NotFound}
+        '409': {$ref: ../../common/errors.yaml#/components/responses/Conflict}
+        '415': {$ref: ../../common/errors.yaml#/components/responses/UnsupportedMediaType}
+  /publishing/posts:
+    post:
+      tags: [Publishing]
+      summary: Create a post translation in the current account.
+      operationId: createPublishingPost
+      x-surfaces: [admin]
+      x-required-permission: publishing.pages.write.own
+      security:
+        - SessionCookie: []
+          CSRFToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - {$ref: '#/components/schemas/ContentMutationRequest'}
+                - type: object
+                  required: [kind, content_key]
+                  properties:
+                    kind: {type: string, enum: [post]}
+                    content_key: {type: string, minLength: 1, maxLength: 128}
+      responses:
+        '201':
+          description: The post was created.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ContentResponse'}
+        '400': {$ref: ../../common/errors.yaml#/components/responses/BadRequest}
+        '401': {$ref: ../../common/errors.yaml#/components/responses/Unauthorized}
+        '403': {$ref: ../../common/errors.yaml#/components/responses/Forbidden}
+        '409': {$ref: ../../common/errors.yaml#/components/responses/Conflict}
+        '415': {$ref: ../../common/errors.yaml#/components/responses/UnsupportedMediaType}
+        '422': {$ref: ../../common/errors.yaml#/components/responses/BadRequest}
+  /publishing/posts/{post_id}:
+    parameters:
+      - name: post_id
+        in: path
+        required: true
+        schema: {type: string, format: uuid}
+    patch:
+      tags: [Publishing]
+      summary: Update a post translation using optimistic concurrency.
+      operationId: updatePublishingPost
+      x-surfaces: [admin]
+      x-required-permission: publishing.pages.write.own
+      security:
+        - SessionCookie: []
+          CSRFToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/ContentUpdateRequest'}
+      responses:
+        '200':
+          description: The post was updated.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ContentResponse'}
+        '400': {$ref: ../../common/errors.yaml#/components/responses/BadRequest}
+        '401': {$ref: ../../common/errors.yaml#/components/responses/Unauthorized}
+        '403': {$ref: ../../common/errors.yaml#/components/responses/Forbidden}
+        '404': {$ref: ../../common/errors.yaml#/components/responses/NotFound}
+        '409': {$ref: ../../common/errors.yaml#/components/responses/Conflict}
+        '415': {$ref: ../../common/errors.yaml#/components/responses/UnsupportedMediaType}
+        '422': {$ref: ../../common/errors.yaml#/components/responses/BadRequest}
+    delete:
+      tags: [Publishing]
+      summary: Soft-delete a post translation using optimistic concurrency.
+      operationId: deletePublishingPost
+      x-surfaces: [admin]
+      x-required-permission: publishing.pages.write.own
+      security:
+        - SessionCookie: []
+          CSRFToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/ContentDeleteRequest'}
+      responses:
+        '204': {description: The post was deleted.}
+        '400': {$ref: ../../common/errors.yaml#/components/responses/BadRequest}
+        '401': {$ref: ../../common/errors.yaml#/components/responses/Unauthorized}
+        '403': {$ref: ../../common/errors.yaml#/components/responses/Forbidden}
+        '404': {$ref: ../../common/errors.yaml#/components/responses/NotFound}
+        '409': {$ref: ../../common/errors.yaml#/components/responses/Conflict}
+        '415': {$ref: ../../common/errors.yaml#/components/responses/UnsupportedMediaType}
+  /publishing/content/{content_id}/preview:
+    post:
+      tags: [Publishing]
+      summary: Issue a short-lived one-time public preview token.
+      operationId: issuePublishingPreview
+      x-surfaces: [admin]
+      x-required-permission: publishing.pages.read.own
+      security:
+        - SessionCookie: []
+          CSRFToken: []
+      parameters:
+        - name: content_id
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/PreviewIssueRequest'}
+      responses:
+        '201':
+          description: One-time preview token; never persist or log the raw token.
+          headers:
+            Cache-Control: {schema: {type: string, enum: [no-store]}}
+            X-Robots-Tag: {schema: {type: string, enum: ['noindex, nofollow']}}
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/PreviewIssueResponse'}
+        '401': {$ref: ../../common/errors.yaml#/components/responses/Unauthorized}
+        '403': {$ref: ../../common/errors.yaml#/components/responses/Forbidden}
+        '404': {$ref: ../../common/errors.yaml#/components/responses/NotFound}
+        '415': {$ref: ../../common/errors.yaml#/components/responses/UnsupportedMediaType}
+        '422': {$ref: ../../common/errors.yaml#/components/responses/BadRequest}
+components:
+  schemas:
+    ContentMutationRequest:
+      type: object
+      additionalProperties: false
+      required: [locale, slug, path, title, excerpt, blocks, seo, geo, aeo]
+      properties:
+        kind: {type: string, enum: [page, post]}
+        content_key: {type: string, minLength: 1, maxLength: 128}
+        translation_id: {type: string, format: uuid}
+        locale: {type: string, minLength: 2, maxLength: 255}
+        slug: {type: string, minLength: 1, maxLength: 160}
+        path: {type: string, minLength: 1, maxLength: 512}
+        title: {type: string, minLength: 1, maxLength: 255}
+        excerpt: {type: string, maxLength: 2000}
+        blocks:
+          type: array
+          minItems: 1
+          maxItems: 500
+          items: {$ref: '#/components/schemas/Block'}
+        seo: {$ref: '#/components/schemas/SEOFields'}
+        geo: {$ref: '#/components/schemas/GEOFields'}
+        aeo: {$ref: '#/components/schemas/AEOFields'}
+        expected_version: {type: integer, minimum: 1}
+    ContentUpdateRequest:
+      allOf:
+        - {$ref: '#/components/schemas/ContentMutationRequest'}
+        - type: object
+          required: [translation_id, expected_version]
+    ContentDeleteRequest:
+      type: object
+      additionalProperties: false
+      required: [translation_id, locale_id, expected_version]
+      properties:
+        translation_id: {type: string, format: uuid}
+        locale_id: {type: string, format: uuid}
+        expected_version: {type: integer, minimum: 1}
+    ContentResponse:
+      type: object
+      additionalProperties: false
+      required: [content_id, translation_id, account_id, locale_id, kind, content_key, content_status, content_version, translation_status, translation_version, slug, path, title, excerpt, blocks, seo, geo, aeo]
+      properties:
+        content_id: {type: string, format: uuid}
+        translation_id: {type: string, format: uuid}
+        account_id: {type: string, format: uuid}
+        locale_id: {type: string, format: uuid}
+        kind: {type: string, enum: [page, post]}
+        content_key: {type: string}
+        content_status: {type: string, enum: [draft, review, published, scheduled, archived]}
+        content_version: {type: integer, minimum: 1}
+        translation_status: {type: string, enum: [draft, review, published, scheduled, archived]}
+        translation_version: {type: integer, minimum: 1}
+        slug: {type: string}
+        path: {type: string}
+        title: {type: string}
+        excerpt: {type: string}
+        blocks:
+          type: array
+          items: {$ref: '#/components/schemas/Block'}
+        seo: {$ref: '#/components/schemas/SEOFields'}
+        geo: {$ref: '#/components/schemas/GEOFields'}
+        aeo: {$ref: '#/components/schemas/AEOFields'}
+    Block:
+      type: object
+      additionalProperties: false
+      required: [type, data]
+      properties:
+        type: {type: string, enum: [text, image, callout, answer, steps, comparison]}
+        data: {type: object, additionalProperties: true}
+    SEOFields:
+      type: object
+      additionalProperties: false
+      required: [title, description, canonical_url, robots]
+      properties:
+        title: {type: string, maxLength: 255}
+        description: {type: string, maxLength: 320}
+        canonical_url: {type: string}
+        robots: {type: string}
+        structured_data: {type: object, additionalProperties: true}
+    GEOFields:
+      type: object
+      additionalProperties: false
+      required: [region, locality]
+      properties:
+        region: {type: string, maxLength: 128}
+        locality: {type: string, maxLength: 128}
+    AEOFields:
+      type: object
+      additionalProperties: false
+      required: [question, answer]
+      properties:
+        question: {type: string, maxLength: 255}
+        answer: {type: string, maxLength: 20000}
+    PreviewIssueRequest:
+      type: object
+      additionalProperties: false
+      required: [translation_id, revision_id]
+      properties:
+        translation_id: {type: string, format: uuid}
+        revision_id: {type: string, format: uuid}
+    PreviewIssueResponse:
+      type: object
+      additionalProperties: false
+      required: [token, token_id, revision_id, expires_at]
+      properties:
+        token: {type: string, minLength: 1}
+        token_id: {type: string, format: uuid}
+        revision_id: {type: string, format: uuid}
+        expires_at: {type: string, format: date-time}

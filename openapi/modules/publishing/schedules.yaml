@@ -1,0 +1,110 @@
+paths:
+  /publishing/schedules:
+    get:
+      tags: [Publishing]
+      summary: List publication schedules for the current account.
+      operationId: listPublishingSchedules
+      x-surfaces: [admin]
+      x-required-permission: publishing.pages.read.own
+      security:
+        - SessionCookie: []
+      parameters:
+        - name: limit
+          in: query
+          schema: {type: integer, minimum: 1, maximum: 100, default: 25}
+      responses:
+        '200':
+          description: Account-scoped publication schedules.
+          headers:
+            Cache-Control: {schema: {type: string, enum: [no-store]}}
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ScheduleListResponse'}
+        '400': {$ref: ../../common/errors.yaml#/components/responses/BadRequest}
+        '401': {$ref: ../../common/errors.yaml#/components/responses/Unauthorized}
+        '403': {$ref: ../../common/errors.yaml#/components/responses/Forbidden}
+    post:
+      tags: [Publishing]
+      summary: Schedule a publish/unpublish operation with an idempotency key.
+      operationId: createPublishingSchedule
+      x-surfaces: [admin]
+      x-required-permission: publishing.pages.publish.any
+      security:
+        - SessionCookie: []
+          CSRFToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/ScheduleRequest'}
+      responses:
+        '201':
+          description: The schedule was created.
+          headers:
+            Cache-Control: {schema: {type: string, enum: [no-store]}}
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Schedule'}
+        '400': {$ref: ../../common/errors.yaml#/components/responses/BadRequest}
+        '401': {$ref: ../../common/errors.yaml#/components/responses/Unauthorized}
+        '403': {$ref: ../../common/errors.yaml#/components/responses/Forbidden}
+        '409': {$ref: ../../common/errors.yaml#/components/responses/Conflict}
+        '415': {$ref: ../../common/errors.yaml#/components/responses/UnsupportedMediaType}
+        '422': {$ref: ../../common/errors.yaml#/components/responses/BadRequest}
+  /publishing/schedules/{schedule_id}:
+    delete:
+      tags: [Publishing]
+      summary: Cancel a pending publication schedule.
+      operationId: cancelPublishingSchedule
+      x-surfaces: [admin]
+      x-required-permission: publishing.pages.publish.any
+      security:
+        - SessionCookie: []
+          CSRFToken: []
+      parameters:
+        - name: schedule_id
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+      responses:
+        '204': {description: The schedule was canceled.}
+        '400': {$ref: ../../common/errors.yaml#/components/responses/BadRequest}
+        '401': {$ref: ../../common/errors.yaml#/components/responses/Unauthorized}
+        '403': {$ref: ../../common/errors.yaml#/components/responses/Forbidden}
+        '404': {$ref: ../../common/errors.yaml#/components/responses/NotFound}
+        '409': {$ref: ../../common/errors.yaml#/components/responses/Conflict}
+        '415': {$ref: ../../common/errors.yaml#/components/responses/UnsupportedMediaType}
+components:
+  schemas:
+    ScheduleRequest:
+      type: object
+      additionalProperties: false
+      required: [translation_id, publish_at, expected_version, idempotency_key]
+      properties:
+        translation_id: {type: string, format: uuid}
+        publish_at: {type: string, format: date-time}
+        unpublish_at: {type: string, format: date-time}
+        expected_version: {type: integer, minimum: 1}
+        idempotency_key: {type: string, minLength: 1, maxLength: 128}
+    ScheduleListResponse:
+      type: object
+      additionalProperties: false
+      required: [items]
+      properties:
+        items:
+          type: array
+          items: {$ref: '#/components/schemas/Schedule'}
+    Schedule:
+      type: object
+      additionalProperties: false
+      required: [id, account_id, translation_id, publish_at, expected_version, idempotency_key, state, attempts]
+      properties:
+        id: {type: string, format: uuid}
+        account_id: {type: string, format: uuid}
+        translation_id: {type: string, format: uuid}
+        publish_at: {type: string, format: date-time}
+        unpublish_at: {type: string, format: date-time}
+        expected_version: {type: integer, minimum: 1}
+        idempotency_key: {type: string}
+        state: {type: string, enum: [pending, leased, succeeded, failed, canceled]}
+        attempts: {type: integer, minimum: 0}

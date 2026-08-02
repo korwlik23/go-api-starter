@@ -53,6 +53,10 @@ func TestOpenAPISurfaceIsolation(t *testing.T) {
 		"resetPassword", "revokeRoleAssignment", "revokeSession", "setDefaultLocale",
 		"updateAuthorizationRole", "updateLocale", "updateLocalePreferences", "updateLocaleStatus",
 		"createAuthorizationRole",
+		"createPublishingPage", "updatePublishingPage", "deletePublishingPage",
+		"createPublishingPost", "updatePublishingPost", "deletePublishingPost",
+		"issuePublishingPreview", "listPublishingRevisions", "rollbackPublishingRevision",
+		"transitionPublishingWorkflow", "listPublishingSchedules", "createPublishingSchedule", "cancelPublishingSchedule",
 		"updateTranslationCatalog", "updateAdminUserStatus", "updateMembershipStatus", "verifyMFA",
 	}, surfaces["admin"])
 	require.ElementsMatch(t, []string{
@@ -80,6 +84,10 @@ func TestGeneratedSurfaceBundlesContainOnlyTheirOperations(t *testing.T) {
 			"resetPassword", "revokeRoleAssignment", "revokeSession", "setDefaultLocale",
 			"updateAuthorizationRole", "updateLocale", "updateLocalePreferences", "updateLocaleStatus",
 			"createAuthorizationRole",
+			"createPublishingPage", "updatePublishingPage", "deletePublishingPage",
+			"createPublishingPost", "updatePublishingPost", "deletePublishingPost",
+			"issuePublishingPreview", "listPublishingRevisions", "rollbackPublishingRevision",
+			"transitionPublishingWorkflow", "listPublishingSchedules", "createPublishingSchedule", "cancelPublishingSchedule",
 			"updateTranslationCatalog", "updateAdminUserStatus", "updateMembershipStatus", "verifyMFA",
 		},
 		"public": {

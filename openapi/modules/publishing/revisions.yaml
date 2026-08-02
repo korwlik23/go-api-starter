@@ -1,0 +1,134 @@
+paths:
+  /publishing/content/{content_id}/revisions:
+    get:
+      tags: [Publishing]
+      summary: List immutable revisions for one content translation.
+      operationId: listPublishingRevisions
+      x-surfaces: [admin]
+      x-required-permission: publishing.revisions.read.own
+      security:
+        - SessionCookie: []
+      parameters:
+        - name: content_id
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+        - name: translation_id
+          in: query
+          required: true
+          schema: {type: string, format: uuid}
+        - name: limit
+          in: query
+          schema: {type: integer, minimum: 1, maximum: 100, default: 25}
+        - name: after_created_at
+          in: query
+          schema: {type: string, format: date-time}
+        - name: after_id
+          in: query
+          schema: {type: string, format: uuid}
+      responses:
+        '200':
+          description: Immutable revisions in stable created-at/id order.
+          headers:
+            Cache-Control: {schema: {type: string, enum: [no-store]}}
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/RevisionListResponse'}
+        '400': {$ref: ../../common/errors.yaml#/components/responses/BadRequest}
+        '401': {$ref: ../../common/errors.yaml#/components/responses/Unauthorized}
+        '403': {$ref: ../../common/errors.yaml#/components/responses/Forbidden}
+        '404': {$ref: ../../common/errors.yaml#/components/responses/NotFound}
+  /publishing/content/{content_id}/revisions/{revision_id}/rollback:
+    post:
+      tags: [Publishing]
+      summary: Restore a revision into the current content translation.
+      operationId: rollbackPublishingRevision
+      x-surfaces: [admin]
+      x-required-permission: publishing.revisions.rollback.own
+      security:
+        - SessionCookie: []
+          CSRFToken: []
+      parameters:
+        - name: content_id
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+        - name: revision_id
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/RevisionRollbackRequest'}
+      responses:
+        '200':
+          description: The revision and restored content state.
+          headers:
+            Cache-Control: {schema: {type: string, enum: [no-store]}}
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/RevisionRollbackResponse'}
+        '400': {$ref: ../../common/errors.yaml#/components/responses/BadRequest}
+        '401': {$ref: ../../common/errors.yaml#/components/responses/Unauthorized}
+        '403': {$ref: ../../common/errors.yaml#/components/responses/Forbidden}
+        '404': {$ref: ../../common/errors.yaml#/components/responses/NotFound}
+        '409': {$ref: ../../common/errors.yaml#/components/responses/Conflict}
+        '415': {$ref: ../../common/errors.yaml#/components/responses/UnsupportedMediaType}
+components:
+  schemas:
+    RevisionListResponse:
+      type: object
+      additionalProperties: false
+      required: [items]
+      properties:
+        items:
+          type: array
+          items: {$ref: '#/components/schemas/Revision'}
+        next: {$ref: '#/components/schemas/RevisionCursor'}
+    RevisionCursor:
+      type: object
+      additionalProperties: false
+      required: [created_at, id]
+      properties:
+        created_at: {type: string, format: date-time}
+        id: {type: string, format: uuid}
+    Revision:
+      type: object
+      additionalProperties: false
+      required: [id, content_id, translation_id, author_id, snapshot_hash, change_summary, source_version, created_at]
+      properties:
+        id: {type: string, format: uuid}
+        content_id: {type: string, format: uuid}
+        translation_id: {type: string, format: uuid}
+        author_id: {type: string, format: uuid}
+        snapshot_hash: {type: string, pattern: '^[a-f0-9]{64}$'}
+        change_summary: {type: string, maxLength: 1000}
+        source_version: {type: integer, minimum: 1}
+        created_at: {type: string, format: date-time}
+    RevisionRollbackRequest:
+      type: object
+      additionalProperties: false
+      required: [translation_id, locale_id, expected_version, change_summary]
+      properties:
+        translation_id: {type: string, format: uuid}
+        locale_id: {type: string, format: uuid}
+        expected_version: {type: integer, minimum: 1}
+        change_summary: {type: string, maxLength: 1000}
+    RevisionRollbackResponse:
+      type: object
+      additionalProperties: false
+      required: [revision, content]
+      properties:
+        revision: {$ref: '#/components/schemas/Revision'}
+        content:
+          type: object
+          additionalProperties: false
+          required: [content_id, translation_id, content_version, translation_version, status]
+          properties:
+            content_id: {type: string, format: uuid}
+            translation_id: {type: string, format: uuid}
+            content_version: {type: integer, minimum: 1}
+            translation_version: {type: integer, minimum: 1}
+            status: {type: string, enum: [draft, review, published, scheduled, archived]}
