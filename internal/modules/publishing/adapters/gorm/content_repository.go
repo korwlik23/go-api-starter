@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	publishingdomain "github.com/korwlik23/go-api-starter/internal/modules/publishing/domain"
@@ -60,6 +61,7 @@ type contentDetailRecord struct {
 	GEOLocality        *string       `gorm:"column:geo_locality"`
 	AEOQuestion        *string       `gorm:"column:aeo_question"`
 	AEOAnswer          *string       `gorm:"column:aeo_answer"`
+	PublishedAt        *time.Time    `gorm:"column:published_at"`
 	UpdatedAt          time.Time     `gorm:"column:updated_at"`
 }
 
@@ -217,6 +219,149 @@ func (repository *ContentRepository) Get(
 	return mapContentDetailRecord(record)
 }
 
+// ListPublishedAlternates returns translations for the same content item
+// that are safe to expose as language switch targets. Both content and
+// translation publication states are checked in SQL, and the account is part
+// of every join predicate to prevent cross-tenant disclosure.
+func (repository *ContentRepository) ListPublishedAlternates(
+	ctx context.Context,
+	accountID string,
+	contentID string,
+	excludeLocaleID string,
+) ([]ports.ContentDetail, error) {
+	if repository == nil || repository.db == nil || ctx == nil {
+		return nil, ErrInvalidContentRepository
+	}
+	if err := ports.ValidateContentListQuery(ports.ContentListQuery{
+		AccountID: accountID, LocaleID: excludeLocaleID, Limit: 1,
+	}); err != nil || strings.TrimSpace(contentID) == "" {
+		return nil, ports.ErrInvalidContentQuery
+	}
+	encodedAccountID, encodedContentID, encodedLocaleID, err :=
+		repository.encodeIDs(accountID, contentID, excludeLocaleID)
+	if err != nil {
+		return nil, ports.ErrInvalidContentQuery
+	}
+	db, err := repository.detailQuery(ctx)
+	if err != nil {
+		return nil, err
+	}
+	var records []contentDetailRecord
+	result := db.
+		Where(
+			"content_items.account_id = ? AND content_translations.content_id = ? "+
+				"AND content_translations.locale_id <> ? "+
+				"AND content_items.status = ? AND content_translations.status = ? "+
+				"AND content_items.deleted_at IS NULL AND content_translations.deleted_at IS NULL",
+			encodedAccountID, encodedContentID, encodedLocaleID,
+			string(publishingdomain.StatusPublished), string(publishingdomain.StatusPublished),
+		).
+		Order("content_translations.locale_id ASC, content_translations.path ASC").
+		Scan(&records)
+	if result.Error != nil {
+		return nil, fmt.Errorf("list public content alternates: %w", result.Error)
+	}
+	items := make([]ports.ContentDetail, 0, len(records))
+	for _, record := range records {
+		item, mapErr := mapContentDetailRecord(record)
+		if mapErr != nil {
+			return nil, mapErr
+		}
+		items = append(items, item)
+	}
+	return items, nil
+}
+
+// ListPublishedPosts is the public collection query. It has its own method
+// instead of reusing the administrative List query so a caller cannot omit
+// publication predicates by accident.
+func (repository *ContentRepository) ListPublishedPosts(
+	ctx context.Context,
+	accountID string,
+	localeID string,
+	limit int,
+	after *ports.ContentCursor,
+) (ports.ContentListPage, error) {
+	if repository == nil || repository.db == nil || ctx == nil {
+		return ports.ContentListPage{}, ErrInvalidContentRepository
+	}
+	kind := publishingdomain.KindPost
+	query := ports.ContentListQuery{
+		AccountID: accountID, LocaleID: localeID, Kind: &kind,
+		Limit: limit, After: after,
+	}
+	if err := ports.ValidateContentListQuery(query); err != nil {
+		return ports.ContentListPage{}, err
+	}
+	encodedAccountID, err := databaseid.Encode(repository.db.Dialector.Name(), accountID)
+	if err != nil {
+		return ports.ContentListPage{}, ports.ErrInvalidContentQuery
+	}
+	encodedLocaleID, err := databaseid.Encode(repository.db.Dialector.Name(), localeID)
+	if err != nil {
+		return ports.ContentListPage{}, ports.ErrInvalidContentQuery
+	}
+	db, err := repository.connection(ctx)
+	if err != nil {
+		return ports.ContentListPage{}, err
+	}
+	db = db.WithContext(ctx).
+		Table("content_translations").
+		Select(
+			"content_items.id AS content_id, content_items.account_id, "+
+				"content_items.kind, content_items.content_key, "+
+				"content_items.status AS content_status, content_items.version AS content_version, "+
+				"content_translations.id AS translation_id, content_translations.locale_id, "+
+				"content_translations.slug, content_translations.path, content_translations.title, "+
+				"content_translations.status AS translation_status, "+
+				"content_translations.version AS translation_version, content_translations.updated_at").
+		Joins(
+			"JOIN content_items ON content_items.id = content_translations.content_id "+
+				"AND content_items.account_id = content_translations.account_id").
+		Where(
+			"content_items.account_id = ? AND content_translations.locale_id = ? "+
+				"AND content_items.kind = ? AND content_items.status = ? "+
+				"AND content_translations.status = ? "+
+				"AND content_items.deleted_at IS NULL AND content_translations.deleted_at IS NULL",
+			encodedAccountID, encodedLocaleID, string(publishingdomain.KindPost),
+			string(publishingdomain.StatusPublished), string(publishingdomain.StatusPublished),
+		)
+	if after != nil {
+		cursorID, encodeErr := databaseid.Encode(repository.db.Dialector.Name(), after.ID)
+		if encodeErr != nil {
+			return ports.ContentListPage{}, ports.ErrInvalidContentQuery
+		}
+		db = db.Where(
+			"(content_translations.updated_at < ? OR "+
+				"(content_translations.updated_at = ? AND content_translations.id < ?))",
+			after.UpdatedAt, after.UpdatedAt, cursorID,
+		)
+	}
+	var records []contentListRecord
+	if err := db.
+		Order("content_translations.updated_at DESC, content_translations.id DESC").
+		Limit(limit + 1).
+		Scan(&records).Error; err != nil {
+		return ports.ContentListPage{}, fmt.Errorf("list public posts: %w", err)
+	}
+	page := ports.ContentListPage{Items: make([]ports.ContentListItem, 0, limit)}
+	if len(records) > limit {
+		records = records[:limit]
+		last := records[len(records)-1]
+		page.Next = &ports.ContentCursor{
+			UpdatedAt: last.UpdatedAt.UTC(), ID: last.TranslationID.String(),
+		}
+	}
+	for _, record := range records {
+		item, mapErr := mapContentListRecord(record)
+		if mapErr != nil {
+			return ports.ContentListPage{}, mapErr
+		}
+		page.Items = append(page.Items, item)
+	}
+	return page, nil
+}
+
 func (repository *ContentRepository) FindPublic(
 	ctx context.Context,
 	accountID string,
@@ -284,7 +429,8 @@ func (repository *ContentRepository) detailQuery(ctx context.Context) (*gormdb.D
 				"content_translations.blocks, content_translations.seo_title, " +
 				"content_translations.seo_description, content_translations.geo_region, " +
 				"content_translations.geo_locality, content_translations.aeo_question, " +
-				"content_translations.aeo_answer, content_translations.updated_at").
+				"content_translations.aeo_answer, content_translations.published_at, " +
+				"content_translations.updated_at").
 		Joins(
 			"JOIN content_items ON content_items.id = content_translations.content_id " +
 				"AND content_items.account_id = content_translations.account_id"), nil
@@ -389,6 +535,10 @@ func mapContentDetailRecord(record contentDetailRecord) (ports.ContentDetail, er
 	detail.GEO.Locality = stringPointer(record.GEOLocality)
 	detail.AEO.Question = stringPointer(record.AEOQuestion)
 	detail.AEO.Answer = stringPointer(record.AEOAnswer)
+	if record.PublishedAt != nil {
+		publishedAt := record.PublishedAt.UTC()
+		detail.PublishedAt = &publishedAt
+	}
 	return detail, nil
 }
 

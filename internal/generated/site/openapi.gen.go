@@ -9,9 +9,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/oapi-codegen/runtime"
+	openapi_types "github.com/oapi-codegen/runtime/types"
 )
 
 // Defines values for LivenessResponseStatus.
@@ -41,6 +43,105 @@ func (e LocaleDirection) Valid() bool {
 	case Ltr:
 		return true
 	case Rtl:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for PublicBlockType.
+const (
+	Answer     PublicBlockType = "answer"
+	Callout    PublicBlockType = "callout"
+	Comparison PublicBlockType = "comparison"
+	Image      PublicBlockType = "image"
+	Steps      PublicBlockType = "steps"
+	Text       PublicBlockType = "text"
+)
+
+// Valid indicates whether the value is a known member of the PublicBlockType enum.
+func (e PublicBlockType) Valid() bool {
+	switch e {
+	case Answer:
+		return true
+	case Callout:
+		return true
+	case Comparison:
+		return true
+	case Image:
+		return true
+	case Steps:
+		return true
+	case Text:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for PublicContentContentStatus.
+const (
+	PublicContentContentStatusPublished PublicContentContentStatus = "published"
+)
+
+// Valid indicates whether the value is a known member of the PublicContentContentStatus enum.
+func (e PublicContentContentStatus) Valid() bool {
+	switch e {
+	case PublicContentContentStatusPublished:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for PublicContentKind.
+const (
+	Page PublicContentKind = "page"
+	Post PublicContentKind = "post"
+)
+
+// Valid indicates whether the value is a known member of the PublicContentKind enum.
+func (e PublicContentKind) Valid() bool {
+	switch e {
+	case Page:
+		return true
+	case Post:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for PublicContentTranslationStatus.
+const (
+	PublicContentTranslationStatusPublished PublicContentTranslationStatus = "published"
+)
+
+// Valid indicates whether the value is a known member of the PublicContentTranslationStatus enum.
+func (e PublicContentTranslationStatus) Valid() bool {
+	switch e {
+	case PublicContentTranslationStatusPublished:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for PublicMenuItemTargetKind.
+const (
+	ContentKey   PublicMenuItemTargetKind = "content_key"
+	ExternalUrl  PublicMenuItemTargetKind = "external_url"
+	InternalPath PublicMenuItemTargetKind = "internal_path"
+)
+
+// Valid indicates whether the value is a known member of the PublicMenuItemTargetKind enum.
+func (e PublicMenuItemTargetKind) Valid() bool {
+	switch e {
+	case ContentKey:
+		return true
+	case ExternalUrl:
+		return true
+	case InternalPath:
 		return true
 	default:
 		return false
@@ -126,6 +227,125 @@ type Problem struct {
 	RequestId string `json:"request_id"`
 }
 
+// PublicAEO defines model for PublicAEO.
+type PublicAEO struct {
+	Answer   *string `json:"answer,omitempty"`
+	Question *string `json:"question,omitempty"`
+}
+
+// PublicAlternate defines model for PublicAlternate.
+type PublicAlternate struct {
+	LocaleId      openapi_types.UUID `json:"locale_id"`
+	Path          string             `json:"path"`
+	Slug          string             `json:"slug"`
+	Title         string             `json:"title"`
+	TranslationId openapi_types.UUID `json:"translation_id"`
+}
+
+// PublicBlock defines model for PublicBlock.
+type PublicBlock struct {
+	Data map[string]interface{} `json:"data"`
+	Type PublicBlockType        `json:"type"`
+}
+
+// PublicBlockType defines model for PublicBlock.Type.
+type PublicBlockType string
+
+// PublicContent defines model for PublicContent.
+type PublicContent struct {
+	Aeo                PublicAEO                      `json:"aeo"`
+	Alternates         []PublicAlternate              `json:"alternates"`
+	Blocks             []PublicBlock                  `json:"blocks"`
+	ContentId          openapi_types.UUID             `json:"content_id"`
+	ContentKey         string                         `json:"content_key"`
+	ContentStatus      PublicContentContentStatus     `json:"content_status"`
+	ContentVersion     int                            `json:"content_version"`
+	Excerpt            string                         `json:"excerpt"`
+	Geo                PublicGEO                      `json:"geo"`
+	Kind               PublicContentKind              `json:"kind"`
+	LocaleId           openapi_types.UUID             `json:"locale_id"`
+	Path               string                         `json:"path"`
+	PublishedAt        *time.Time                     `json:"published_at,omitempty"`
+	Seo                PublicSEO                      `json:"seo"`
+	Slug               string                         `json:"slug"`
+	Title              string                         `json:"title"`
+	TranslationId      openapi_types.UUID             `json:"translation_id"`
+	TranslationStatus  PublicContentTranslationStatus `json:"translation_status"`
+	TranslationVersion int                            `json:"translation_version"`
+	UpdatedAt          time.Time                      `json:"updated_at"`
+}
+
+// PublicContentContentStatus defines model for PublicContent.ContentStatus.
+type PublicContentContentStatus string
+
+// PublicContentKind defines model for PublicContent.Kind.
+type PublicContentKind string
+
+// PublicContentTranslationStatus defines model for PublicContent.TranslationStatus.
+type PublicContentTranslationStatus string
+
+// PublicGEO defines model for PublicGEO.
+type PublicGEO struct {
+	Locality *string `json:"locality,omitempty"`
+	Region   *string `json:"region,omitempty"`
+}
+
+// PublicMenu defines model for PublicMenu.
+type PublicMenu struct {
+	Id       openapi_types.UUID `json:"id"`
+	Items    []PublicMenuItem   `json:"items"`
+	Key      string             `json:"key"`
+	LocaleId openapi_types.UUID `json:"locale_id"`
+	Name     string             `json:"name"`
+	Version  int                `json:"version"`
+}
+
+// PublicMenuItem defines model for PublicMenuItem.
+type PublicMenuItem struct {
+	Children   *[]PublicMenuItem        `json:"children,omitempty"`
+	Id         openapi_types.UUID       `json:"id"`
+	Label      string                   `json:"label"`
+	ParentId   *openapi_types.UUID      `json:"parent_id,omitempty"`
+	Position   int                      `json:"position"`
+	Target     string                   `json:"target"`
+	TargetKind PublicMenuItemTargetKind `json:"target_kind"`
+}
+
+// PublicMenuItemTargetKind defines model for PublicMenuItem.TargetKind.
+type PublicMenuItemTargetKind string
+
+// PublicPostCursor defines model for PublicPostCursor.
+type PublicPostCursor struct {
+	Id        openapi_types.UUID `json:"id"`
+	UpdatedAt time.Time          `json:"updated_at"`
+}
+
+// PublicPostItem defines model for PublicPostItem.
+type PublicPostItem struct {
+	ContentId     openapi_types.UUID `json:"content_id"`
+	LocaleId      openapi_types.UUID `json:"locale_id"`
+	Path          string             `json:"path"`
+	Slug          string             `json:"slug"`
+	Title         string             `json:"title"`
+	TranslationId openapi_types.UUID `json:"translation_id"`
+	UpdatedAt     time.Time          `json:"updated_at"`
+}
+
+// PublicPostListResponse defines model for PublicPostListResponse.
+type PublicPostListResponse struct {
+	Items []PublicPostItem  `json:"items"`
+	Next  *PublicPostCursor `json:"next,omitempty"`
+}
+
+// PublicSEO defines model for PublicSEO.
+type PublicSEO struct {
+	CanonicalUrl   *string                 `json:"canonical_url,omitempty"`
+	Description    string                  `json:"description"`
+	Robots         *string                 `json:"robots,omitempty"`
+	StructuredData *map[string]interface{} `json:"structured_data,omitempty"`
+	Title          string                  `json:"title"`
+}
+
 // ReadinessResponse defines model for ReadinessResponse.
 type ReadinessResponse struct {
 	Status ReadinessResponseStatus `json:"status"`
@@ -150,6 +370,12 @@ type TranslationCatalogResponse struct {
 	Version  int               `json:"version"`
 }
 
+// BadRequest defines model for BadRequest.
+type BadRequest = ErrorEnvelope
+
+// InternalServerError defines model for InternalServerError.
+type InternalServerError = ErrorEnvelope
+
 // NotFound defines model for NotFound.
 type NotFound = ErrorEnvelope
 
@@ -160,6 +386,11 @@ type TooManyRequests = ErrorEnvelope
 type GetTranslationCatalogParams struct {
 	Locale   string `form:"locale" json:"locale"`
 	Category string `form:"category" json:"category"`
+}
+
+// ListPublicPostsParams defines parameters for ListPublicPosts.
+type ListPublicPostsParams struct {
+	Limit *int `form:"limit,omitempty" json:"limit,omitempty"`
 }
 
 // ServerInterface represents all server handlers.
@@ -173,6 +404,18 @@ type ServerInterface interface {
 	// GetTranslationCatalog Read a versioned translation category for an enabled locale.
 	// (GET /localization/catalog)
 	GetTranslationCatalog(c *gin.Context, params GetTranslationCatalogParams)
+	// GetPublicContent Resolve one published content translation for the public site.
+	// (GET /public/content/{locale}/{path})
+	GetPublicContent(c *gin.Context, locale string, path string)
+	// GetPublicMenu Resolve one enabled public navigation menu for a locale.
+	// (GET /public/menus/{locale}/{location})
+	GetPublicMenu(c *gin.Context, locale string, location string)
+	// ListPublicPosts List published posts for one public locale.
+	// (GET /public/posts/{locale})
+	ListPublicPosts(c *gin.Context, locale string, params ListPublicPostsParams)
+	// GetPublicPost Resolve one published post by locale and slug.
+	// (GET /public/posts/{locale}/{slug})
+	GetPublicPost(c *gin.Context, locale string, slug string)
 	// GetReadiness Report bounded readiness without exposing dependency detail.
 	// (GET /readyz)
 	GetReadiness(c *gin.Context)
@@ -248,6 +491,144 @@ func (siw *ServerInterfaceWrapper) GetTranslationCatalog(c *gin.Context) {
 	siw.Handler.GetTranslationCatalog(c, params)
 }
 
+// GetPublicContent operation middleware
+func (siw *ServerInterfaceWrapper) GetPublicContent(c *gin.Context) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "locale" -------------
+	var locale string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "locale", c.Param("locale"), &locale, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter locale: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// ------------- Path parameter "path" -------------
+	var path string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "path", c.Param("path"), &path, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter path: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.GetPublicContent(c, locale, path)
+}
+
+// GetPublicMenu operation middleware
+func (siw *ServerInterfaceWrapper) GetPublicMenu(c *gin.Context) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "locale" -------------
+	var locale string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "locale", c.Param("locale"), &locale, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter locale: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// ------------- Path parameter "location" -------------
+	var location string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "location", c.Param("location"), &location, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter location: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.GetPublicMenu(c, locale, location)
+}
+
+// ListPublicPosts operation middleware
+func (siw *ServerInterfaceWrapper) ListPublicPosts(c *gin.Context) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "locale" -------------
+	var locale string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "locale", c.Param("locale"), &locale, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter locale: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params ListPublicPostsParams
+
+	// ------------- Optional query parameter "limit" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "limit", c.Request.URL.Query(), &params.Limit, runtime.BindQueryParameterOptions{Type: "integer", Format: ""})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter limit: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.ListPublicPosts(c, locale, params)
+}
+
+// GetPublicPost operation middleware
+func (siw *ServerInterfaceWrapper) GetPublicPost(c *gin.Context) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "locale" -------------
+	var locale string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "locale", c.Param("locale"), &locale, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter locale: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	// ------------- Path parameter "slug" -------------
+	var slug string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "slug", c.Param("slug"), &slug, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter slug: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.GetPublicPost(c, locale, slug)
+}
+
 // GetReadiness operation middleware
 func (siw *ServerInterfaceWrapper) GetReadiness(c *gin.Context) {
 
@@ -291,8 +672,16 @@ func RegisterHandlersWithOptions(router gin.IRouter, si ServerInterface, options
 	router.GET(options.BaseURL+"/livez", wrapper.GetLiveness)
 	router.GET(options.BaseURL+"/locales", wrapper.ListLocales)
 	router.GET(options.BaseURL+"/localization/catalog", wrapper.GetTranslationCatalog)
+	router.GET(options.BaseURL+"/public/content/:locale/:path", wrapper.GetPublicContent)
+	router.GET(options.BaseURL+"/public/menus/:locale/:location", wrapper.GetPublicMenu)
+	router.GET(options.BaseURL+"/public/posts/:locale", wrapper.ListPublicPosts)
+	router.GET(options.BaseURL+"/public/posts/:locale/:slug", wrapper.GetPublicPost)
 	router.GET(options.BaseURL+"/readyz", wrapper.GetReadiness)
 }
+
+type BadRequestJSONResponse ErrorEnvelope
+
+type InternalServerErrorJSONResponse ErrorEnvelope
 
 type NotFoundJSONResponse ErrorEnvelope
 
@@ -414,6 +803,328 @@ func (response GetTranslationCatalog429JSONResponse) VisitGetTranslationCatalogR
 	return err
 }
 
+type GetPublicContentRequestObject struct {
+	Locale string `json:"locale"`
+	Path   string `json:"path"`
+}
+
+type GetPublicContentResponseObject interface {
+	VisitGetPublicContentResponse(w http.ResponseWriter) error
+}
+
+type GetPublicContent200ResponseHeaders struct {
+	CacheControl *string
+}
+
+type GetPublicContent200JSONResponse struct {
+	Body    PublicContent
+	Headers GetPublicContent200ResponseHeaders
+}
+
+func (response GetPublicContent200JSONResponse) VisitGetPublicContentResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if response.Headers.CacheControl != nil {
+		w.Header().Set("Cache-Control", fmt.Sprint(*response.Headers.CacheControl))
+	}
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetPublicContent404JSONResponse struct{ NotFoundJSONResponse }
+
+func (response GetPublicContent404JSONResponse) VisitGetPublicContentResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetPublicContent429JSONResponse struct{ TooManyRequestsJSONResponse }
+
+func (response GetPublicContent429JSONResponse) VisitGetPublicContentResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(429)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetPublicContent500JSONResponse struct {
+	InternalServerErrorJSONResponse
+}
+
+func (response GetPublicContent500JSONResponse) VisitGetPublicContentResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(500)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetPublicMenuRequestObject struct {
+	Locale   string `json:"locale"`
+	Location string `json:"location"`
+}
+
+type GetPublicMenuResponseObject interface {
+	VisitGetPublicMenuResponse(w http.ResponseWriter) error
+}
+
+type GetPublicMenu200ResponseHeaders struct {
+	CacheControl *string
+}
+
+type GetPublicMenu200JSONResponse struct {
+	Body    PublicMenu
+	Headers GetPublicMenu200ResponseHeaders
+}
+
+func (response GetPublicMenu200JSONResponse) VisitGetPublicMenuResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if response.Headers.CacheControl != nil {
+		w.Header().Set("Cache-Control", fmt.Sprint(*response.Headers.CacheControl))
+	}
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetPublicMenu404JSONResponse struct{ NotFoundJSONResponse }
+
+func (response GetPublicMenu404JSONResponse) VisitGetPublicMenuResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetPublicMenu429JSONResponse struct{ TooManyRequestsJSONResponse }
+
+func (response GetPublicMenu429JSONResponse) VisitGetPublicMenuResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(429)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetPublicMenu500JSONResponse struct {
+	InternalServerErrorJSONResponse
+}
+
+func (response GetPublicMenu500JSONResponse) VisitGetPublicMenuResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(500)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListPublicPostsRequestObject struct {
+	Locale string `json:"locale"`
+	Params ListPublicPostsParams
+}
+
+type ListPublicPostsResponseObject interface {
+	VisitListPublicPostsResponse(w http.ResponseWriter) error
+}
+
+type ListPublicPosts200ResponseHeaders struct {
+	CacheControl *string
+}
+
+type ListPublicPosts200JSONResponse struct {
+	Body    PublicPostListResponse
+	Headers ListPublicPosts200ResponseHeaders
+}
+
+func (response ListPublicPosts200JSONResponse) VisitListPublicPostsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if response.Headers.CacheControl != nil {
+		w.Header().Set("Cache-Control", fmt.Sprint(*response.Headers.CacheControl))
+	}
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListPublicPosts400JSONResponse struct{ BadRequestJSONResponse }
+
+func (response ListPublicPosts400JSONResponse) VisitListPublicPostsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListPublicPosts404JSONResponse struct{ NotFoundJSONResponse }
+
+func (response ListPublicPosts404JSONResponse) VisitListPublicPostsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListPublicPosts429JSONResponse struct{ TooManyRequestsJSONResponse }
+
+func (response ListPublicPosts429JSONResponse) VisitListPublicPostsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(429)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListPublicPosts500JSONResponse struct {
+	InternalServerErrorJSONResponse
+}
+
+func (response ListPublicPosts500JSONResponse) VisitListPublicPostsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(500)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetPublicPostRequestObject struct {
+	Locale string `json:"locale"`
+	Slug   string `json:"slug"`
+}
+
+type GetPublicPostResponseObject interface {
+	VisitGetPublicPostResponse(w http.ResponseWriter) error
+}
+
+type GetPublicPost200ResponseHeaders struct {
+	CacheControl *string
+}
+
+type GetPublicPost200JSONResponse struct {
+	Body    PublicContent
+	Headers GetPublicPost200ResponseHeaders
+}
+
+func (response GetPublicPost200JSONResponse) VisitGetPublicPostResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if response.Headers.CacheControl != nil {
+		w.Header().Set("Cache-Control", fmt.Sprint(*response.Headers.CacheControl))
+	}
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetPublicPost404JSONResponse struct{ NotFoundJSONResponse }
+
+func (response GetPublicPost404JSONResponse) VisitGetPublicPostResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetPublicPost429JSONResponse struct{ TooManyRequestsJSONResponse }
+
+func (response GetPublicPost429JSONResponse) VisitGetPublicPostResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(429)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetPublicPost500JSONResponse struct {
+	InternalServerErrorJSONResponse
+}
+
+func (response GetPublicPost500JSONResponse) VisitGetPublicPostResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(500)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
 type GetReadinessRequestObject struct {
 }
 
@@ -480,6 +1191,18 @@ type StrictServerInterface interface {
 	// GetTranslationCatalog Read a versioned translation category for an enabled locale.
 	// (GET /localization/catalog)
 	GetTranslationCatalog(ctx context.Context, request GetTranslationCatalogRequestObject) (GetTranslationCatalogResponseObject, error)
+	// GetPublicContent Resolve one published content translation for the public site.
+	// (GET /public/content/{locale}/{path})
+	GetPublicContent(ctx context.Context, request GetPublicContentRequestObject) (GetPublicContentResponseObject, error)
+	// GetPublicMenu Resolve one enabled public navigation menu for a locale.
+	// (GET /public/menus/{locale}/{location})
+	GetPublicMenu(ctx context.Context, request GetPublicMenuRequestObject) (GetPublicMenuResponseObject, error)
+	// ListPublicPosts List published posts for one public locale.
+	// (GET /public/posts/{locale})
+	ListPublicPosts(ctx context.Context, request ListPublicPostsRequestObject) (ListPublicPostsResponseObject, error)
+	// GetPublicPost Resolve one published post by locale and slug.
+	// (GET /public/posts/{locale}/{slug})
+	GetPublicPost(ctx context.Context, request GetPublicPostRequestObject) (GetPublicPostResponseObject, error)
 	// GetReadiness Report bounded readiness without exposing dependency detail.
 	// (GET /readyz)
 	GetReadiness(ctx context.Context, request GetReadinessRequestObject) (GetReadinessResponseObject, error)
@@ -609,6 +1332,114 @@ func (sh *strictHandler) GetTranslationCatalog(ctx *gin.Context, params GetTrans
 		sh.options.HandlerErrorFunc(ctx, err)
 	} else if validResponse, ok := response.(GetTranslationCatalogResponseObject); ok {
 		if err := validResponse.VisitGetTranslationCatalogResponse(ctx.Writer); err != nil {
+			sh.options.ResponseErrorHandlerFunc(ctx, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(ctx, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// GetPublicContent operation middleware
+func (sh *strictHandler) GetPublicContent(ctx *gin.Context, locale string, path string) {
+	var request GetPublicContentRequestObject
+
+	request.Locale = locale
+	request.Path = path
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.GetPublicContent(ctx, request.(GetPublicContentRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetPublicContent")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		sh.options.HandlerErrorFunc(ctx, err)
+	} else if validResponse, ok := response.(GetPublicContentResponseObject); ok {
+		if err := validResponse.VisitGetPublicContentResponse(ctx.Writer); err != nil {
+			sh.options.ResponseErrorHandlerFunc(ctx, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(ctx, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// GetPublicMenu operation middleware
+func (sh *strictHandler) GetPublicMenu(ctx *gin.Context, locale string, location string) {
+	var request GetPublicMenuRequestObject
+
+	request.Locale = locale
+	request.Location = location
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.GetPublicMenu(ctx, request.(GetPublicMenuRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetPublicMenu")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		sh.options.HandlerErrorFunc(ctx, err)
+	} else if validResponse, ok := response.(GetPublicMenuResponseObject); ok {
+		if err := validResponse.VisitGetPublicMenuResponse(ctx.Writer); err != nil {
+			sh.options.ResponseErrorHandlerFunc(ctx, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(ctx, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// ListPublicPosts operation middleware
+func (sh *strictHandler) ListPublicPosts(ctx *gin.Context, locale string, params ListPublicPostsParams) {
+	var request ListPublicPostsRequestObject
+
+	request.Locale = locale
+	request.Params = params
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.ListPublicPosts(ctx, request.(ListPublicPostsRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ListPublicPosts")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		sh.options.HandlerErrorFunc(ctx, err)
+	} else if validResponse, ok := response.(ListPublicPostsResponseObject); ok {
+		if err := validResponse.VisitListPublicPostsResponse(ctx.Writer); err != nil {
+			sh.options.ResponseErrorHandlerFunc(ctx, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(ctx, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// GetPublicPost operation middleware
+func (sh *strictHandler) GetPublicPost(ctx *gin.Context, locale string, slug string) {
+	var request GetPublicPostRequestObject
+
+	request.Locale = locale
+	request.Slug = slug
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.GetPublicPost(ctx, request.(GetPublicPostRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetPublicPost")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		sh.options.HandlerErrorFunc(ctx, err)
+	} else if validResponse, ok := response.(GetPublicPostResponseObject); ok {
+		if err := validResponse.VisitGetPublicPostResponse(ctx.Writer); err != nil {
 			sh.options.ResponseErrorHandlerFunc(ctx, err)
 		}
 	} else if response != nil {

@@ -34,3 +34,23 @@ func TestM3A5RegisterRoutesExposesDraftMutationContract(t *testing.T) {
 		require.True(t, exists, expected)
 	}
 }
+
+func TestM3C1RegisterPublicRoutesExposesReadOnlyPublishedContract(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	router := gin.New()
+	RegisterPublicRoutes(router.Group("/api/v1"), &PublicHandler{})
+
+	routes := make(map[string]struct{})
+	for _, route := range router.Routes() {
+		routes[route.Method+" "+route.Path] = struct{}{}
+	}
+	for _, expected := range []string{
+		"GET /api/v1/public/content/:locale/*path",
+		"GET /api/v1/public/posts/:locale",
+		"GET /api/v1/public/posts/:locale/:slug",
+		"GET /api/v1/public/menus/:locale/:location",
+	} {
+		_, exists := routes[expected]
+		require.True(t, exists, expected)
+	}
+}

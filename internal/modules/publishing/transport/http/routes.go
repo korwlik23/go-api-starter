@@ -32,3 +32,16 @@ func RegisterRoutes(router *gin.RouterGroup, handlers RouteHandlers) {
 		router.DELETE("/publishing/schedules/:schedule_id", handlers.Schedules.Cancel)
 	}
 }
+
+// RegisterPublicRoutes exposes read-only published content. It intentionally
+// has no authentication or CSRF middleware; account and locale resolution are
+// supplied when the public runtime is composed.
+func RegisterPublicRoutes(router *gin.RouterGroup, handler *PublicHandler) {
+	if router == nil || handler == nil {
+		return
+	}
+	router.GET("/public/content/:locale/*path", handler.GetContent)
+	router.GET("/public/posts/:locale", handler.ListPosts)
+	router.GET("/public/posts/:locale/:slug", handler.GetPost)
+	router.GET("/public/menus/:locale/:location", handler.GetMenu)
+}

@@ -55,9 +55,13 @@ func TestOpenAPISurfaceIsolation(t *testing.T) {
 		"createAuthorizationRole",
 		"updateTranslationCatalog", "updateAdminUserStatus", "updateMembershipStatus", "verifyMFA",
 	}, surfaces["admin"])
-	require.ElementsMatch(t, []string{"getTranslationCatalog", "listLocales"}, surfaces["public"])
 	require.ElementsMatch(t, []string{
-		"getLiveness", "getReadiness", "getTranslationCatalog", "listLocales",
+		"getPublicContent", "getPublicMenu", "getPublicPost", "getTranslationCatalog",
+		"listLocales", "listPublicPosts",
+	}, surfaces["public"])
+	require.ElementsMatch(t, []string{
+		"getLiveness", "getPublicContent", "getPublicMenu", "getPublicPost",
+		"getReadiness", "getTranslationCatalog", "listLocales", "listPublicPosts",
 	}, surfaces["site-server"])
 }
 
@@ -78,9 +82,13 @@ func TestGeneratedSurfaceBundlesContainOnlyTheirOperations(t *testing.T) {
 			"createAuthorizationRole",
 			"updateTranslationCatalog", "updateAdminUserStatus", "updateMembershipStatus", "verifyMFA",
 		},
-		"public": {"getTranslationCatalog", "listLocales"},
+		"public": {
+			"getPublicContent", "getPublicMenu", "getPublicPost", "getTranslationCatalog",
+			"listLocales", "listPublicPosts",
+		},
 		"site-server": {
-			"getLiveness", "getReadiness", "getTranslationCatalog", "listLocales",
+			"getLiveness", "getPublicContent", "getPublicMenu", "getPublicPost",
+			"getReadiness", "getTranslationCatalog", "listLocales", "listPublicPosts",
 		},
 	}
 

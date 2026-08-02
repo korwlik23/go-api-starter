@@ -1,0 +1,249 @@
+paths:
+  /public/content/{locale}/{path}:
+    get:
+      tags: [Publishing]
+      summary: Resolve one published content translation for the public site.
+      operationId: getPublicContent
+      x-surfaces: [public, site-server]
+      security: []
+      parameters:
+        - name: locale
+          in: path
+          required: true
+          schema:
+            type: string
+            minLength: 2
+        - name: path
+          in: path
+          required: true
+          description: Normalized public content path without the locale prefix.
+          schema:
+            type: string
+            minLength: 1
+      responses:
+        '200':
+          description: The published content translation and its published alternate locales.
+          headers:
+            Cache-Control:
+              schema: {type: string}
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/PublicContent'}
+        '404': {$ref: ../../common/errors.yaml#/components/responses/NotFound}
+        '429': {$ref: ../../common/errors.yaml#/components/responses/TooManyRequests}
+        '500': {$ref: ../../common/errors.yaml#/components/responses/InternalServerError}
+  /public/posts/{locale}:
+    get:
+      tags: [Publishing]
+      summary: List published posts for one public locale.
+      operationId: listPublicPosts
+      x-surfaces: [public, site-server]
+      security: []
+      parameters:
+        - name: locale
+          in: path
+          required: true
+          schema:
+            type: string
+            minLength: 2
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+      responses:
+        '200':
+          description: Published posts ordered by the public content cursor.
+          headers:
+            Cache-Control:
+              schema: {type: string}
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/PublicPostListResponse'}
+        '400': {$ref: ../../common/errors.yaml#/components/responses/BadRequest}
+        '404': {$ref: ../../common/errors.yaml#/components/responses/NotFound}
+        '429': {$ref: ../../common/errors.yaml#/components/responses/TooManyRequests}
+        '500': {$ref: ../../common/errors.yaml#/components/responses/InternalServerError}
+  /public/posts/{locale}/{slug}:
+    get:
+      tags: [Publishing]
+      summary: Resolve one published post by locale and slug.
+      operationId: getPublicPost
+      x-surfaces: [public, site-server]
+      security: []
+      parameters:
+        - name: locale
+          in: path
+          required: true
+          schema: {type: string, minLength: 2}
+        - name: slug
+          in: path
+          required: true
+          schema: {type: string, minLength: 1}
+      responses:
+        '200':
+          description: The published post.
+          headers:
+            Cache-Control: {schema: {type: string}}
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/PublicContent'}
+        '404': {$ref: ../../common/errors.yaml#/components/responses/NotFound}
+        '429': {$ref: ../../common/errors.yaml#/components/responses/TooManyRequests}
+        '500': {$ref: ../../common/errors.yaml#/components/responses/InternalServerError}
+  /public/menus/{locale}/{location}:
+    get:
+      tags: [Navigation]
+      summary: Resolve one enabled public navigation menu for a locale.
+      operationId: getPublicMenu
+      x-surfaces: [public, site-server]
+      security: []
+      parameters:
+        - name: locale
+          in: path
+          required: true
+          schema: {type: string, minLength: 2}
+        - name: location
+          in: path
+          required: true
+          schema: {type: string, minLength: 1}
+      responses:
+        '200':
+          description: Enabled menu with enabled items only.
+          headers:
+            Cache-Control: {schema: {type: string}}
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/PublicMenu'}
+        '404': {$ref: ../../common/errors.yaml#/components/responses/NotFound}
+        '429': {$ref: ../../common/errors.yaml#/components/responses/TooManyRequests}
+        '500': {$ref: ../../common/errors.yaml#/components/responses/InternalServerError}
+components:
+  schemas:
+    PublicContent:
+      type: object
+      additionalProperties: false
+      required: [content_id, translation_id, locale_id, kind, content_key, content_status, content_version, translation_status, translation_version, slug, path, title, excerpt, blocks, seo, geo, aeo, updated_at, alternates]
+      properties:
+        content_id: {type: string, format: uuid}
+        translation_id: {type: string, format: uuid}
+        locale_id: {type: string, format: uuid}
+        kind: {type: string, enum: [page, post]}
+        content_key: {type: string, minLength: 1}
+        content_status: {type: string, enum: [published]}
+        content_version: {type: integer, minimum: 1}
+        translation_status: {type: string, enum: [published]}
+        translation_version: {type: integer, minimum: 1}
+        published_at: {type: string, format: date-time}
+        updated_at: {type: string, format: date-time}
+        slug: {type: string, minLength: 1}
+        path: {type: string, minLength: 1}
+        title: {type: string, minLength: 1}
+        excerpt: {type: string}
+        blocks:
+          type: array
+          minItems: 1
+          items: {$ref: '#/components/schemas/PublicBlock'}
+        seo: {$ref: '#/components/schemas/PublicSEO'}
+        geo: {$ref: '#/components/schemas/PublicGEO'}
+        aeo: {$ref: '#/components/schemas/PublicAEO'}
+        alternates:
+          type: array
+          items: {$ref: '#/components/schemas/PublicAlternate'}
+    PublicBlock:
+      type: object
+      additionalProperties: false
+      required: [type, data]
+      properties:
+        type: {type: string, enum: [text, image, callout, answer, steps, comparison]}
+        data: {type: object, additionalProperties: true}
+    PublicSEO:
+      type: object
+      additionalProperties: false
+      required: [title, description]
+      properties:
+        title: {type: string}
+        description: {type: string}
+        canonical_url: {type: string, format: uri-reference}
+        robots: {type: string}
+        structured_data: {type: object, additionalProperties: true}
+    PublicGEO:
+      type: object
+      additionalProperties: false
+      properties:
+        region: {type: string}
+        locality: {type: string}
+    PublicAEO:
+      type: object
+      additionalProperties: false
+      properties:
+        question: {type: string}
+        answer: {type: string}
+    PublicAlternate:
+      type: object
+      additionalProperties: false
+      required: [translation_id, locale_id, slug, path, title]
+      properties:
+        translation_id: {type: string, format: uuid}
+        locale_id: {type: string, format: uuid}
+        slug: {type: string, minLength: 1}
+        path: {type: string, minLength: 1}
+        title: {type: string, minLength: 1}
+    PublicPostListResponse:
+      type: object
+      additionalProperties: false
+      required: [items]
+      properties:
+        items:
+          type: array
+          items: {$ref: '#/components/schemas/PublicPostItem'}
+        next:
+          $ref: '#/components/schemas/PublicPostCursor'
+    PublicPostItem:
+      type: object
+      additionalProperties: false
+      required: [content_id, translation_id, locale_id, slug, path, title, updated_at]
+      properties:
+        content_id: {type: string, format: uuid}
+        translation_id: {type: string, format: uuid}
+        locale_id: {type: string, format: uuid}
+        slug: {type: string, minLength: 1}
+        path: {type: string, minLength: 1}
+        title: {type: string, minLength: 1}
+        updated_at: {type: string, format: date-time}
+    PublicPostCursor:
+      type: object
+      additionalProperties: false
+      required: [updated_at, id]
+      properties:
+        updated_at: {type: string, format: date-time}
+        id: {type: string, format: uuid}
+    PublicMenu:
+      type: object
+      additionalProperties: false
+      required: [id, locale_id, key, name, version, items]
+      properties:
+        id: {type: string, format: uuid}
+        locale_id: {type: string, format: uuid}
+        key: {type: string, minLength: 1}
+        name: {type: string, minLength: 1}
+        version: {type: integer, minimum: 1}
+        items:
+          type: array
+          items: {$ref: '#/components/schemas/PublicMenuItem'}
+    PublicMenuItem:
+      type: object
+      additionalProperties: false
+      required: [id, label, target_kind, target, position]
+      properties:
+        id: {type: string, format: uuid}
+        parent_id: {type: string, format: uuid}
+        label: {type: string, minLength: 1}
+        target_kind: {type: string, enum: [internal_path, external_url, content_key]}
+        target: {type: string, minLength: 1}
+        position: {type: integer, minimum: 0}
+        children:
+          type: array
+          items: {$ref: '#/components/schemas/PublicMenuItem'}

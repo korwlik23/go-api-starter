@@ -75,6 +75,7 @@ type ContentDetail struct {
 	SEO                publishingdomain.SEOFields
 	GEO                publishingdomain.GEOFields
 	AEO                publishingdomain.AEOFields
+	PublishedAt        *time.Time
 	UpdatedAt          time.Time
 }
 

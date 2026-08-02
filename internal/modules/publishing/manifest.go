@@ -128,6 +128,18 @@ func Manifest() modular.Manifest {
 				Path:   "/api/v1/public/content/:locale/*path",
 			},
 			{
+				Method: "GET",
+				Path:   "/api/v1/public/posts/:locale",
+			},
+			{
+				Method: "GET",
+				Path:   "/api/v1/public/posts/:locale/:slug",
+			},
+			{
+				Method: "GET",
+				Path:   "/api/v1/public/menus/:locale/:location",
+			},
+			{
 				Method: "POST",
 				Path:   "/api/v1/public/previews/exchange",
 			},

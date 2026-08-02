@@ -100,6 +100,14 @@ paths:
     $ref: ./modules/discoverability/audit.yaml#/paths/~1discoverability~1audits
   /discoverability/audits/{audit_id}:
     $ref: ./modules/discoverability/audit.yaml#/paths/~1discoverability~1audits~1{audit_id}
+  /public/content/{locale}/{path}:
+    $ref: ./modules/publishing/public.yaml#/paths/~1public~1content~1{locale}~1{path}
+  /public/posts/{locale}:
+    $ref: ./modules/publishing/public.yaml#/paths/~1public~1posts~1{locale}
+  /public/posts/{locale}/{slug}:
+    $ref: ./modules/publishing/public.yaml#/paths/~1public~1posts~1{locale}~1{slug}
+  /public/menus/{locale}/{location}:
+    $ref: ./modules/publishing/public.yaml#/paths/~1public~1menus~1{locale}~1{location}
   /livez:
     $ref: ./modules/system/health.yaml#/paths/~1livez
   /readyz:

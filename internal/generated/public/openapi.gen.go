@@ -11,8 +11,10 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"time"
 
 	"github.com/oapi-codegen/runtime"
+	openapi_types "github.com/oapi-codegen/runtime/types"
 )
 
 // Defines values for LocaleDirection.
@@ -27,6 +29,105 @@ func (e LocaleDirection) Valid() bool {
 	case Ltr:
 		return true
 	case Rtl:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for PublicBlockType.
+const (
+	Answer     PublicBlockType = "answer"
+	Callout    PublicBlockType = "callout"
+	Comparison PublicBlockType = "comparison"
+	Image      PublicBlockType = "image"
+	Steps      PublicBlockType = "steps"
+	Text       PublicBlockType = "text"
+)
+
+// Valid indicates whether the value is a known member of the PublicBlockType enum.
+func (e PublicBlockType) Valid() bool {
+	switch e {
+	case Answer:
+		return true
+	case Callout:
+		return true
+	case Comparison:
+		return true
+	case Image:
+		return true
+	case Steps:
+		return true
+	case Text:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for PublicContentContentStatus.
+const (
+	PublicContentContentStatusPublished PublicContentContentStatus = "published"
+)
+
+// Valid indicates whether the value is a known member of the PublicContentContentStatus enum.
+func (e PublicContentContentStatus) Valid() bool {
+	switch e {
+	case PublicContentContentStatusPublished:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for PublicContentKind.
+const (
+	Page PublicContentKind = "page"
+	Post PublicContentKind = "post"
+)
+
+// Valid indicates whether the value is a known member of the PublicContentKind enum.
+func (e PublicContentKind) Valid() bool {
+	switch e {
+	case Page:
+		return true
+	case Post:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for PublicContentTranslationStatus.
+const (
+	PublicContentTranslationStatusPublished PublicContentTranslationStatus = "published"
+)
+
+// Valid indicates whether the value is a known member of the PublicContentTranslationStatus enum.
+func (e PublicContentTranslationStatus) Valid() bool {
+	switch e {
+	case PublicContentTranslationStatusPublished:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for PublicMenuItemTargetKind.
+const (
+	ContentKey   PublicMenuItemTargetKind = "content_key"
+	ExternalUrl  PublicMenuItemTargetKind = "external_url"
+	InternalPath PublicMenuItemTargetKind = "internal_path"
+)
+
+// Valid indicates whether the value is a known member of the PublicMenuItemTargetKind enum.
+func (e PublicMenuItemTargetKind) Valid() bool {
+	switch e {
+	case ContentKey:
+		return true
+	case ExternalUrl:
+		return true
+	case InternalPath:
 		return true
 	default:
 		return false
@@ -74,6 +175,125 @@ type Problem struct {
 	RequestId string `json:"request_id"`
 }
 
+// PublicAEO defines model for PublicAEO.
+type PublicAEO struct {
+	Answer   *string `json:"answer,omitempty"`
+	Question *string `json:"question,omitempty"`
+}
+
+// PublicAlternate defines model for PublicAlternate.
+type PublicAlternate struct {
+	LocaleId      openapi_types.UUID `json:"locale_id"`
+	Path          string             `json:"path"`
+	Slug          string             `json:"slug"`
+	Title         string             `json:"title"`
+	TranslationId openapi_types.UUID `json:"translation_id"`
+}
+
+// PublicBlock defines model for PublicBlock.
+type PublicBlock struct {
+	Data map[string]interface{} `json:"data"`
+	Type PublicBlockType        `json:"type"`
+}
+
+// PublicBlockType defines model for PublicBlock.Type.
+type PublicBlockType string
+
+// PublicContent defines model for PublicContent.
+type PublicContent struct {
+	Aeo                PublicAEO                      `json:"aeo"`
+	Alternates         []PublicAlternate              `json:"alternates"`
+	Blocks             []PublicBlock                  `json:"blocks"`
+	ContentId          openapi_types.UUID             `json:"content_id"`
+	ContentKey         string                         `json:"content_key"`
+	ContentStatus      PublicContentContentStatus     `json:"content_status"`
+	ContentVersion     int                            `json:"content_version"`
+	Excerpt            string                         `json:"excerpt"`
+	Geo                PublicGEO                      `json:"geo"`
+	Kind               PublicContentKind              `json:"kind"`
+	LocaleId           openapi_types.UUID             `json:"locale_id"`
+	Path               string                         `json:"path"`
+	PublishedAt        *time.Time                     `json:"published_at,omitempty"`
+	Seo                PublicSEO                      `json:"seo"`
+	Slug               string                         `json:"slug"`
+	Title              string                         `json:"title"`
+	TranslationId      openapi_types.UUID             `json:"translation_id"`
+	TranslationStatus  PublicContentTranslationStatus `json:"translation_status"`
+	TranslationVersion int                            `json:"translation_version"`
+	UpdatedAt          time.Time                      `json:"updated_at"`
+}
+
+// PublicContentContentStatus defines model for PublicContent.ContentStatus.
+type PublicContentContentStatus string
+
+// PublicContentKind defines model for PublicContent.Kind.
+type PublicContentKind string
+
+// PublicContentTranslationStatus defines model for PublicContent.TranslationStatus.
+type PublicContentTranslationStatus string
+
+// PublicGEO defines model for PublicGEO.
+type PublicGEO struct {
+	Locality *string `json:"locality,omitempty"`
+	Region   *string `json:"region,omitempty"`
+}
+
+// PublicMenu defines model for PublicMenu.
+type PublicMenu struct {
+	Id       openapi_types.UUID `json:"id"`
+	Items    []PublicMenuItem   `json:"items"`
+	Key      string             `json:"key"`
+	LocaleId openapi_types.UUID `json:"locale_id"`
+	Name     string             `json:"name"`
+	Version  int                `json:"version"`
+}
+
+// PublicMenuItem defines model for PublicMenuItem.
+type PublicMenuItem struct {
+	Children   *[]PublicMenuItem        `json:"children,omitempty"`
+	Id         openapi_types.UUID       `json:"id"`
+	Label      string                   `json:"label"`
+	ParentId   *openapi_types.UUID      `json:"parent_id,omitempty"`
+	Position   int                      `json:"position"`
+	Target     string                   `json:"target"`
+	TargetKind PublicMenuItemTargetKind `json:"target_kind"`
+}
+
+// PublicMenuItemTargetKind defines model for PublicMenuItem.TargetKind.
+type PublicMenuItemTargetKind string
+
+// PublicPostCursor defines model for PublicPostCursor.
+type PublicPostCursor struct {
+	Id        openapi_types.UUID `json:"id"`
+	UpdatedAt time.Time          `json:"updated_at"`
+}
+
+// PublicPostItem defines model for PublicPostItem.
+type PublicPostItem struct {
+	ContentId     openapi_types.UUID `json:"content_id"`
+	LocaleId      openapi_types.UUID `json:"locale_id"`
+	Path          string             `json:"path"`
+	Slug          string             `json:"slug"`
+	Title         string             `json:"title"`
+	TranslationId openapi_types.UUID `json:"translation_id"`
+	UpdatedAt     time.Time          `json:"updated_at"`
+}
+
+// PublicPostListResponse defines model for PublicPostListResponse.
+type PublicPostListResponse struct {
+	Items []PublicPostItem  `json:"items"`
+	Next  *PublicPostCursor `json:"next,omitempty"`
+}
+
+// PublicSEO defines model for PublicSEO.
+type PublicSEO struct {
+	CanonicalUrl   *string                 `json:"canonical_url,omitempty"`
+	Description    string                  `json:"description"`
+	Robots         *string                 `json:"robots,omitempty"`
+	StructuredData *map[string]interface{} `json:"structured_data,omitempty"`
+	Title          string                  `json:"title"`
+}
+
 // TranslationCatalogResponse defines model for TranslationCatalogResponse.
 type TranslationCatalogResponse struct {
 	Category string            `json:"category"`
@@ -81,6 +301,12 @@ type TranslationCatalogResponse struct {
 	Locale   string            `json:"locale"`
 	Version  int               `json:"version"`
 }
+
+// BadRequest defines model for BadRequest.
+type BadRequest = ErrorEnvelope
+
+// InternalServerError defines model for InternalServerError.
+type InternalServerError = ErrorEnvelope
 
 // NotFound defines model for NotFound.
 type NotFound = ErrorEnvelope
@@ -92,6 +318,11 @@ type TooManyRequests = ErrorEnvelope
 type GetTranslationCatalogParams struct {
 	Locale   string `form:"locale" json:"locale"`
 	Category string `form:"category" json:"category"`
+}
+
+// ListPublicPostsParams defines parameters for ListPublicPosts.
+type ListPublicPostsParams struct {
+	Limit *int `form:"limit,omitempty" json:"limit,omitempty"`
 }
 
 // RequestEditorFn is the function signature for the RequestEditor callback function
@@ -177,6 +408,26 @@ type ClientInterface interface {
 	//
 	// Corresponds with GET /localization/catalog (the `GetTranslationCatalog` operationId).
 	GetTranslationCatalog(ctx context.Context, params *GetTranslationCatalogParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetPublicContent Resolve one published content translation for the public site.
+	//
+	// Corresponds with GET /public/content/{locale}/{path} (the `GetPublicContent` operationId).
+	GetPublicContent(ctx context.Context, locale string, path string, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetPublicMenu Resolve one enabled public navigation menu for a locale.
+	//
+	// Corresponds with GET /public/menus/{locale}/{location} (the `GetPublicMenu` operationId).
+	GetPublicMenu(ctx context.Context, locale string, location string, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ListPublicPosts List published posts for one public locale.
+	//
+	// Corresponds with GET /public/posts/{locale} (the `ListPublicPosts` operationId).
+	ListPublicPosts(ctx context.Context, locale string, params *ListPublicPostsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetPublicPost Resolve one published post by locale and slug.
+	//
+	// Corresponds with GET /public/posts/{locale}/{slug} (the `GetPublicPost` operationId).
+	GetPublicPost(ctx context.Context, locale string, slug string, reqEditors ...RequestEditorFn) (*http.Response, error)
 }
 
 // ListLocales List locales visible to public and administrative consumers.
@@ -199,6 +450,66 @@ func (c *Client) ListLocales(ctx context.Context, reqEditors ...RequestEditorFn)
 // Corresponds with GET /localization/catalog (the `GetTranslationCatalog` operationId).
 func (c *Client) GetTranslationCatalog(ctx context.Context, params *GetTranslationCatalogParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewGetTranslationCatalogRequest(c.Server, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// GetPublicContent Resolve one published content translation for the public site.
+//
+// Corresponds with GET /public/content/{locale}/{path} (the `GetPublicContent` operationId).
+func (c *Client) GetPublicContent(ctx context.Context, locale string, path string, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetPublicContentRequest(c.Server, locale, path)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// GetPublicMenu Resolve one enabled public navigation menu for a locale.
+//
+// Corresponds with GET /public/menus/{locale}/{location} (the `GetPublicMenu` operationId).
+func (c *Client) GetPublicMenu(ctx context.Context, locale string, location string, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetPublicMenuRequest(c.Server, locale, location)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// ListPublicPosts List published posts for one public locale.
+//
+// Corresponds with GET /public/posts/{locale} (the `ListPublicPosts` operationId).
+func (c *Client) ListPublicPosts(ctx context.Context, locale string, params *ListPublicPostsParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewListPublicPostsRequest(c.Server, locale, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// GetPublicPost Resolve one published post by locale and slug.
+//
+// Corresponds with GET /public/posts/{locale}/{slug} (the `GetPublicPost` operationId).
+func (c *Client) GetPublicPost(ctx context.Context, locale string, slug string, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetPublicPostRequest(c.Server, locale, slug)
 	if err != nil {
 		return nil, err
 	}
@@ -294,6 +605,190 @@ func NewGetTranslationCatalogRequest(server string, params *GetTranslationCatalo
 	return req, nil
 }
 
+// NewGetPublicContentRequest constructs an http.Request for the GetPublicContent method
+func NewGetPublicContentRequest(server string, locale string, path string) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "locale", locale, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "path", path, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/public/content/%s/%s", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewGetPublicMenuRequest constructs an http.Request for the GetPublicMenu method
+func NewGetPublicMenuRequest(server string, locale string, location string) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "locale", locale, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "location", location, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/public/menus/%s/%s", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewListPublicPostsRequest constructs an http.Request for the ListPublicPosts method
+func NewListPublicPostsRequest(server string, locale string, params *ListPublicPostsParams) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "locale", locale, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/public/posts/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		// queryValues collects non-styled parameters (passthrough, JSON)
+		// that are safe to round-trip through url.Values.Encode().
+		queryValues := queryURL.Query()
+		// rawQueryFragments collects pre-encoded query fragments from
+		// styled parameters, preserving literal commas as delimiters
+		// per the OpenAPI spec (e.g. "color=blue,black,brown").
+		var rawQueryFragments []string
+
+		if params.Limit != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "limit", *params.Limit, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "integer", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if encoded := queryValues.Encode(); encoded != "" {
+			rawQueryFragments = append(rawQueryFragments, encoded)
+		}
+		queryURL.RawQuery = strings.Join(rawQueryFragments, "&")
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewGetPublicPostRequest constructs an http.Request for the GetPublicPost method
+func NewGetPublicPostRequest(server string, locale string, slug string) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "locale", locale, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "slug", slug, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/public/posts/%s/%s", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
 func (c *Client) applyEditors(ctx context.Context, req *http.Request, additionalEditors []RequestEditorFn) error {
 	for _, r := range c.RequestEditors {
 		if err := r(ctx, req); err != nil {
@@ -351,6 +846,34 @@ type ClientWithResponsesInterface interface {
 	//
 	// Corresponds with GET /localization/catalog (the `GetTranslationCatalog` operationId).
 	GetTranslationCatalogWithResponse(ctx context.Context, params *GetTranslationCatalogParams, reqEditors ...RequestEditorFn) (*GetTranslationCatalogResponse, error)
+
+	// GetPublicContentWithResponse Resolve one published content translation for the public site.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /public/content/{locale}/{path} (the `GetPublicContent` operationId).
+	GetPublicContentWithResponse(ctx context.Context, locale string, path string, reqEditors ...RequestEditorFn) (*GetPublicContentResponse, error)
+
+	// GetPublicMenuWithResponse Resolve one enabled public navigation menu for a locale.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /public/menus/{locale}/{location} (the `GetPublicMenu` operationId).
+	GetPublicMenuWithResponse(ctx context.Context, locale string, location string, reqEditors ...RequestEditorFn) (*GetPublicMenuResponse, error)
+
+	// ListPublicPostsWithResponse List published posts for one public locale.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /public/posts/{locale} (the `ListPublicPosts` operationId).
+	ListPublicPostsWithResponse(ctx context.Context, locale string, params *ListPublicPostsParams, reqEditors ...RequestEditorFn) (*ListPublicPostsResponse, error)
+
+	// GetPublicPostWithResponse Resolve one published post by locale and slug.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /public/posts/{locale}/{slug} (the `GetPublicPost` operationId).
+	GetPublicPostWithResponse(ctx context.Context, locale string, slug string, reqEditors ...RequestEditorFn) (*GetPublicPostResponse, error)
 }
 
 type ListLocalesResponse struct {
@@ -456,6 +979,289 @@ func (r GetTranslationCatalogResponse) ContentType() string {
 	return ""
 }
 
+// GetPublicContentResponse200Headers the declared response headers of an HTTP 200 response for GetPublicContent
+type GetPublicContentResponse200Headers struct {
+	CacheControl *string
+}
+
+type GetPublicContentResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *PublicContent
+	// JSON404 the response for an HTTP 404 `application/json` response
+	JSON404 *NotFound
+	// JSON429 the response for an HTTP 429 `application/json` response
+	JSON429 *TooManyRequests
+	// JSON500 the response for an HTTP 500 `application/json` response
+	JSON500 *InternalServerError
+	// Headers200 the parsed response headers for an HTTP 200 response
+	Headers200 *GetPublicContentResponse200Headers
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r GetPublicContentResponse) GetJSON200() *PublicContent {
+	return r.JSON200
+}
+
+// GetJSON404 returns the response for an HTTP 404 `application/json` response
+func (r GetPublicContentResponse) GetJSON404() *NotFound {
+	return r.JSON404
+}
+
+// GetJSON429 returns the response for an HTTP 429 `application/json` response
+func (r GetPublicContentResponse) GetJSON429() *TooManyRequests {
+	return r.JSON429
+}
+
+// GetJSON500 returns the response for an HTTP 500 `application/json` response
+func (r GetPublicContentResponse) GetJSON500() *InternalServerError {
+	return r.JSON500
+}
+
+// GetBody returns the raw response body bytes
+func (r GetPublicContentResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r GetPublicContentResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetPublicContentResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r GetPublicContentResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+// GetPublicMenuResponse200Headers the declared response headers of an HTTP 200 response for GetPublicMenu
+type GetPublicMenuResponse200Headers struct {
+	CacheControl *string
+}
+
+type GetPublicMenuResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *PublicMenu
+	// JSON404 the response for an HTTP 404 `application/json` response
+	JSON404 *NotFound
+	// JSON429 the response for an HTTP 429 `application/json` response
+	JSON429 *TooManyRequests
+	// JSON500 the response for an HTTP 500 `application/json` response
+	JSON500 *InternalServerError
+	// Headers200 the parsed response headers for an HTTP 200 response
+	Headers200 *GetPublicMenuResponse200Headers
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r GetPublicMenuResponse) GetJSON200() *PublicMenu {
+	return r.JSON200
+}
+
+// GetJSON404 returns the response for an HTTP 404 `application/json` response
+func (r GetPublicMenuResponse) GetJSON404() *NotFound {
+	return r.JSON404
+}
+
+// GetJSON429 returns the response for an HTTP 429 `application/json` response
+func (r GetPublicMenuResponse) GetJSON429() *TooManyRequests {
+	return r.JSON429
+}
+
+// GetJSON500 returns the response for an HTTP 500 `application/json` response
+func (r GetPublicMenuResponse) GetJSON500() *InternalServerError {
+	return r.JSON500
+}
+
+// GetBody returns the raw response body bytes
+func (r GetPublicMenuResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r GetPublicMenuResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetPublicMenuResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r GetPublicMenuResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+// ListPublicPostsResponse200Headers the declared response headers of an HTTP 200 response for ListPublicPosts
+type ListPublicPostsResponse200Headers struct {
+	CacheControl *string
+}
+
+type ListPublicPostsResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *PublicPostListResponse
+	// JSON400 the response for an HTTP 400 `application/json` response
+	JSON400 *BadRequest
+	// JSON404 the response for an HTTP 404 `application/json` response
+	JSON404 *NotFound
+	// JSON429 the response for an HTTP 429 `application/json` response
+	JSON429 *TooManyRequests
+	// JSON500 the response for an HTTP 500 `application/json` response
+	JSON500 *InternalServerError
+	// Headers200 the parsed response headers for an HTTP 200 response
+	Headers200 *ListPublicPostsResponse200Headers
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r ListPublicPostsResponse) GetJSON200() *PublicPostListResponse {
+	return r.JSON200
+}
+
+// GetJSON400 returns the response for an HTTP 400 `application/json` response
+func (r ListPublicPostsResponse) GetJSON400() *BadRequest {
+	return r.JSON400
+}
+
+// GetJSON404 returns the response for an HTTP 404 `application/json` response
+func (r ListPublicPostsResponse) GetJSON404() *NotFound {
+	return r.JSON404
+}
+
+// GetJSON429 returns the response for an HTTP 429 `application/json` response
+func (r ListPublicPostsResponse) GetJSON429() *TooManyRequests {
+	return r.JSON429
+}
+
+// GetJSON500 returns the response for an HTTP 500 `application/json` response
+func (r ListPublicPostsResponse) GetJSON500() *InternalServerError {
+	return r.JSON500
+}
+
+// GetBody returns the raw response body bytes
+func (r ListPublicPostsResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r ListPublicPostsResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ListPublicPostsResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r ListPublicPostsResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+// GetPublicPostResponse200Headers the declared response headers of an HTTP 200 response for GetPublicPost
+type GetPublicPostResponse200Headers struct {
+	CacheControl *string
+}
+
+type GetPublicPostResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *PublicContent
+	// JSON404 the response for an HTTP 404 `application/json` response
+	JSON404 *NotFound
+	// JSON429 the response for an HTTP 429 `application/json` response
+	JSON429 *TooManyRequests
+	// JSON500 the response for an HTTP 500 `application/json` response
+	JSON500 *InternalServerError
+	// Headers200 the parsed response headers for an HTTP 200 response
+	Headers200 *GetPublicPostResponse200Headers
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r GetPublicPostResponse) GetJSON200() *PublicContent {
+	return r.JSON200
+}
+
+// GetJSON404 returns the response for an HTTP 404 `application/json` response
+func (r GetPublicPostResponse) GetJSON404() *NotFound {
+	return r.JSON404
+}
+
+// GetJSON429 returns the response for an HTTP 429 `application/json` response
+func (r GetPublicPostResponse) GetJSON429() *TooManyRequests {
+	return r.JSON429
+}
+
+// GetJSON500 returns the response for an HTTP 500 `application/json` response
+func (r GetPublicPostResponse) GetJSON500() *InternalServerError {
+	return r.JSON500
+}
+
+// GetBody returns the raw response body bytes
+func (r GetPublicPostResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r GetPublicPostResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetPublicPostResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r GetPublicPostResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
 // ListLocalesWithResponse List locales visible to public and administrative consumers.
 //
 // Returns a wrapper object for the known response body format(s).
@@ -480,6 +1286,58 @@ func (c *ClientWithResponses) GetTranslationCatalogWithResponse(ctx context.Cont
 		return nil, err
 	}
 	return ParseGetTranslationCatalogResponse(rsp)
+}
+
+// GetPublicContentWithResponse Resolve one published content translation for the public site.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /public/content/{locale}/{path} (the `GetPublicContent` operationId).
+func (c *ClientWithResponses) GetPublicContentWithResponse(ctx context.Context, locale string, path string, reqEditors ...RequestEditorFn) (*GetPublicContentResponse, error) {
+	rsp, err := c.GetPublicContent(ctx, locale, path, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetPublicContentResponse(rsp)
+}
+
+// GetPublicMenuWithResponse Resolve one enabled public navigation menu for a locale.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /public/menus/{locale}/{location} (the `GetPublicMenu` operationId).
+func (c *ClientWithResponses) GetPublicMenuWithResponse(ctx context.Context, locale string, location string, reqEditors ...RequestEditorFn) (*GetPublicMenuResponse, error) {
+	rsp, err := c.GetPublicMenu(ctx, locale, location, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetPublicMenuResponse(rsp)
+}
+
+// ListPublicPostsWithResponse List published posts for one public locale.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /public/posts/{locale} (the `ListPublicPosts` operationId).
+func (c *ClientWithResponses) ListPublicPostsWithResponse(ctx context.Context, locale string, params *ListPublicPostsParams, reqEditors ...RequestEditorFn) (*ListPublicPostsResponse, error) {
+	rsp, err := c.ListPublicPosts(ctx, locale, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseListPublicPostsResponse(rsp)
+}
+
+// GetPublicPostWithResponse Resolve one published post by locale and slug.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /public/posts/{locale}/{slug} (the `GetPublicPost` operationId).
+func (c *ClientWithResponses) GetPublicPostWithResponse(ctx context.Context, locale string, slug string, reqEditors ...RequestEditorFn) (*GetPublicPostResponse, error) {
+	rsp, err := c.GetPublicPost(ctx, locale, slug, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetPublicPostResponse(rsp)
 }
 
 // ParseListLocalesResponse parses an HTTP response from a ListLocalesWithResponse call
@@ -550,6 +1408,253 @@ func ParseGetTranslationCatalogResponse(rsp *http.Response) (*GetTranslationCata
 		}
 		response.JSON429 = &dest
 
+	}
+
+	return response, nil
+}
+
+// ParseGetPublicContentResponse parses an HTTP response from a GetPublicContentWithResponse call
+func ParseGetPublicContentResponse(rsp *http.Response) (*GetPublicContentResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetPublicContentResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest PublicContent
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 429:
+		var dest TooManyRequests
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON429 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest InternalServerError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	switch {
+	case rsp.StatusCode == 200:
+		var headers GetPublicContentResponse200Headers
+		if values := rsp.Header.Values("Cache-Control"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "Cache-Control", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.CacheControl = &value
+		}
+		response.Headers200 = &headers
+	}
+
+	return response, nil
+}
+
+// ParseGetPublicMenuResponse parses an HTTP response from a GetPublicMenuWithResponse call
+func ParseGetPublicMenuResponse(rsp *http.Response) (*GetPublicMenuResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetPublicMenuResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest PublicMenu
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 429:
+		var dest TooManyRequests
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON429 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest InternalServerError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	switch {
+	case rsp.StatusCode == 200:
+		var headers GetPublicMenuResponse200Headers
+		if values := rsp.Header.Values("Cache-Control"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "Cache-Control", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.CacheControl = &value
+		}
+		response.Headers200 = &headers
+	}
+
+	return response, nil
+}
+
+// ParseListPublicPostsResponse parses an HTTP response from a ListPublicPostsWithResponse call
+func ParseListPublicPostsResponse(rsp *http.Response) (*ListPublicPostsResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ListPublicPostsResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest PublicPostListResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest BadRequest
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 429:
+		var dest TooManyRequests
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON429 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest InternalServerError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	switch {
+	case rsp.StatusCode == 200:
+		var headers ListPublicPostsResponse200Headers
+		if values := rsp.Header.Values("Cache-Control"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "Cache-Control", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.CacheControl = &value
+		}
+		response.Headers200 = &headers
+	}
+
+	return response, nil
+}
+
+// ParseGetPublicPostResponse parses an HTTP response from a GetPublicPostWithResponse call
+func ParseGetPublicPostResponse(rsp *http.Response) (*GetPublicPostResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetPublicPostResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest PublicContent
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 429:
+		var dest TooManyRequests
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON429 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest InternalServerError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	switch {
+	case rsp.StatusCode == 200:
+		var headers GetPublicPostResponse200Headers
+		if values := rsp.Header.Values("Cache-Control"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "Cache-Control", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.CacheControl = &value
+		}
+		response.Headers200 = &headers
 	}
 
 	return response, nil
