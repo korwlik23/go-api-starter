@@ -14,7 +14,7 @@ Go + Gin API starter และ OpenAPI source of truth สำหรับ `go-la
 - Contract validation: kin-openapi และ oapi-codegen runtime
 - Primary database: PostgreSQL
 - First-class local profile: MariaDB/XAMPP
-- Compatibility profile: Oracle MySQL (ห้ามประกาศ supported จน integration tests ผ่าน)
+- Compatibility profile: Oracle MySQL 8.4.11 (ผ่าน disposable integration tests แล้ว)
 
 ## Responsibilities
 
