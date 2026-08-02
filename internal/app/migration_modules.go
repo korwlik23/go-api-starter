@@ -4,6 +4,7 @@ import (
 	accountsmodule "github.com/korwlik23/go-api-starter/internal/modules/accounts"
 	auditmodule "github.com/korwlik23/go-api-starter/internal/modules/audit"
 	authorizationmodule "github.com/korwlik23/go-api-starter/internal/modules/authorization"
+	discoverabilitymodule "github.com/korwlik23/go-api-starter/internal/modules/discoverability"
 	identitymodule "github.com/korwlik23/go-api-starter/internal/modules/identity"
 	localizationmodule "github.com/korwlik23/go-api-starter/internal/modules/localization"
 	mediamodule "github.com/korwlik23/go-api-starter/internal/modules/media"
@@ -24,5 +25,6 @@ func MigrationModules() []database.MigrationModule {
 		publishingmodule.MigrationModule(),
 		mediamodule.MigrationModule(),
 		navigationmodule.MigrationModule(),
+		discoverabilitymodule.MigrationModule(),
 	}
 }

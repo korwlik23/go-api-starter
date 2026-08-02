@@ -463,6 +463,78 @@ func (e RecoveryAcceptedResponseStatus) Valid() bool {
 	}
 }
 
+// Defines values for RedirectStatusCode.
+const (
+	RedirectStatusCodeN301 RedirectStatusCode = 301
+	RedirectStatusCodeN302 RedirectStatusCode = 302
+	RedirectStatusCodeN307 RedirectStatusCode = 307
+	RedirectStatusCodeN308 RedirectStatusCode = 308
+)
+
+// Valid indicates whether the value is a known member of the RedirectStatusCode enum.
+func (e RedirectStatusCode) Valid() bool {
+	switch e {
+	case RedirectStatusCodeN301:
+		return true
+	case RedirectStatusCodeN302:
+		return true
+	case RedirectStatusCodeN307:
+		return true
+	case RedirectStatusCodeN308:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for RedirectMutationRequestStatusCode.
+const (
+	RedirectMutationRequestStatusCodeN301 RedirectMutationRequestStatusCode = 301
+	RedirectMutationRequestStatusCodeN302 RedirectMutationRequestStatusCode = 302
+	RedirectMutationRequestStatusCodeN307 RedirectMutationRequestStatusCode = 307
+	RedirectMutationRequestStatusCodeN308 RedirectMutationRequestStatusCode = 308
+)
+
+// Valid indicates whether the value is a known member of the RedirectMutationRequestStatusCode enum.
+func (e RedirectMutationRequestStatusCode) Valid() bool {
+	switch e {
+	case RedirectMutationRequestStatusCodeN301:
+		return true
+	case RedirectMutationRequestStatusCodeN302:
+		return true
+	case RedirectMutationRequestStatusCodeN307:
+		return true
+	case RedirectMutationRequestStatusCodeN308:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for RedirectUpdateRequestStatusCode.
+const (
+	RedirectUpdateRequestStatusCodeN301 RedirectUpdateRequestStatusCode = 301
+	RedirectUpdateRequestStatusCodeN302 RedirectUpdateRequestStatusCode = 302
+	RedirectUpdateRequestStatusCodeN307 RedirectUpdateRequestStatusCode = 307
+	RedirectUpdateRequestStatusCodeN308 RedirectUpdateRequestStatusCode = 308
+)
+
+// Valid indicates whether the value is a known member of the RedirectUpdateRequestStatusCode enum.
+func (e RedirectUpdateRequestStatusCode) Valid() bool {
+	switch e {
+	case RedirectUpdateRequestStatusCodeN301:
+		return true
+	case RedirectUpdateRequestStatusCodeN302:
+		return true
+	case RedirectUpdateRequestStatusCodeN307:
+		return true
+	case RedirectUpdateRequestStatusCodeN308:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for RoleAssignmentItemScope.
 const (
 	RoleAssignmentItemScopeAccount RoleAssignmentItemScope = "account"
@@ -529,6 +601,54 @@ const (
 func (e RoleRevokeResponseRevoked) Valid() bool {
 	switch e {
 	case RoleRevokeResponseRevokedTrue:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for SEODefaultsRobots.
+const (
+	SEODefaultsRobotsIndexfollow     SEODefaultsRobots = "index,follow"
+	SEODefaultsRobotsIndexnofollow   SEODefaultsRobots = "index,nofollow"
+	SEODefaultsRobotsNoindexfollow   SEODefaultsRobots = "noindex,follow"
+	SEODefaultsRobotsNoindexnofollow SEODefaultsRobots = "noindex,nofollow"
+)
+
+// Valid indicates whether the value is a known member of the SEODefaultsRobots enum.
+func (e SEODefaultsRobots) Valid() bool {
+	switch e {
+	case SEODefaultsRobotsIndexfollow:
+		return true
+	case SEODefaultsRobotsIndexnofollow:
+		return true
+	case SEODefaultsRobotsNoindexfollow:
+		return true
+	case SEODefaultsRobotsNoindexnofollow:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for SEOUpdateRequestRobots.
+const (
+	SEOUpdateRequestRobotsIndexfollow     SEOUpdateRequestRobots = "index,follow"
+	SEOUpdateRequestRobotsIndexnofollow   SEOUpdateRequestRobots = "index,nofollow"
+	SEOUpdateRequestRobotsNoindexfollow   SEOUpdateRequestRobots = "noindex,follow"
+	SEOUpdateRequestRobotsNoindexnofollow SEOUpdateRequestRobots = "noindex,nofollow"
+)
+
+// Valid indicates whether the value is a known member of the SEOUpdateRequestRobots enum.
+func (e SEOUpdateRequestRobots) Valid() bool {
+	switch e {
+	case SEOUpdateRequestRobotsIndexfollow:
+		return true
+	case SEOUpdateRequestRobotsIndexnofollow:
+		return true
+	case SEOUpdateRequestRobotsNoindexfollow:
+		return true
+	case SEOUpdateRequestRobotsNoindexnofollow:
 		return true
 	default:
 		return false
@@ -1224,6 +1344,60 @@ type RecoveryRequest struct {
 	Email openapi_types.Email `json:"email"`
 }
 
+// Redirect defines model for Redirect.
+type Redirect struct {
+	AccountId       openapi_types.UUID `json:"account_id"`
+	CreatedAt       time.Time          `json:"created_at"`
+	DestinationPath string             `json:"destination_path"`
+	Enabled         bool               `json:"enabled"`
+	Id              openapi_types.UUID `json:"id"`
+	LocaleId        openapi_types.UUID `json:"locale_id"`
+	SourcePath      string             `json:"source_path"`
+	StatusCode      RedirectStatusCode `json:"status_code"`
+	UpdatedAt       time.Time          `json:"updated_at"`
+	Version         int                `json:"version"`
+}
+
+// RedirectStatusCode defines model for Redirect.StatusCode.
+type RedirectStatusCode int
+
+// RedirectCursor defines model for RedirectCursor.
+type RedirectCursor struct {
+	Id        openapi_types.UUID `json:"id"`
+	UpdatedAt time.Time          `json:"updated_at"`
+}
+
+// RedirectListResponse defines model for RedirectListResponse.
+type RedirectListResponse struct {
+	Items []Redirect      `json:"items"`
+	Next  *RedirectCursor `json:"next,omitempty"`
+}
+
+// RedirectMutationRequest defines model for RedirectMutationRequest.
+type RedirectMutationRequest struct {
+	DestinationPath string                            `json:"destination_path"`
+	Enabled         bool                              `json:"enabled"`
+	LocaleId        openapi_types.UUID                `json:"locale_id"`
+	SourcePath      string                            `json:"source_path"`
+	StatusCode      RedirectMutationRequestStatusCode `json:"status_code"`
+}
+
+// RedirectMutationRequestStatusCode defines model for RedirectMutationRequest.StatusCode.
+type RedirectMutationRequestStatusCode int
+
+// RedirectUpdateRequest defines model for RedirectUpdateRequest.
+type RedirectUpdateRequest struct {
+	DestinationPath string                          `json:"destination_path"`
+	Enabled         bool                            `json:"enabled"`
+	ExpectedVersion int                             `json:"expected_version"`
+	LocaleId        openapi_types.UUID              `json:"locale_id"`
+	SourcePath      string                          `json:"source_path"`
+	StatusCode      RedirectUpdateRequestStatusCode `json:"status_code"`
+}
+
+// RedirectUpdateRequestStatusCode defines model for RedirectUpdateRequest.StatusCode.
+type RedirectUpdateRequestStatusCode int
+
 // RoleAssignmentItem defines model for RoleAssignmentItem.
 type RoleAssignmentItem struct {
 	AccountId    *string                 `json:"account_id,omitempty"`
@@ -1311,6 +1485,38 @@ type RoleRevokeResponse struct {
 
 // RoleRevokeResponseRevoked defines model for RoleRevokeResponse.Revoked.
 type RoleRevokeResponseRevoked bool
+
+// SEODefaults defines model for SEODefaults.
+type SEODefaults struct {
+	AccountId     openapi_types.UUID `json:"account_id"`
+	CanonicalBase string             `json:"canonical_base"`
+	CreatedAt     time.Time          `json:"created_at"`
+	Description   string             `json:"description"`
+	Id            openapi_types.UUID `json:"id"`
+	LocaleId      openapi_types.UUID `json:"locale_id"`
+	Robots        SEODefaultsRobots  `json:"robots"`
+	Title         string             `json:"title"`
+	UpdatedAt     time.Time          `json:"updated_at"`
+	Version       int                `json:"version"`
+}
+
+// SEODefaultsRobots defines model for SEODefaults.Robots.
+type SEODefaultsRobots string
+
+// SEOUpdateRequest defines model for SEOUpdateRequest.
+type SEOUpdateRequest struct {
+	CanonicalBase string `json:"canonical_base"`
+	Description   string `json:"description"`
+
+	// ExpectedVersion Use zero when creating defaults for a locale for the first time.
+	ExpectedVersion int                    `json:"expected_version"`
+	LocaleId        openapi_types.UUID     `json:"locale_id"`
+	Robots          SEOUpdateRequestRobots `json:"robots"`
+	Title           string                 `json:"title"`
+}
+
+// SEOUpdateRequestRobots defines model for SEOUpdateRequest.Robots.
+type SEOUpdateRequestRobots string
 
 // SessionInvalidationOutcome defines model for SessionInvalidationOutcome.
 type SessionInvalidationOutcome struct {
@@ -1474,6 +1680,20 @@ type ListRoleAssignmentsParams struct {
 	PerPage *PerPage `form:"per_page,omitempty" json:"per_page,omitempty"`
 }
 
+// ListDiscoverabilityRedirectsParams defines parameters for ListDiscoverabilityRedirects.
+type ListDiscoverabilityRedirectsParams struct {
+	LocaleId       *openapi_types.UUID `form:"locale_id,omitempty" json:"locale_id,omitempty"`
+	Enabled        *bool               `form:"enabled,omitempty" json:"enabled,omitempty"`
+	Limit          *int                `form:"limit,omitempty" json:"limit,omitempty"`
+	AfterUpdatedAt *time.Time          `form:"after_updated_at,omitempty" json:"after_updated_at,omitempty"`
+	AfterId        *openapi_types.UUID `form:"after_id,omitempty" json:"after_id,omitempty"`
+}
+
+// GetDiscoverabilitySEOParams defines parameters for GetDiscoverabilitySEO.
+type GetDiscoverabilitySEOParams struct {
+	LocaleId openapi_types.UUID `form:"locale_id" json:"locale_id"`
+}
+
 // GetTranslationCatalogParams defines parameters for GetTranslationCatalog.
 type GetTranslationCatalogParams struct {
 	Locale   string `form:"locale" json:"locale"`
@@ -1560,6 +1780,18 @@ type AssignRoleJSONRequestBody = RoleAssignmentRequest
 
 // GrantRolePermissionJSONRequestBody defines body for GrantRolePermission for application/json ContentType.
 type GrantRolePermissionJSONRequestBody = PermissionGrantRequest
+
+// CreateDiscoverabilityRedirectJSONRequestBody defines body for CreateDiscoverabilityRedirect for application/json ContentType.
+type CreateDiscoverabilityRedirectJSONRequestBody = RedirectMutationRequest
+
+// DeleteDiscoverabilityRedirectJSONRequestBody defines body for DeleteDiscoverabilityRedirect for application/json ContentType.
+type DeleteDiscoverabilityRedirectJSONRequestBody = ExpectedVersionRequest
+
+// UpdateDiscoverabilityRedirectJSONRequestBody defines body for UpdateDiscoverabilityRedirect for application/json ContentType.
+type UpdateDiscoverabilityRedirectJSONRequestBody = RedirectUpdateRequest
+
+// UpdateDiscoverabilitySEOJSONRequestBody defines body for UpdateDiscoverabilitySEO for application/json ContentType.
+type UpdateDiscoverabilitySEOJSONRequestBody = SEOUpdateRequest
 
 // CreateLocaleJSONRequestBody defines body for CreateLocale for application/json ContentType.
 type CreateLocaleJSONRequestBody = LocaleCreateRequest
@@ -1998,6 +2230,77 @@ type ClientInterface interface {
 	//
 	// Corresponds with POST /authorization/roles/{role_id}/permissions (the `GrantRolePermission` operationId).
 	GrantRolePermission(ctx context.Context, roleId string, body GrantRolePermissionJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ListDiscoverabilityRedirects List account-scoped redirect rules in stable cursor order.
+	//
+	// Corresponds with GET /discoverability/redirects (the `ListDiscoverabilityRedirects` operationId).
+	ListDiscoverabilityRedirects(ctx context.Context, params *ListDiscoverabilityRedirectsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// CreateDiscoverabilityRedirectWithBody Create an account-scoped redirect rule.
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with POST /discoverability/redirects (the `CreateDiscoverabilityRedirect` operationId).
+	CreateDiscoverabilityRedirectWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// CreateDiscoverabilityRedirect Create an account-scoped redirect rule.
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with POST /discoverability/redirects (the `CreateDiscoverabilityRedirect` operationId).
+	CreateDiscoverabilityRedirect(ctx context.Context, body CreateDiscoverabilityRedirectJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// DeleteDiscoverabilityRedirectWithBody Soft-delete a redirect rule using optimistic concurrency.
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with DELETE /discoverability/redirects/{redirect_id} (the `DeleteDiscoverabilityRedirect` operationId).
+	DeleteDiscoverabilityRedirectWithBody(ctx context.Context, redirectId openapi_types.UUID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// DeleteDiscoverabilityRedirect Soft-delete a redirect rule using optimistic concurrency.
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with DELETE /discoverability/redirects/{redirect_id} (the `DeleteDiscoverabilityRedirect` operationId).
+	DeleteDiscoverabilityRedirect(ctx context.Context, redirectId openapi_types.UUID, body DeleteDiscoverabilityRedirectJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetDiscoverabilityRedirect Read one account-scoped redirect rule.
+	//
+	// Corresponds with GET /discoverability/redirects/{redirect_id} (the `GetDiscoverabilityRedirect` operationId).
+	GetDiscoverabilityRedirect(ctx context.Context, redirectId openapi_types.UUID, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// UpdateDiscoverabilityRedirectWithBody Replace a redirect rule using optimistic concurrency.
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with PATCH /discoverability/redirects/{redirect_id} (the `UpdateDiscoverabilityRedirect` operationId).
+	UpdateDiscoverabilityRedirectWithBody(ctx context.Context, redirectId openapi_types.UUID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// UpdateDiscoverabilityRedirect Replace a redirect rule using optimistic concurrency.
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with PATCH /discoverability/redirects/{redirect_id} (the `UpdateDiscoverabilityRedirect` operationId).
+	UpdateDiscoverabilityRedirect(ctx context.Context, redirectId openapi_types.UUID, body UpdateDiscoverabilityRedirectJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetDiscoverabilitySEO Read locale-specific default SEO metadata.
+	//
+	// Corresponds with GET /discoverability/seo (the `GetDiscoverabilitySEO` operationId).
+	GetDiscoverabilitySEO(ctx context.Context, params *GetDiscoverabilitySEOParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// UpdateDiscoverabilitySEOWithBody Create or update locale-specific default SEO metadata.
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with PATCH /discoverability/seo (the `UpdateDiscoverabilitySEO` operationId).
+	UpdateDiscoverabilitySEOWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// UpdateDiscoverabilitySEO Create or update locale-specific default SEO metadata.
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with PATCH /discoverability/seo (the `UpdateDiscoverabilitySEO` operationId).
+	UpdateDiscoverabilitySEO(ctx context.Context, body UpdateDiscoverabilitySEOJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// ListLocales List locales visible to public and administrative consumers.
 	//
@@ -2808,6 +3111,187 @@ func (c *Client) GrantRolePermissionWithBody(ctx context.Context, roleId string,
 // Corresponds with POST /authorization/roles/{role_id}/permissions (the `GrantRolePermission` operationId).
 func (c *Client) GrantRolePermission(ctx context.Context, roleId string, body GrantRolePermissionJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewGrantRolePermissionRequest(c.Server, roleId, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// ListDiscoverabilityRedirects List account-scoped redirect rules in stable cursor order.
+//
+// Corresponds with GET /discoverability/redirects (the `ListDiscoverabilityRedirects` operationId).
+func (c *Client) ListDiscoverabilityRedirects(ctx context.Context, params *ListDiscoverabilityRedirectsParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewListDiscoverabilityRedirectsRequest(c.Server, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// CreateDiscoverabilityRedirectWithBody Create an account-scoped redirect rule.
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with POST /discoverability/redirects (the `CreateDiscoverabilityRedirect` operationId).
+func (c *Client) CreateDiscoverabilityRedirectWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCreateDiscoverabilityRedirectRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// CreateDiscoverabilityRedirect Create an account-scoped redirect rule.
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with POST /discoverability/redirects (the `CreateDiscoverabilityRedirect` operationId).
+func (c *Client) CreateDiscoverabilityRedirect(ctx context.Context, body CreateDiscoverabilityRedirectJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCreateDiscoverabilityRedirectRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// DeleteDiscoverabilityRedirectWithBody Soft-delete a redirect rule using optimistic concurrency.
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with DELETE /discoverability/redirects/{redirect_id} (the `DeleteDiscoverabilityRedirect` operationId).
+func (c *Client) DeleteDiscoverabilityRedirectWithBody(ctx context.Context, redirectId openapi_types.UUID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDeleteDiscoverabilityRedirectRequestWithBody(c.Server, redirectId, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// DeleteDiscoverabilityRedirect Soft-delete a redirect rule using optimistic concurrency.
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with DELETE /discoverability/redirects/{redirect_id} (the `DeleteDiscoverabilityRedirect` operationId).
+func (c *Client) DeleteDiscoverabilityRedirect(ctx context.Context, redirectId openapi_types.UUID, body DeleteDiscoverabilityRedirectJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDeleteDiscoverabilityRedirectRequest(c.Server, redirectId, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// GetDiscoverabilityRedirect Read one account-scoped redirect rule.
+//
+// Corresponds with GET /discoverability/redirects/{redirect_id} (the `GetDiscoverabilityRedirect` operationId).
+func (c *Client) GetDiscoverabilityRedirect(ctx context.Context, redirectId openapi_types.UUID, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetDiscoverabilityRedirectRequest(c.Server, redirectId)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// UpdateDiscoverabilityRedirectWithBody Replace a redirect rule using optimistic concurrency.
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with PATCH /discoverability/redirects/{redirect_id} (the `UpdateDiscoverabilityRedirect` operationId).
+func (c *Client) UpdateDiscoverabilityRedirectWithBody(ctx context.Context, redirectId openapi_types.UUID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewUpdateDiscoverabilityRedirectRequestWithBody(c.Server, redirectId, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// UpdateDiscoverabilityRedirect Replace a redirect rule using optimistic concurrency.
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with PATCH /discoverability/redirects/{redirect_id} (the `UpdateDiscoverabilityRedirect` operationId).
+func (c *Client) UpdateDiscoverabilityRedirect(ctx context.Context, redirectId openapi_types.UUID, body UpdateDiscoverabilityRedirectJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewUpdateDiscoverabilityRedirectRequest(c.Server, redirectId, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// GetDiscoverabilitySEO Read locale-specific default SEO metadata.
+//
+// Corresponds with GET /discoverability/seo (the `GetDiscoverabilitySEO` operationId).
+func (c *Client) GetDiscoverabilitySEO(ctx context.Context, params *GetDiscoverabilitySEOParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetDiscoverabilitySEORequest(c.Server, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// UpdateDiscoverabilitySEOWithBody Create or update locale-specific default SEO metadata.
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with PATCH /discoverability/seo (the `UpdateDiscoverabilitySEO` operationId).
+func (c *Client) UpdateDiscoverabilitySEOWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewUpdateDiscoverabilitySEORequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// UpdateDiscoverabilitySEO Create or update locale-specific default SEO metadata.
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with PATCH /discoverability/seo (the `UpdateDiscoverabilitySEO` operationId).
+func (c *Client) UpdateDiscoverabilitySEO(ctx context.Context, body UpdateDiscoverabilitySEOJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewUpdateDiscoverabilitySEORequest(c.Server, body)
 	if err != nil {
 		return nil, err
 	}
@@ -4523,6 +5007,366 @@ func NewGrantRolePermissionRequestWithBody(server string, roleId string, content
 	return req, nil
 }
 
+// NewListDiscoverabilityRedirectsRequest constructs an http.Request for the ListDiscoverabilityRedirects method
+func NewListDiscoverabilityRedirectsRequest(server string, params *ListDiscoverabilityRedirectsParams) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/discoverability/redirects")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		// queryValues collects non-styled parameters (passthrough, JSON)
+		// that are safe to round-trip through url.Values.Encode().
+		queryValues := queryURL.Query()
+		// rawQueryFragments collects pre-encoded query fragments from
+		// styled parameters, preserving literal commas as delimiters
+		// per the OpenAPI spec (e.g. "color=blue,black,brown").
+		var rawQueryFragments []string
+
+		if params.LocaleId != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "locale_id", *params.LocaleId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: "uuid"}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.Enabled != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "enabled", *params.Enabled, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "boolean", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.Limit != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "limit", *params.Limit, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "integer", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.AfterUpdatedAt != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "after_updated_at", *params.AfterUpdatedAt, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: "date-time"}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.AfterId != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "after_id", *params.AfterId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: "uuid"}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if encoded := queryValues.Encode(); encoded != "" {
+			rawQueryFragments = append(rawQueryFragments, encoded)
+		}
+		queryURL.RawQuery = strings.Join(rawQueryFragments, "&")
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewCreateDiscoverabilityRedirectRequest calls the generic CreateDiscoverabilityRedirect builder with application/json body
+func NewCreateDiscoverabilityRedirectRequest(server string, body CreateDiscoverabilityRedirectJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewCreateDiscoverabilityRedirectRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewCreateDiscoverabilityRedirectRequestWithBody constructs an http.Request for the CreateDiscoverabilityRedirect method, with any body, and a specified content type
+func NewCreateDiscoverabilityRedirectRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/discoverability/redirects")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPost, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewDeleteDiscoverabilityRedirectRequest calls the generic DeleteDiscoverabilityRedirect builder with application/json body
+func NewDeleteDiscoverabilityRedirectRequest(server string, redirectId openapi_types.UUID, body DeleteDiscoverabilityRedirectJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewDeleteDiscoverabilityRedirectRequestWithBody(server, redirectId, "application/json", bodyReader)
+}
+
+// NewDeleteDiscoverabilityRedirectRequestWithBody constructs an http.Request for the DeleteDiscoverabilityRedirect method, with any body, and a specified content type
+func NewDeleteDiscoverabilityRedirectRequestWithBody(server string, redirectId openapi_types.UUID, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "redirect_id", redirectId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: "uuid"})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/discoverability/redirects/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodDelete, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewGetDiscoverabilityRedirectRequest constructs an http.Request for the GetDiscoverabilityRedirect method
+func NewGetDiscoverabilityRedirectRequest(server string, redirectId openapi_types.UUID) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "redirect_id", redirectId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: "uuid"})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/discoverability/redirects/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewUpdateDiscoverabilityRedirectRequest calls the generic UpdateDiscoverabilityRedirect builder with application/json body
+func NewUpdateDiscoverabilityRedirectRequest(server string, redirectId openapi_types.UUID, body UpdateDiscoverabilityRedirectJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewUpdateDiscoverabilityRedirectRequestWithBody(server, redirectId, "application/json", bodyReader)
+}
+
+// NewUpdateDiscoverabilityRedirectRequestWithBody constructs an http.Request for the UpdateDiscoverabilityRedirect method, with any body, and a specified content type
+func NewUpdateDiscoverabilityRedirectRequestWithBody(server string, redirectId openapi_types.UUID, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "redirect_id", redirectId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: "uuid"})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/discoverability/redirects/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPatch, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewGetDiscoverabilitySEORequest constructs an http.Request for the GetDiscoverabilitySEO method
+func NewGetDiscoverabilitySEORequest(server string, params *GetDiscoverabilitySEOParams) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/discoverability/seo")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		// queryValues collects non-styled parameters (passthrough, JSON)
+		// that are safe to round-trip through url.Values.Encode().
+		queryValues := queryURL.Query()
+		// rawQueryFragments collects pre-encoded query fragments from
+		// styled parameters, preserving literal commas as delimiters
+		// per the OpenAPI spec (e.g. "color=blue,black,brown").
+		var rawQueryFragments []string
+
+		if queryFrag, err := runtime.StyleParamWithOptions("form", true, "locale_id", params.LocaleId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: "uuid"}); err != nil {
+			return nil, err
+		} else {
+			for _, qp := range strings.Split(queryFrag, "&") {
+				rawQueryFragments = append(rawQueryFragments, qp)
+			}
+		}
+
+		if encoded := queryValues.Encode(); encoded != "" {
+			rawQueryFragments = append(rawQueryFragments, encoded)
+		}
+		queryURL.RawQuery = strings.Join(rawQueryFragments, "&")
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewUpdateDiscoverabilitySEORequest calls the generic UpdateDiscoverabilitySEO builder with application/json body
+func NewUpdateDiscoverabilitySEORequest(server string, body UpdateDiscoverabilitySEOJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewUpdateDiscoverabilitySEORequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewUpdateDiscoverabilitySEORequestWithBody constructs an http.Request for the UpdateDiscoverabilitySEO method, with any body, and a specified content type
+func NewUpdateDiscoverabilitySEORequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/discoverability/seo")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPatch, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
 // NewListLocalesRequest constructs an http.Request for the ListLocales method
 func NewListLocalesRequest(server string) (*http.Request, error) {
 	var err error
@@ -5938,6 +6782,83 @@ type ClientWithResponsesInterface interface {
 	//
 	// Corresponds with POST /authorization/roles/{role_id}/permissions (the `GrantRolePermission` operationId).
 	GrantRolePermissionWithResponse(ctx context.Context, roleId string, body GrantRolePermissionJSONRequestBody, reqEditors ...RequestEditorFn) (*GrantRolePermissionResponse, error)
+
+	// ListDiscoverabilityRedirectsWithResponse List account-scoped redirect rules in stable cursor order.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /discoverability/redirects (the `ListDiscoverabilityRedirects` operationId).
+	ListDiscoverabilityRedirectsWithResponse(ctx context.Context, params *ListDiscoverabilityRedirectsParams, reqEditors ...RequestEditorFn) (*ListDiscoverabilityRedirectsResponse, error)
+
+	// CreateDiscoverabilityRedirectWithBodyWithResponse Create an account-scoped redirect rule.
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /discoverability/redirects (the `CreateDiscoverabilityRedirect` operationId).
+	CreateDiscoverabilityRedirectWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateDiscoverabilityRedirectResponse, error)
+
+	// CreateDiscoverabilityRedirectWithResponse Create an account-scoped redirect rule.
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /discoverability/redirects (the `CreateDiscoverabilityRedirect` operationId).
+	CreateDiscoverabilityRedirectWithResponse(ctx context.Context, body CreateDiscoverabilityRedirectJSONRequestBody, reqEditors ...RequestEditorFn) (*CreateDiscoverabilityRedirectResponse, error)
+
+	// DeleteDiscoverabilityRedirectWithBodyWithResponse Soft-delete a redirect rule using optimistic concurrency.
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with DELETE /discoverability/redirects/{redirect_id} (the `DeleteDiscoverabilityRedirect` operationId).
+	DeleteDiscoverabilityRedirectWithBodyWithResponse(ctx context.Context, redirectId openapi_types.UUID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*DeleteDiscoverabilityRedirectResponse, error)
+
+	// DeleteDiscoverabilityRedirectWithResponse Soft-delete a redirect rule using optimistic concurrency.
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with DELETE /discoverability/redirects/{redirect_id} (the `DeleteDiscoverabilityRedirect` operationId).
+	DeleteDiscoverabilityRedirectWithResponse(ctx context.Context, redirectId openapi_types.UUID, body DeleteDiscoverabilityRedirectJSONRequestBody, reqEditors ...RequestEditorFn) (*DeleteDiscoverabilityRedirectResponse, error)
+
+	// GetDiscoverabilityRedirectWithResponse Read one account-scoped redirect rule.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /discoverability/redirects/{redirect_id} (the `GetDiscoverabilityRedirect` operationId).
+	GetDiscoverabilityRedirectWithResponse(ctx context.Context, redirectId openapi_types.UUID, reqEditors ...RequestEditorFn) (*GetDiscoverabilityRedirectResponse, error)
+
+	// UpdateDiscoverabilityRedirectWithBodyWithResponse Replace a redirect rule using optimistic concurrency.
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with PATCH /discoverability/redirects/{redirect_id} (the `UpdateDiscoverabilityRedirect` operationId).
+	UpdateDiscoverabilityRedirectWithBodyWithResponse(ctx context.Context, redirectId openapi_types.UUID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*UpdateDiscoverabilityRedirectResponse, error)
+
+	// UpdateDiscoverabilityRedirectWithResponse Replace a redirect rule using optimistic concurrency.
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with PATCH /discoverability/redirects/{redirect_id} (the `UpdateDiscoverabilityRedirect` operationId).
+	UpdateDiscoverabilityRedirectWithResponse(ctx context.Context, redirectId openapi_types.UUID, body UpdateDiscoverabilityRedirectJSONRequestBody, reqEditors ...RequestEditorFn) (*UpdateDiscoverabilityRedirectResponse, error)
+
+	// GetDiscoverabilitySEOWithResponse Read locale-specific default SEO metadata.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /discoverability/seo (the `GetDiscoverabilitySEO` operationId).
+	GetDiscoverabilitySEOWithResponse(ctx context.Context, params *GetDiscoverabilitySEOParams, reqEditors ...RequestEditorFn) (*GetDiscoverabilitySEOResponse, error)
+
+	// UpdateDiscoverabilitySEOWithBodyWithResponse Create or update locale-specific default SEO metadata.
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with PATCH /discoverability/seo (the `UpdateDiscoverabilitySEO` operationId).
+	UpdateDiscoverabilitySEOWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*UpdateDiscoverabilitySEOResponse, error)
+
+	// UpdateDiscoverabilitySEOWithResponse Create or update locale-specific default SEO metadata.
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with PATCH /discoverability/seo (the `UpdateDiscoverabilitySEO` operationId).
+	UpdateDiscoverabilitySEOWithResponse(ctx context.Context, body UpdateDiscoverabilitySEOJSONRequestBody, reqEditors ...RequestEditorFn) (*UpdateDiscoverabilitySEOResponse, error)
 
 	// ListLocalesWithResponse List locales visible to public and administrative consumers.
 	//
@@ -7722,6 +8643,503 @@ func (r GrantRolePermissionResponse) StatusCode() int {
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
 func (r GrantRolePermissionResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type ListDiscoverabilityRedirectsResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *RedirectListResponse
+	// JSON400 the response for an HTTP 400 `application/json` response
+	JSON400 *BadRequest
+	// JSON401 the response for an HTTP 401 `application/json` response
+	JSON401 *Unauthorized
+	// JSON403 the response for an HTTP 403 `application/json` response
+	JSON403 *Forbidden
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r ListDiscoverabilityRedirectsResponse) GetJSON200() *RedirectListResponse {
+	return r.JSON200
+}
+
+// GetJSON400 returns the response for an HTTP 400 `application/json` response
+func (r ListDiscoverabilityRedirectsResponse) GetJSON400() *BadRequest {
+	return r.JSON400
+}
+
+// GetJSON401 returns the response for an HTTP 401 `application/json` response
+func (r ListDiscoverabilityRedirectsResponse) GetJSON401() *Unauthorized {
+	return r.JSON401
+}
+
+// GetJSON403 returns the response for an HTTP 403 `application/json` response
+func (r ListDiscoverabilityRedirectsResponse) GetJSON403() *Forbidden {
+	return r.JSON403
+}
+
+// GetBody returns the raw response body bytes
+func (r ListDiscoverabilityRedirectsResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r ListDiscoverabilityRedirectsResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ListDiscoverabilityRedirectsResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r ListDiscoverabilityRedirectsResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type CreateDiscoverabilityRedirectResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON201 the response for an HTTP 201 `application/json` response
+	JSON201 *Redirect
+	// JSON400 the response for an HTTP 400 `application/json` response
+	JSON400 *BadRequest
+	// JSON401 the response for an HTTP 401 `application/json` response
+	JSON401 *Unauthorized
+	// JSON403 the response for an HTTP 403 `application/json` response
+	JSON403 *Forbidden
+	// JSON409 the response for an HTTP 409 `application/json` response
+	JSON409 *Conflict
+	// JSON422 the response for an HTTP 422 `application/json` response
+	JSON422 *BadRequest
+}
+
+// GetJSON201 returns the response for an HTTP 201 `application/json` response
+func (r CreateDiscoverabilityRedirectResponse) GetJSON201() *Redirect {
+	return r.JSON201
+}
+
+// GetJSON400 returns the response for an HTTP 400 `application/json` response
+func (r CreateDiscoverabilityRedirectResponse) GetJSON400() *BadRequest {
+	return r.JSON400
+}
+
+// GetJSON401 returns the response for an HTTP 401 `application/json` response
+func (r CreateDiscoverabilityRedirectResponse) GetJSON401() *Unauthorized {
+	return r.JSON401
+}
+
+// GetJSON403 returns the response for an HTTP 403 `application/json` response
+func (r CreateDiscoverabilityRedirectResponse) GetJSON403() *Forbidden {
+	return r.JSON403
+}
+
+// GetJSON409 returns the response for an HTTP 409 `application/json` response
+func (r CreateDiscoverabilityRedirectResponse) GetJSON409() *Conflict {
+	return r.JSON409
+}
+
+// GetJSON422 returns the response for an HTTP 422 `application/json` response
+func (r CreateDiscoverabilityRedirectResponse) GetJSON422() *BadRequest {
+	return r.JSON422
+}
+
+// GetBody returns the raw response body bytes
+func (r CreateDiscoverabilityRedirectResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r CreateDiscoverabilityRedirectResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r CreateDiscoverabilityRedirectResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r CreateDiscoverabilityRedirectResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type DeleteDiscoverabilityRedirectResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON400 the response for an HTTP 400 `application/json` response
+	JSON400 *BadRequest
+	// JSON401 the response for an HTTP 401 `application/json` response
+	JSON401 *Unauthorized
+	// JSON403 the response for an HTTP 403 `application/json` response
+	JSON403 *Forbidden
+	// JSON404 the response for an HTTP 404 `application/json` response
+	JSON404 *NotFound
+	// JSON409 the response for an HTTP 409 `application/json` response
+	JSON409 *Conflict
+}
+
+// GetJSON400 returns the response for an HTTP 400 `application/json` response
+func (r DeleteDiscoverabilityRedirectResponse) GetJSON400() *BadRequest {
+	return r.JSON400
+}
+
+// GetJSON401 returns the response for an HTTP 401 `application/json` response
+func (r DeleteDiscoverabilityRedirectResponse) GetJSON401() *Unauthorized {
+	return r.JSON401
+}
+
+// GetJSON403 returns the response for an HTTP 403 `application/json` response
+func (r DeleteDiscoverabilityRedirectResponse) GetJSON403() *Forbidden {
+	return r.JSON403
+}
+
+// GetJSON404 returns the response for an HTTP 404 `application/json` response
+func (r DeleteDiscoverabilityRedirectResponse) GetJSON404() *NotFound {
+	return r.JSON404
+}
+
+// GetJSON409 returns the response for an HTTP 409 `application/json` response
+func (r DeleteDiscoverabilityRedirectResponse) GetJSON409() *Conflict {
+	return r.JSON409
+}
+
+// GetBody returns the raw response body bytes
+func (r DeleteDiscoverabilityRedirectResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r DeleteDiscoverabilityRedirectResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r DeleteDiscoverabilityRedirectResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r DeleteDiscoverabilityRedirectResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type GetDiscoverabilityRedirectResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *Redirect
+	// JSON401 the response for an HTTP 401 `application/json` response
+	JSON401 *Unauthorized
+	// JSON403 the response for an HTTP 403 `application/json` response
+	JSON403 *Forbidden
+	// JSON404 the response for an HTTP 404 `application/json` response
+	JSON404 *NotFound
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r GetDiscoverabilityRedirectResponse) GetJSON200() *Redirect {
+	return r.JSON200
+}
+
+// GetJSON401 returns the response for an HTTP 401 `application/json` response
+func (r GetDiscoverabilityRedirectResponse) GetJSON401() *Unauthorized {
+	return r.JSON401
+}
+
+// GetJSON403 returns the response for an HTTP 403 `application/json` response
+func (r GetDiscoverabilityRedirectResponse) GetJSON403() *Forbidden {
+	return r.JSON403
+}
+
+// GetJSON404 returns the response for an HTTP 404 `application/json` response
+func (r GetDiscoverabilityRedirectResponse) GetJSON404() *NotFound {
+	return r.JSON404
+}
+
+// GetBody returns the raw response body bytes
+func (r GetDiscoverabilityRedirectResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r GetDiscoverabilityRedirectResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetDiscoverabilityRedirectResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r GetDiscoverabilityRedirectResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type UpdateDiscoverabilityRedirectResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *Redirect
+	// JSON400 the response for an HTTP 400 `application/json` response
+	JSON400 *BadRequest
+	// JSON401 the response for an HTTP 401 `application/json` response
+	JSON401 *Unauthorized
+	// JSON403 the response for an HTTP 403 `application/json` response
+	JSON403 *Forbidden
+	// JSON404 the response for an HTTP 404 `application/json` response
+	JSON404 *NotFound
+	// JSON409 the response for an HTTP 409 `application/json` response
+	JSON409 *Conflict
+	// JSON422 the response for an HTTP 422 `application/json` response
+	JSON422 *BadRequest
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r UpdateDiscoverabilityRedirectResponse) GetJSON200() *Redirect {
+	return r.JSON200
+}
+
+// GetJSON400 returns the response for an HTTP 400 `application/json` response
+func (r UpdateDiscoverabilityRedirectResponse) GetJSON400() *BadRequest {
+	return r.JSON400
+}
+
+// GetJSON401 returns the response for an HTTP 401 `application/json` response
+func (r UpdateDiscoverabilityRedirectResponse) GetJSON401() *Unauthorized {
+	return r.JSON401
+}
+
+// GetJSON403 returns the response for an HTTP 403 `application/json` response
+func (r UpdateDiscoverabilityRedirectResponse) GetJSON403() *Forbidden {
+	return r.JSON403
+}
+
+// GetJSON404 returns the response for an HTTP 404 `application/json` response
+func (r UpdateDiscoverabilityRedirectResponse) GetJSON404() *NotFound {
+	return r.JSON404
+}
+
+// GetJSON409 returns the response for an HTTP 409 `application/json` response
+func (r UpdateDiscoverabilityRedirectResponse) GetJSON409() *Conflict {
+	return r.JSON409
+}
+
+// GetJSON422 returns the response for an HTTP 422 `application/json` response
+func (r UpdateDiscoverabilityRedirectResponse) GetJSON422() *BadRequest {
+	return r.JSON422
+}
+
+// GetBody returns the raw response body bytes
+func (r UpdateDiscoverabilityRedirectResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r UpdateDiscoverabilityRedirectResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r UpdateDiscoverabilityRedirectResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r UpdateDiscoverabilityRedirectResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type GetDiscoverabilitySEOResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *SEODefaults
+	// JSON400 the response for an HTTP 400 `application/json` response
+	JSON400 *BadRequest
+	// JSON401 the response for an HTTP 401 `application/json` response
+	JSON401 *Unauthorized
+	// JSON403 the response for an HTTP 403 `application/json` response
+	JSON403 *Forbidden
+	// JSON404 the response for an HTTP 404 `application/json` response
+	JSON404 *NotFound
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r GetDiscoverabilitySEOResponse) GetJSON200() *SEODefaults {
+	return r.JSON200
+}
+
+// GetJSON400 returns the response for an HTTP 400 `application/json` response
+func (r GetDiscoverabilitySEOResponse) GetJSON400() *BadRequest {
+	return r.JSON400
+}
+
+// GetJSON401 returns the response for an HTTP 401 `application/json` response
+func (r GetDiscoverabilitySEOResponse) GetJSON401() *Unauthorized {
+	return r.JSON401
+}
+
+// GetJSON403 returns the response for an HTTP 403 `application/json` response
+func (r GetDiscoverabilitySEOResponse) GetJSON403() *Forbidden {
+	return r.JSON403
+}
+
+// GetJSON404 returns the response for an HTTP 404 `application/json` response
+func (r GetDiscoverabilitySEOResponse) GetJSON404() *NotFound {
+	return r.JSON404
+}
+
+// GetBody returns the raw response body bytes
+func (r GetDiscoverabilitySEOResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r GetDiscoverabilitySEOResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetDiscoverabilitySEOResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r GetDiscoverabilitySEOResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type UpdateDiscoverabilitySEOResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *SEODefaults
+	// JSON400 the response for an HTTP 400 `application/json` response
+	JSON400 *BadRequest
+	// JSON401 the response for an HTTP 401 `application/json` response
+	JSON401 *Unauthorized
+	// JSON403 the response for an HTTP 403 `application/json` response
+	JSON403 *Forbidden
+	// JSON409 the response for an HTTP 409 `application/json` response
+	JSON409 *Conflict
+	// JSON422 the response for an HTTP 422 `application/json` response
+	JSON422 *BadRequest
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r UpdateDiscoverabilitySEOResponse) GetJSON200() *SEODefaults {
+	return r.JSON200
+}
+
+// GetJSON400 returns the response for an HTTP 400 `application/json` response
+func (r UpdateDiscoverabilitySEOResponse) GetJSON400() *BadRequest {
+	return r.JSON400
+}
+
+// GetJSON401 returns the response for an HTTP 401 `application/json` response
+func (r UpdateDiscoverabilitySEOResponse) GetJSON401() *Unauthorized {
+	return r.JSON401
+}
+
+// GetJSON403 returns the response for an HTTP 403 `application/json` response
+func (r UpdateDiscoverabilitySEOResponse) GetJSON403() *Forbidden {
+	return r.JSON403
+}
+
+// GetJSON409 returns the response for an HTTP 409 `application/json` response
+func (r UpdateDiscoverabilitySEOResponse) GetJSON409() *Conflict {
+	return r.JSON409
+}
+
+// GetJSON422 returns the response for an HTTP 422 `application/json` response
+func (r UpdateDiscoverabilitySEOResponse) GetJSON422() *BadRequest {
+	return r.JSON422
+}
+
+// GetBody returns the raw response body bytes
+func (r UpdateDiscoverabilitySEOResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r UpdateDiscoverabilitySEOResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r UpdateDiscoverabilitySEOResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r UpdateDiscoverabilitySEOResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
@@ -9671,6 +11089,149 @@ func (c *ClientWithResponses) GrantRolePermissionWithResponse(ctx context.Contex
 	return ParseGrantRolePermissionResponse(rsp)
 }
 
+// ListDiscoverabilityRedirectsWithResponse List account-scoped redirect rules in stable cursor order.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /discoverability/redirects (the `ListDiscoverabilityRedirects` operationId).
+func (c *ClientWithResponses) ListDiscoverabilityRedirectsWithResponse(ctx context.Context, params *ListDiscoverabilityRedirectsParams, reqEditors ...RequestEditorFn) (*ListDiscoverabilityRedirectsResponse, error) {
+	rsp, err := c.ListDiscoverabilityRedirects(ctx, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseListDiscoverabilityRedirectsResponse(rsp)
+}
+
+// CreateDiscoverabilityRedirectWithBodyWithResponse Create an account-scoped redirect rule.
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /discoverability/redirects (the `CreateDiscoverabilityRedirect` operationId).
+func (c *ClientWithResponses) CreateDiscoverabilityRedirectWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateDiscoverabilityRedirectResponse, error) {
+	rsp, err := c.CreateDiscoverabilityRedirectWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseCreateDiscoverabilityRedirectResponse(rsp)
+}
+
+// CreateDiscoverabilityRedirectWithResponse Create an account-scoped redirect rule.
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /discoverability/redirects (the `CreateDiscoverabilityRedirect` operationId).
+func (c *ClientWithResponses) CreateDiscoverabilityRedirectWithResponse(ctx context.Context, body CreateDiscoverabilityRedirectJSONRequestBody, reqEditors ...RequestEditorFn) (*CreateDiscoverabilityRedirectResponse, error) {
+	rsp, err := c.CreateDiscoverabilityRedirect(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseCreateDiscoverabilityRedirectResponse(rsp)
+}
+
+// DeleteDiscoverabilityRedirectWithBodyWithResponse Soft-delete a redirect rule using optimistic concurrency.
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with DELETE /discoverability/redirects/{redirect_id} (the `DeleteDiscoverabilityRedirect` operationId).
+func (c *ClientWithResponses) DeleteDiscoverabilityRedirectWithBodyWithResponse(ctx context.Context, redirectId openapi_types.UUID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*DeleteDiscoverabilityRedirectResponse, error) {
+	rsp, err := c.DeleteDiscoverabilityRedirectWithBody(ctx, redirectId, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseDeleteDiscoverabilityRedirectResponse(rsp)
+}
+
+// DeleteDiscoverabilityRedirectWithResponse Soft-delete a redirect rule using optimistic concurrency.
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with DELETE /discoverability/redirects/{redirect_id} (the `DeleteDiscoverabilityRedirect` operationId).
+func (c *ClientWithResponses) DeleteDiscoverabilityRedirectWithResponse(ctx context.Context, redirectId openapi_types.UUID, body DeleteDiscoverabilityRedirectJSONRequestBody, reqEditors ...RequestEditorFn) (*DeleteDiscoverabilityRedirectResponse, error) {
+	rsp, err := c.DeleteDiscoverabilityRedirect(ctx, redirectId, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseDeleteDiscoverabilityRedirectResponse(rsp)
+}
+
+// GetDiscoverabilityRedirectWithResponse Read one account-scoped redirect rule.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /discoverability/redirects/{redirect_id} (the `GetDiscoverabilityRedirect` operationId).
+func (c *ClientWithResponses) GetDiscoverabilityRedirectWithResponse(ctx context.Context, redirectId openapi_types.UUID, reqEditors ...RequestEditorFn) (*GetDiscoverabilityRedirectResponse, error) {
+	rsp, err := c.GetDiscoverabilityRedirect(ctx, redirectId, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetDiscoverabilityRedirectResponse(rsp)
+}
+
+// UpdateDiscoverabilityRedirectWithBodyWithResponse Replace a redirect rule using optimistic concurrency.
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with PATCH /discoverability/redirects/{redirect_id} (the `UpdateDiscoverabilityRedirect` operationId).
+func (c *ClientWithResponses) UpdateDiscoverabilityRedirectWithBodyWithResponse(ctx context.Context, redirectId openapi_types.UUID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*UpdateDiscoverabilityRedirectResponse, error) {
+	rsp, err := c.UpdateDiscoverabilityRedirectWithBody(ctx, redirectId, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseUpdateDiscoverabilityRedirectResponse(rsp)
+}
+
+// UpdateDiscoverabilityRedirectWithResponse Replace a redirect rule using optimistic concurrency.
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with PATCH /discoverability/redirects/{redirect_id} (the `UpdateDiscoverabilityRedirect` operationId).
+func (c *ClientWithResponses) UpdateDiscoverabilityRedirectWithResponse(ctx context.Context, redirectId openapi_types.UUID, body UpdateDiscoverabilityRedirectJSONRequestBody, reqEditors ...RequestEditorFn) (*UpdateDiscoverabilityRedirectResponse, error) {
+	rsp, err := c.UpdateDiscoverabilityRedirect(ctx, redirectId, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseUpdateDiscoverabilityRedirectResponse(rsp)
+}
+
+// GetDiscoverabilitySEOWithResponse Read locale-specific default SEO metadata.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /discoverability/seo (the `GetDiscoverabilitySEO` operationId).
+func (c *ClientWithResponses) GetDiscoverabilitySEOWithResponse(ctx context.Context, params *GetDiscoverabilitySEOParams, reqEditors ...RequestEditorFn) (*GetDiscoverabilitySEOResponse, error) {
+	rsp, err := c.GetDiscoverabilitySEO(ctx, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetDiscoverabilitySEOResponse(rsp)
+}
+
+// UpdateDiscoverabilitySEOWithBodyWithResponse Create or update locale-specific default SEO metadata.
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with PATCH /discoverability/seo (the `UpdateDiscoverabilitySEO` operationId).
+func (c *ClientWithResponses) UpdateDiscoverabilitySEOWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*UpdateDiscoverabilitySEOResponse, error) {
+	rsp, err := c.UpdateDiscoverabilitySEOWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseUpdateDiscoverabilitySEOResponse(rsp)
+}
+
+// UpdateDiscoverabilitySEOWithResponse Create or update locale-specific default SEO metadata.
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with PATCH /discoverability/seo (the `UpdateDiscoverabilitySEO` operationId).
+func (c *ClientWithResponses) UpdateDiscoverabilitySEOWithResponse(ctx context.Context, body UpdateDiscoverabilitySEOJSONRequestBody, reqEditors ...RequestEditorFn) (*UpdateDiscoverabilitySEOResponse, error) {
+	rsp, err := c.UpdateDiscoverabilitySEO(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseUpdateDiscoverabilitySEOResponse(rsp)
+}
+
 // ListLocalesWithResponse List locales visible to public and administrative consumers.
 //
 // Returns a wrapper object for the known response body format(s).
@@ -11420,6 +12981,401 @@ func ParseGrantRolePermissionResponse(rsp *http.Response) (*GrantRolePermissionR
 			return nil, err
 		}
 		response.JSON409 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseListDiscoverabilityRedirectsResponse parses an HTTP response from a ListDiscoverabilityRedirectsWithResponse call
+func ParseListDiscoverabilityRedirectsResponse(rsp *http.Response) (*ListDiscoverabilityRedirectsResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ListDiscoverabilityRedirectsResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest RedirectListResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest BadRequest
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest Unauthorized
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest Forbidden
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseCreateDiscoverabilityRedirectResponse parses an HTTP response from a CreateDiscoverabilityRedirectWithResponse call
+func ParseCreateDiscoverabilityRedirectResponse(rsp *http.Response) (*CreateDiscoverabilityRedirectResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &CreateDiscoverabilityRedirectResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 201:
+		var dest Redirect
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON201 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest BadRequest
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest Unauthorized
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest Forbidden
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest Conflict
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON409 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest BadRequest
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON422 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseDeleteDiscoverabilityRedirectResponse parses an HTTP response from a DeleteDiscoverabilityRedirectWithResponse call
+func ParseDeleteDiscoverabilityRedirectResponse(rsp *http.Response) (*DeleteDiscoverabilityRedirectResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &DeleteDiscoverabilityRedirectResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case rsp.StatusCode == 204:
+		break // No content-type
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest BadRequest
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest Unauthorized
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest Forbidden
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest Conflict
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON409 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetDiscoverabilityRedirectResponse parses an HTTP response from a GetDiscoverabilityRedirectWithResponse call
+func ParseGetDiscoverabilityRedirectResponse(rsp *http.Response) (*GetDiscoverabilityRedirectResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetDiscoverabilityRedirectResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest Redirect
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest Unauthorized
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest Forbidden
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseUpdateDiscoverabilityRedirectResponse parses an HTTP response from a UpdateDiscoverabilityRedirectWithResponse call
+func ParseUpdateDiscoverabilityRedirectResponse(rsp *http.Response) (*UpdateDiscoverabilityRedirectResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &UpdateDiscoverabilityRedirectResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest Redirect
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest BadRequest
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest Unauthorized
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest Forbidden
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest Conflict
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON409 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest BadRequest
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON422 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetDiscoverabilitySEOResponse parses an HTTP response from a GetDiscoverabilitySEOWithResponse call
+func ParseGetDiscoverabilitySEOResponse(rsp *http.Response) (*GetDiscoverabilitySEOResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetDiscoverabilitySEOResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest SEODefaults
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest BadRequest
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest Unauthorized
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest Forbidden
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseUpdateDiscoverabilitySEOResponse parses an HTTP response from a UpdateDiscoverabilitySEOWithResponse call
+func ParseUpdateDiscoverabilitySEOResponse(rsp *http.Response) (*UpdateDiscoverabilitySEOResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &UpdateDiscoverabilitySEOResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest SEODefaults
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest BadRequest
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest Unauthorized
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest Forbidden
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest Conflict
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON409 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest BadRequest
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON422 = &dest
 
 	}
 

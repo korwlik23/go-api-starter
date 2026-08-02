@@ -90,6 +90,12 @@ paths:
     $ref: ./modules/navigation/menus.yaml#/paths/~1navigation~1menus~1{menu_id}
   /navigation/menus/{menu_id}/reorder:
     $ref: ./modules/navigation/menus.yaml#/paths/~1navigation~1menus~1{menu_id}~1reorder
+  /discoverability/redirects:
+    $ref: ./modules/discoverability/redirects.yaml#/paths/~1discoverability~1redirects
+  /discoverability/redirects/{redirect_id}:
+    $ref: ./modules/discoverability/redirects.yaml#/paths/~1discoverability~1redirects~1{redirect_id}
+  /discoverability/seo:
+    $ref: ./modules/discoverability/settings.yaml#/paths/~1discoverability~1seo
   /livez:
     $ref: ./modules/system/health.yaml#/paths/~1livez
   /readyz:

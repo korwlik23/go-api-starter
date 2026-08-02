@@ -842,6 +842,241 @@ paths:
       summary: Grant a permission key to a role using optimistic concurrency.
       tags:
         - Authorization
+  /discoverability/redirects:
+    get:
+      operationId: listDiscoverabilityRedirects
+      parameters:
+        - in: query
+          name: locale_id
+          schema:
+            format: uuid
+            type: string
+        - in: query
+          name: enabled
+          schema:
+            type: boolean
+        - in: query
+          name: limit
+          schema:
+            default: 25
+            maximum: 100
+            minimum: 1
+            type: integer
+        - in: query
+          name: after_updated_at
+          schema:
+            format: date-time
+            type: string
+        - in: query
+          name: after_id
+          schema:
+            format: uuid
+            type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RedirectListResponse'
+          description: Account-scoped redirect rules.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+      security:
+        - SessionCookie: []
+      summary: List account-scoped redirect rules in stable cursor order.
+      tags:
+        - Discoverability
+      x-required-permission: discoverability.redirects.read.own
+    post:
+      operationId: createDiscoverabilityRedirect
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RedirectMutationRequest'
+        required: true
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Redirect'
+          description: The redirect rule was created.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/BadRequest'
+      security:
+        - CSRFToken: []
+          SessionCookie: []
+      summary: Create an account-scoped redirect rule.
+      tags:
+        - Discoverability
+      x-required-permission: discoverability.redirects.write.own
+  /discoverability/redirects/{redirect_id}:
+    delete:
+      operationId: deleteDiscoverabilityRedirect
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ExpectedVersionRequest'
+        required: true
+      responses:
+        '204':
+          description: The redirect rule was soft-deleted.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+      security:
+        - CSRFToken: []
+          SessionCookie: []
+      summary: Soft-delete a redirect rule using optimistic concurrency.
+      tags:
+        - Discoverability
+      x-required-permission: discoverability.redirects.write.own
+    get:
+      operationId: getDiscoverabilityRedirect
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Redirect'
+          description: The redirect rule.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+      security:
+        - SessionCookie: []
+      summary: Read one account-scoped redirect rule.
+      tags:
+        - Discoverability
+      x-required-permission: discoverability.redirects.read.own
+    parameters:
+      - in: path
+        name: redirect_id
+        required: true
+        schema:
+          format: uuid
+          type: string
+    patch:
+      operationId: updateDiscoverabilityRedirect
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RedirectUpdateRequest'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Redirect'
+          description: The updated redirect rule.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/BadRequest'
+      security:
+        - CSRFToken: []
+          SessionCookie: []
+      summary: Replace a redirect rule using optimistic concurrency.
+      tags:
+        - Discoverability
+      x-required-permission: discoverability.redirects.write.own
+  /discoverability/seo:
+    get:
+      operationId: getDiscoverabilitySEO
+      parameters:
+        - in: query
+          name: locale_id
+          required: true
+          schema:
+            format: uuid
+            type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SEODefaults'
+          description: Locale-specific SEO defaults.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+      security:
+        - SessionCookie: []
+      summary: Read locale-specific default SEO metadata.
+      tags:
+        - Discoverability
+      x-required-permission: discoverability.seo.read.own
+    patch:
+      operationId: updateDiscoverabilitySEO
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SEOUpdateRequest'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SEODefaults'
+          description: The saved SEO defaults.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/BadRequest'
+      security:
+        - CSRFToken: []
+          SessionCookie: []
+      summary: Create or update locale-specific default SEO metadata.
+      tags:
+        - Discoverability
+      x-required-permission: discoverability.seo.write.own
   /locales:
     get:
       operationId: listLocales
@@ -2895,6 +3130,123 @@ components:
       required:
         - email
       type: object
+    Redirect:
+      additionalProperties: false
+      properties:
+        account_id:
+          format: uuid
+          type: string
+        created_at:
+          format: date-time
+          type: string
+        destination_path:
+          maxLength: 512
+          minLength: 1
+          pattern: ^/[a-z0-9][a-z0-9/_-]*$|^/$
+          type: string
+        enabled:
+          type: boolean
+        id:
+          format: uuid
+          type: string
+        locale_id:
+          format: uuid
+          type: string
+        source_path:
+          maxLength: 512
+          minLength: 1
+          pattern: ^/[a-z0-9][a-z0-9/_-]*$|^/$
+          type: string
+        status_code:
+          enum:
+            - 301
+            - 302
+            - 307
+            - 308
+          type: integer
+        updated_at:
+          format: date-time
+          type: string
+        version:
+          minimum: 1
+          type: integer
+      required:
+        - id
+        - account_id
+        - locale_id
+        - source_path
+        - destination_path
+        - status_code
+        - enabled
+        - version
+        - created_at
+        - updated_at
+      type: object
+    RedirectCursor:
+      additionalProperties: false
+      properties:
+        id:
+          format: uuid
+          type: string
+        updated_at:
+          format: date-time
+          type: string
+      required:
+        - updated_at
+        - id
+      type: object
+    RedirectListResponse:
+      additionalProperties: false
+      properties:
+        items:
+          items:
+            $ref: '#/components/schemas/Redirect'
+          type: array
+        next:
+          $ref: '#/components/schemas/RedirectCursor'
+      required:
+        - items
+      type: object
+    RedirectMutationRequest:
+      additionalProperties: false
+      properties:
+        destination_path:
+          maxLength: 512
+          minLength: 1
+          type: string
+        enabled:
+          type: boolean
+        locale_id:
+          format: uuid
+          type: string
+        source_path:
+          maxLength: 512
+          minLength: 1
+          type: string
+        status_code:
+          enum:
+            - 301
+            - 302
+            - 307
+            - 308
+          type: integer
+      required:
+        - locale_id
+        - source_path
+        - destination_path
+        - status_code
+        - enabled
+      type: object
+    RedirectUpdateRequest:
+      allOf:
+        - $ref: '#/components/schemas/RedirectMutationRequest'
+        - properties:
+            expected_version:
+              minimum: 1
+              type: integer
+          required:
+            - expected_version
+          type: object
     RoleAssignmentItem:
       additionalProperties: false
       properties:
@@ -3092,6 +3444,93 @@ components:
         - version
         - affected_principals
         - session_outcome
+      type: object
+    SEODefaults:
+      additionalProperties: false
+      properties:
+        account_id:
+          format: uuid
+          type: string
+        canonical_base:
+          maxLength: 512
+          pattern: ^https://[^?#]+$
+          type: string
+        created_at:
+          format: date-time
+          type: string
+        description:
+          maxLength: 320
+          type: string
+        id:
+          format: uuid
+          type: string
+        locale_id:
+          format: uuid
+          type: string
+        robots:
+          enum:
+            - index,follow
+            - noindex,follow
+            - index,nofollow
+            - noindex,nofollow
+          type: string
+        title:
+          maxLength: 255
+          minLength: 1
+          type: string
+        updated_at:
+          format: date-time
+          type: string
+        version:
+          minimum: 1
+          type: integer
+      required:
+        - id
+        - account_id
+        - locale_id
+        - title
+        - description
+        - canonical_base
+        - robots
+        - version
+        - created_at
+        - updated_at
+      type: object
+    SEOUpdateRequest:
+      additionalProperties: false
+      properties:
+        canonical_base:
+          maxLength: 512
+          pattern: ^https://[^?#]+$
+          type: string
+        description:
+          maxLength: 320
+          type: string
+        expected_version:
+          description: Use zero when creating defaults for a locale for the first time.
+          minimum: 0
+          type: integer
+        locale_id:
+          format: uuid
+          type: string
+        robots:
+          enum:
+            - index,follow
+            - noindex,follow
+            - index,nofollow
+            - noindex,nofollow
+          type: string
+        title:
+          maxLength: 255
+          minLength: 1
+          type: string
+      required:
+        - locale_id
+        - title
+        - description
+        - canonical_base
+        - robots
+        - expected_version
       type: object
     SessionInvalidationOutcome:
       additionalProperties: false

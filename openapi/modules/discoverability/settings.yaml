@@ -1,0 +1,78 @@
+paths:
+  /discoverability/seo:
+    get:
+      tags: [Discoverability]
+      summary: Read locale-specific default SEO metadata.
+      operationId: getDiscoverabilitySEO
+      x-surfaces: [admin]
+      x-required-permission: discoverability.seo.read.own
+      security:
+        - SessionCookie: []
+      parameters:
+        - name: locale_id
+          in: query
+          required: true
+          schema: {type: string, format: uuid}
+      responses:
+        '200':
+          description: Locale-specific SEO defaults.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/SEODefaults'}
+        '400': {$ref: ../../common/errors.yaml#/components/responses/BadRequest}
+        '401': {$ref: ../../common/errors.yaml#/components/responses/Unauthorized}
+        '403': {$ref: ../../common/errors.yaml#/components/responses/Forbidden}
+        '404': {$ref: ../../common/errors.yaml#/components/responses/NotFound}
+    patch:
+      tags: [Discoverability]
+      summary: Create or update locale-specific default SEO metadata.
+      operationId: updateDiscoverabilitySEO
+      x-surfaces: [admin]
+      x-required-permission: discoverability.seo.write.own
+      security:
+        - SessionCookie: []
+          CSRFToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/SEOUpdateRequest'}
+      responses:
+        '200':
+          description: The saved SEO defaults.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/SEODefaults'}
+        '400': {$ref: ../../common/errors.yaml#/components/responses/BadRequest}
+        '401': {$ref: ../../common/errors.yaml#/components/responses/Unauthorized}
+        '403': {$ref: ../../common/errors.yaml#/components/responses/Forbidden}
+        '409': {$ref: ../../common/errors.yaml#/components/responses/Conflict}
+        '422': {$ref: ../../common/errors.yaml#/components/responses/BadRequest}
+components:
+  schemas:
+    SEODefaults:
+      type: object
+      additionalProperties: false
+      required: [id, account_id, locale_id, title, description, canonical_base, robots, version, created_at, updated_at]
+      properties:
+        id: {type: string, format: uuid}
+        account_id: {type: string, format: uuid}
+        locale_id: {type: string, format: uuid}
+        title: {type: string, minLength: 1, maxLength: 255}
+        description: {type: string, maxLength: 320}
+        canonical_base: {type: string, maxLength: 512, pattern: '^https://[^?#]+$'}
+        robots: {type: string, enum: ['index,follow', 'noindex,follow', 'index,nofollow', 'noindex,nofollow']}
+        version: {type: integer, minimum: 1}
+        created_at: {type: string, format: date-time}
+        updated_at: {type: string, format: date-time}
+    SEOUpdateRequest:
+      type: object
+      additionalProperties: false
+      required: [locale_id, title, description, canonical_base, robots, expected_version]
+      properties:
+        locale_id: {type: string, format: uuid}
+        title: {type: string, minLength: 1, maxLength: 255}
+        description: {type: string, maxLength: 320}
+        canonical_base: {type: string, maxLength: 512, pattern: '^https://[^?#]+$'}
+        robots: {type: string, enum: ['index,follow', 'noindex,follow', 'index,nofollow', 'noindex,nofollow']}
+        expected_version: {type: integer, minimum: 0, description: Use zero when creating defaults for a locale for the first time.}
