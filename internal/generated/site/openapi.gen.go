@@ -214,6 +214,21 @@ type LocaleListResponse struct {
 	Items []Locale `json:"items"`
 }
 
+// PreviewExchangeRequest defines model for PreviewExchangeRequest.
+type PreviewExchangeRequest struct {
+	Token string `json:"token"`
+}
+
+// PreviewExchangeResponse defines model for PreviewExchangeResponse.
+type PreviewExchangeResponse struct {
+	ContentId     openapi_types.UUID     `json:"content_id"`
+	ExpiresAt     time.Time              `json:"expires_at"`
+	RevisionId    openapi_types.UUID     `json:"revision_id"`
+	Snapshot      map[string]interface{} `json:"snapshot"`
+	SourceVersion int                    `json:"source_version"`
+	TranslationId openapi_types.UUID     `json:"translation_id"`
+}
+
 // Problem defines model for Problem.
 type Problem struct {
 	// Code Stable, machine-readable error code.
@@ -393,6 +408,9 @@ type ListPublicPostsParams struct {
 	Limit *int `form:"limit,omitempty" json:"limit,omitempty"`
 }
 
+// ExchangePublicPreviewJSONRequestBody defines body for ExchangePublicPreview for application/json ContentType.
+type ExchangePublicPreviewJSONRequestBody = PreviewExchangeRequest
+
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
 	// GetLiveness Report process liveness without probing dependencies.
@@ -416,6 +434,9 @@ type ServerInterface interface {
 	// GetPublicPost Resolve one published post by locale and slug.
 	// (GET /public/posts/{locale}/{slug})
 	GetPublicPost(c *gin.Context, locale string, slug string)
+	// ExchangePublicPreview Consume one preview token and return its immutable snapshot.
+	// (POST /public/previews/exchange)
+	ExchangePublicPreview(c *gin.Context)
 	// GetReadiness Report bounded readiness without exposing dependency detail.
 	// (GET /readyz)
 	GetReadiness(c *gin.Context)
@@ -629,6 +650,19 @@ func (siw *ServerInterfaceWrapper) GetPublicPost(c *gin.Context) {
 	siw.Handler.GetPublicPost(c, locale, slug)
 }
 
+// ExchangePublicPreview operation middleware
+func (siw *ServerInterfaceWrapper) ExchangePublicPreview(c *gin.Context) {
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.ExchangePublicPreview(c)
+}
+
 // GetReadiness operation middleware
 func (siw *ServerInterfaceWrapper) GetReadiness(c *gin.Context) {
 
@@ -676,6 +710,7 @@ func RegisterHandlersWithOptions(router gin.IRouter, si ServerInterface, options
 	router.GET(options.BaseURL+"/public/menus/:locale/:location", wrapper.GetPublicMenu)
 	router.GET(options.BaseURL+"/public/posts/:locale", wrapper.ListPublicPosts)
 	router.GET(options.BaseURL+"/public/posts/:locale/:slug", wrapper.GetPublicPost)
+	router.POST(options.BaseURL+"/public/previews/exchange", wrapper.ExchangePublicPreview)
 	router.GET(options.BaseURL+"/readyz", wrapper.GetReadiness)
 }
 
@@ -1125,6 +1160,86 @@ func (response GetPublicPost500JSONResponse) VisitGetPublicPostResponse(w http.R
 	return err
 }
 
+type ExchangePublicPreviewRequestObject struct {
+	Body *ExchangePublicPreviewJSONRequestBody
+}
+
+type ExchangePublicPreviewResponseObject interface {
+	VisitExchangePublicPreviewResponse(w http.ResponseWriter) error
+}
+
+type ExchangePublicPreview200ResponseHeaders struct {
+	CacheControl *string
+	XRobotsTag   *string
+}
+
+type ExchangePublicPreview200JSONResponse struct {
+	Body    PreviewExchangeResponse
+	Headers ExchangePublicPreview200ResponseHeaders
+}
+
+func (response ExchangePublicPreview200JSONResponse) VisitExchangePublicPreviewResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if response.Headers.CacheControl != nil {
+		w.Header().Set("Cache-Control", fmt.Sprint(*response.Headers.CacheControl))
+	}
+	if response.Headers.XRobotsTag != nil {
+		w.Header().Set("X-Robots-Tag", fmt.Sprint(*response.Headers.XRobotsTag))
+	}
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ExchangePublicPreview404JSONResponse struct{ NotFoundJSONResponse }
+
+func (response ExchangePublicPreview404JSONResponse) VisitExchangePublicPreviewResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ExchangePublicPreview429JSONResponse struct{ TooManyRequestsJSONResponse }
+
+func (response ExchangePublicPreview429JSONResponse) VisitExchangePublicPreviewResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(429)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ExchangePublicPreview500JSONResponse struct {
+	InternalServerErrorJSONResponse
+}
+
+func (response ExchangePublicPreview500JSONResponse) VisitExchangePublicPreviewResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(500)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
 type GetReadinessRequestObject struct {
 }
 
@@ -1203,6 +1318,9 @@ type StrictServerInterface interface {
 	// GetPublicPost Resolve one published post by locale and slug.
 	// (GET /public/posts/{locale}/{slug})
 	GetPublicPost(ctx context.Context, request GetPublicPostRequestObject) (GetPublicPostResponseObject, error)
+	// ExchangePublicPreview Consume one preview token and return its immutable snapshot.
+	// (POST /public/previews/exchange)
+	ExchangePublicPreview(ctx context.Context, request ExchangePublicPreviewRequestObject) (ExchangePublicPreviewResponseObject, error)
 	// GetReadiness Report bounded readiness without exposing dependency detail.
 	// (GET /readyz)
 	GetReadiness(ctx context.Context, request GetReadinessRequestObject) (GetReadinessResponseObject, error)
@@ -1440,6 +1558,37 @@ func (sh *strictHandler) GetPublicPost(ctx *gin.Context, locale string, slug str
 		sh.options.HandlerErrorFunc(ctx, err)
 	} else if validResponse, ok := response.(GetPublicPostResponseObject); ok {
 		if err := validResponse.VisitGetPublicPostResponse(ctx.Writer); err != nil {
+			sh.options.ResponseErrorHandlerFunc(ctx, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(ctx, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// ExchangePublicPreview operation middleware
+func (sh *strictHandler) ExchangePublicPreview(ctx *gin.Context) {
+	var request ExchangePublicPreviewRequestObject
+
+	var body ExchangePublicPreviewJSONRequestBody
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		sh.options.RequestErrorHandlerFunc(ctx, err)
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.ExchangePublicPreview(ctx, request.(ExchangePublicPreviewRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ExchangePublicPreview")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		sh.options.HandlerErrorFunc(ctx, err)
+	} else if validResponse, ok := response.(ExchangePublicPreviewResponseObject); ok {
+		if err := validResponse.VisitExchangePublicPreviewResponse(ctx.Writer); err != nil {
 			sh.options.ResponseErrorHandlerFunc(ctx, err)
 		}
 	} else if response != nil {

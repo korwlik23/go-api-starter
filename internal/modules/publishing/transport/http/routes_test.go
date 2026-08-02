@@ -10,7 +10,7 @@ import (
 func TestM3A5RegisterRoutesExposesDraftMutationContract(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	router := gin.New()
-	RegisterRoutes(router.Group("/api/v1"), RouteHandlers{Content: &ContentHandler{}, Revisions: &RevisionHandler{}, Workflow: &WorkflowHandler{}, Schedules: &ScheduleHandler{}})
+	RegisterRoutes(router.Group("/api/v1"), RouteHandlers{Content: &ContentHandler{}, Revisions: &RevisionHandler{}, Workflow: &WorkflowHandler{}, Schedules: &ScheduleHandler{}, Preview: &PreviewHandler{}})
 
 	routes := make(map[string]struct{})
 	for _, route := range router.Routes() {
@@ -29,6 +29,7 @@ func TestM3A5RegisterRoutesExposesDraftMutationContract(t *testing.T) {
 		"GET /api/v1/publishing/schedules",
 		"POST /api/v1/publishing/schedules",
 		"DELETE /api/v1/publishing/schedules/:schedule_id",
+		"POST /api/v1/publishing/content/:content_id/preview",
 	} {
 		_, exists := routes[expected]
 		require.True(t, exists, expected)
@@ -39,6 +40,7 @@ func TestM3C1RegisterPublicRoutesExposesReadOnlyPublishedContract(t *testing.T) 
 	gin.SetMode(gin.TestMode)
 	router := gin.New()
 	RegisterPublicRoutes(router.Group("/api/v1"), &PublicHandler{})
+	RegisterPreviewExchangeRoute(router.Group("/api/v1"), &PreviewHandler{})
 
 	routes := make(map[string]struct{})
 	for _, route := range router.Routes() {
@@ -49,6 +51,7 @@ func TestM3C1RegisterPublicRoutesExposesReadOnlyPublishedContract(t *testing.T) 
 		"GET /api/v1/public/posts/:locale",
 		"GET /api/v1/public/posts/:locale/:slug",
 		"GET /api/v1/public/menus/:locale/:location",
+		"POST /api/v1/public/previews/exchange",
 	} {
 		_, exists := routes[expected]
 		require.True(t, exists, expected)

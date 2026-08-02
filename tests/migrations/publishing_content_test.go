@@ -18,7 +18,7 @@ func TestM3A2PublishingMigrationCatalog(t *testing.T) {
 
 	module := database.MigrationModule{
 		ID:           "publishing",
-		Dependencies: []string{"accounts", "localization"},
+		Dependencies: []string{"accounts", "identity", "localization"},
 		Bundles:      strictMigrationTestBundles(t, "publishing"),
 	}
 	require.NoError(t, app.ValidateMigrationDialectParity([]database.MigrationModule{module}))
@@ -62,6 +62,11 @@ func TestM3A2PublishingMigrationCatalog(t *testing.T) {
 			"publication_schedules_due_index",
 			"publication_schedules_translation_fk",
 		},
+		"000008_create_preview_tokens.sql": {
+			"CREATE TABLE publishing_preview_tokens",
+			"publishing_preview_tokens_hash_index",
+			"publishing_preview_tokens_revision_fk",
+		},
 	}
 
 	for dialect, bundle := range module.Bundles {
@@ -103,6 +108,7 @@ func TestM3A2PublishingSchemaUpDown(t *testing.T) {
 		"content_revisions",
 		"workflow_events",
 		"publication_schedules",
+		"publishing_preview_tokens",
 	} {
 		require.True(t, migrationTableExists(t, ctx, sqlDB, cfg, table), table)
 	}
@@ -123,6 +129,7 @@ func TestM3A2PublishingSchemaUpDown(t *testing.T) {
 	require.NoError(t, err)
 	for _, table := range []string{
 		"publication_schedules",
+		"publishing_preview_tokens",
 		"workflow_events",
 		"content_revisions",
 		"content_taxonomy_terms",
@@ -139,6 +146,7 @@ func m3CleanupPublishingSchema(t *testing.T, db *sql.DB) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	for _, table := range []string{
+		"publishing_preview_tokens",
 		"publication_schedules",
 		"workflow_events",
 		"content_revisions",
@@ -170,4 +178,6 @@ func m3CreatePublishingParents(
 		_, err := db.ExecContext(ctx, "CREATE TABLE "+table+" (id "+idType+" PRIMARY KEY)")
 		require.NoError(t, err)
 	}
+	_, err := db.ExecContext(ctx, "CREATE TABLE IF NOT EXISTS users (id "+idType+" PRIMARY KEY)")
+	require.NoError(t, err)
 }

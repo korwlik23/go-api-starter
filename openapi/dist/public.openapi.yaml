@@ -213,6 +213,43 @@ paths:
       summary: Resolve one published post by locale and slug.
       tags:
         - Publishing
+  /public/previews/exchange:
+    post:
+      operationId: exchangePublicPreview
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PreviewExchangeRequest'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PreviewExchangeResponse'
+          description: One-time preview payload; never cache or index this response.
+          headers:
+            Cache-Control:
+              schema:
+                enum:
+                  - no-store
+                type: string
+            X-Robots-Tag:
+              schema:
+                enum:
+                  - noindex, nofollow
+                type: string
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      security: []
+      summary: Consume one preview token and return its immutable snapshot.
+      tags:
+        - Publishing
 components:
   responses:
     BadRequest:
@@ -298,6 +335,44 @@ components:
           type: array
       required:
         - items
+      type: object
+    PreviewExchangeRequest:
+      additionalProperties: false
+      properties:
+        token:
+          minLength: 1
+          type: string
+      required:
+        - token
+      type: object
+    PreviewExchangeResponse:
+      additionalProperties: false
+      properties:
+        content_id:
+          format: uuid
+          type: string
+        expires_at:
+          format: date-time
+          type: string
+        revision_id:
+          format: uuid
+          type: string
+        snapshot:
+          additionalProperties: true
+          type: object
+        source_version:
+          minimum: 1
+          type: integer
+        translation_id:
+          format: uuid
+          type: string
+      required:
+        - revision_id
+        - content_id
+        - translation_id
+        - source_version
+        - snapshot
+        - expires_at
       type: object
     Problem:
       additionalProperties: false

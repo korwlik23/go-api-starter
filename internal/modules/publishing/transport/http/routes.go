@@ -7,6 +7,7 @@ type RouteHandlers struct {
 	Revisions *RevisionHandler
 	Workflow  *WorkflowHandler
 	Schedules *ScheduleHandler
+	Preview   *PreviewHandler
 }
 
 // RegisterRoutes exposes the draft content mutation surface. Authentication,
@@ -31,6 +32,9 @@ func RegisterRoutes(router *gin.RouterGroup, handlers RouteHandlers) {
 		router.POST("/publishing/schedules", handlers.Schedules.Create)
 		router.DELETE("/publishing/schedules/:schedule_id", handlers.Schedules.Cancel)
 	}
+	if handlers.Preview != nil {
+		router.POST("/publishing/content/:content_id/preview", handlers.Preview.Issue)
+	}
 }
 
 // RegisterPublicRoutes exposes read-only published content. It intentionally
@@ -44,4 +48,11 @@ func RegisterPublicRoutes(router *gin.RouterGroup, handler *PublicHandler) {
 	router.GET("/public/posts/:locale", handler.ListPosts)
 	router.GET("/public/posts/:locale/:slug", handler.GetPost)
 	router.GET("/public/menus/:locale/:location", handler.GetMenu)
+}
+
+func RegisterPreviewExchangeRoute(router *gin.RouterGroup, handler *PreviewHandler) {
+	if router == nil || handler == nil {
+		return
+	}
+	router.POST("/public/previews/exchange", handler.Exchange)
 }

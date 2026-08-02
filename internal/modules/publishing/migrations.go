@@ -13,7 +13,7 @@ var migrationFiles embed.FS
 func MigrationModule() database.MigrationModule {
 	return database.MigrationModule{
 		ID:           "publishing",
-		Dependencies: []string{"accounts", "localization"},
+		Dependencies: []string{"accounts", "identity", "localization"},
 		Bundles:      migrationBundles(migrationFiles),
 	}
 }

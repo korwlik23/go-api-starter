@@ -108,6 +108,8 @@ paths:
     $ref: ./modules/publishing/public.yaml#/paths/~1public~1posts~1{locale}~1{slug}
   /public/menus/{locale}/{location}:
     $ref: ./modules/publishing/public.yaml#/paths/~1public~1menus~1{locale}~1{location}
+  /public/previews/exchange:
+    $ref: ./modules/publishing/public.yaml#/paths/~1public~1previews~1exchange
   /livez:
     $ref: ./modules/system/health.yaml#/paths/~1livez
   /readyz:

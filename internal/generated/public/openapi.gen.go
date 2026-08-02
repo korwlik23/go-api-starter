@@ -4,6 +4,7 @@
 package publicapi
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -160,6 +161,21 @@ type LocaleDirection string
 // LocaleListResponse defines model for LocaleListResponse.
 type LocaleListResponse struct {
 	Items []Locale `json:"items"`
+}
+
+// PreviewExchangeRequest defines model for PreviewExchangeRequest.
+type PreviewExchangeRequest struct {
+	Token string `json:"token"`
+}
+
+// PreviewExchangeResponse defines model for PreviewExchangeResponse.
+type PreviewExchangeResponse struct {
+	ContentId     openapi_types.UUID     `json:"content_id"`
+	ExpiresAt     time.Time              `json:"expires_at"`
+	RevisionId    openapi_types.UUID     `json:"revision_id"`
+	Snapshot      map[string]interface{} `json:"snapshot"`
+	SourceVersion int                    `json:"source_version"`
+	TranslationId openapi_types.UUID     `json:"translation_id"`
 }
 
 // Problem defines model for Problem.
@@ -325,6 +341,9 @@ type ListPublicPostsParams struct {
 	Limit *int `form:"limit,omitempty" json:"limit,omitempty"`
 }
 
+// ExchangePublicPreviewJSONRequestBody defines body for ExchangePublicPreview for application/json ContentType.
+type ExchangePublicPreviewJSONRequestBody = PreviewExchangeRequest
+
 // RequestEditorFn is the function signature for the RequestEditor callback function
 type RequestEditorFn func(ctx context.Context, req *http.Request) error
 
@@ -428,6 +447,20 @@ type ClientInterface interface {
 	//
 	// Corresponds with GET /public/posts/{locale}/{slug} (the `GetPublicPost` operationId).
 	GetPublicPost(ctx context.Context, locale string, slug string, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ExchangePublicPreviewWithBody Consume one preview token and return its immutable snapshot.
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with POST /public/previews/exchange (the `ExchangePublicPreview` operationId).
+	ExchangePublicPreviewWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ExchangePublicPreview Consume one preview token and return its immutable snapshot.
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with POST /public/previews/exchange (the `ExchangePublicPreview` operationId).
+	ExchangePublicPreview(ctx context.Context, body ExchangePublicPreviewJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 }
 
 // ListLocales List locales visible to public and administrative consumers.
@@ -510,6 +543,40 @@ func (c *Client) ListPublicPosts(ctx context.Context, locale string, params *Lis
 // Corresponds with GET /public/posts/{locale}/{slug} (the `GetPublicPost` operationId).
 func (c *Client) GetPublicPost(ctx context.Context, locale string, slug string, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewGetPublicPostRequest(c.Server, locale, slug)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// ExchangePublicPreviewWithBody Consume one preview token and return its immutable snapshot.
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with POST /public/previews/exchange (the `ExchangePublicPreview` operationId).
+func (c *Client) ExchangePublicPreviewWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewExchangePublicPreviewRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// ExchangePublicPreview Consume one preview token and return its immutable snapshot.
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with POST /public/previews/exchange (the `ExchangePublicPreview` operationId).
+func (c *Client) ExchangePublicPreview(ctx context.Context, body ExchangePublicPreviewJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewExchangePublicPreviewRequest(c.Server, body)
 	if err != nil {
 		return nil, err
 	}
@@ -789,6 +856,46 @@ func NewGetPublicPostRequest(server string, locale string, slug string) (*http.R
 	return req, nil
 }
 
+// NewExchangePublicPreviewRequest calls the generic ExchangePublicPreview builder with application/json body
+func NewExchangePublicPreviewRequest(server string, body ExchangePublicPreviewJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewExchangePublicPreviewRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewExchangePublicPreviewRequestWithBody constructs an http.Request for the ExchangePublicPreview method, with any body, and a specified content type
+func NewExchangePublicPreviewRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/public/previews/exchange")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPost, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
 func (c *Client) applyEditors(ctx context.Context, req *http.Request, additionalEditors []RequestEditorFn) error {
 	for _, r := range c.RequestEditors {
 		if err := r(ctx, req); err != nil {
@@ -874,6 +981,20 @@ type ClientWithResponsesInterface interface {
 	//
 	// Corresponds with GET /public/posts/{locale}/{slug} (the `GetPublicPost` operationId).
 	GetPublicPostWithResponse(ctx context.Context, locale string, slug string, reqEditors ...RequestEditorFn) (*GetPublicPostResponse, error)
+
+	// ExchangePublicPreviewWithBodyWithResponse Consume one preview token and return its immutable snapshot.
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /public/previews/exchange (the `ExchangePublicPreview` operationId).
+	ExchangePublicPreviewWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*ExchangePublicPreviewResponse, error)
+
+	// ExchangePublicPreviewWithResponse Consume one preview token and return its immutable snapshot.
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /public/previews/exchange (the `ExchangePublicPreview` operationId).
+	ExchangePublicPreviewWithResponse(ctx context.Context, body ExchangePublicPreviewJSONRequestBody, reqEditors ...RequestEditorFn) (*ExchangePublicPreviewResponse, error)
 }
 
 type ListLocalesResponse struct {
@@ -1262,6 +1383,76 @@ func (r GetPublicPostResponse) ContentType() string {
 	return ""
 }
 
+// ExchangePublicPreviewResponse200Headers the declared response headers of an HTTP 200 response for ExchangePublicPreview
+type ExchangePublicPreviewResponse200Headers struct {
+	CacheControl *string
+	XRobotsTag   *string
+}
+
+type ExchangePublicPreviewResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *PreviewExchangeResponse
+	// JSON404 the response for an HTTP 404 `application/json` response
+	JSON404 *NotFound
+	// JSON429 the response for an HTTP 429 `application/json` response
+	JSON429 *TooManyRequests
+	// JSON500 the response for an HTTP 500 `application/json` response
+	JSON500 *InternalServerError
+	// Headers200 the parsed response headers for an HTTP 200 response
+	Headers200 *ExchangePublicPreviewResponse200Headers
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r ExchangePublicPreviewResponse) GetJSON200() *PreviewExchangeResponse {
+	return r.JSON200
+}
+
+// GetJSON404 returns the response for an HTTP 404 `application/json` response
+func (r ExchangePublicPreviewResponse) GetJSON404() *NotFound {
+	return r.JSON404
+}
+
+// GetJSON429 returns the response for an HTTP 429 `application/json` response
+func (r ExchangePublicPreviewResponse) GetJSON429() *TooManyRequests {
+	return r.JSON429
+}
+
+// GetJSON500 returns the response for an HTTP 500 `application/json` response
+func (r ExchangePublicPreviewResponse) GetJSON500() *InternalServerError {
+	return r.JSON500
+}
+
+// GetBody returns the raw response body bytes
+func (r ExchangePublicPreviewResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r ExchangePublicPreviewResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ExchangePublicPreviewResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r ExchangePublicPreviewResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
 // ListLocalesWithResponse List locales visible to public and administrative consumers.
 //
 // Returns a wrapper object for the known response body format(s).
@@ -1338,6 +1529,32 @@ func (c *ClientWithResponses) GetPublicPostWithResponse(ctx context.Context, loc
 		return nil, err
 	}
 	return ParseGetPublicPostResponse(rsp)
+}
+
+// ExchangePublicPreviewWithBodyWithResponse Consume one preview token and return its immutable snapshot.
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /public/previews/exchange (the `ExchangePublicPreview` operationId).
+func (c *ClientWithResponses) ExchangePublicPreviewWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*ExchangePublicPreviewResponse, error) {
+	rsp, err := c.ExchangePublicPreviewWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseExchangePublicPreviewResponse(rsp)
+}
+
+// ExchangePublicPreviewWithResponse Consume one preview token and return its immutable snapshot.
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /public/previews/exchange (the `ExchangePublicPreview` operationId).
+func (c *ClientWithResponses) ExchangePublicPreviewWithResponse(ctx context.Context, body ExchangePublicPreviewJSONRequestBody, reqEditors ...RequestEditorFn) (*ExchangePublicPreviewResponse, error) {
+	rsp, err := c.ExchangePublicPreview(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseExchangePublicPreviewResponse(rsp)
 }
 
 // ParseListLocalesResponse parses an HTTP response from a ListLocalesWithResponse call
@@ -1653,6 +1870,73 @@ func ParseGetPublicPostResponse(rsp *http.Response) (*GetPublicPostResponse, err
 				return nil, err
 			}
 			headers.CacheControl = &value
+		}
+		response.Headers200 = &headers
+	}
+
+	return response, nil
+}
+
+// ParseExchangePublicPreviewResponse parses an HTTP response from a ExchangePublicPreviewWithResponse call
+func ParseExchangePublicPreviewResponse(rsp *http.Response) (*ExchangePublicPreviewResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ExchangePublicPreviewResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest PreviewExchangeResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 429:
+		var dest TooManyRequests
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON429 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest InternalServerError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	switch {
+	case rsp.StatusCode == 200:
+		var headers ExchangePublicPreviewResponse200Headers
+		if values := rsp.Header.Values("Cache-Control"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "Cache-Control", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.CacheControl = &value
+		}
+		if values := rsp.Header.Values("X-Robots-Tag"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "X-Robots-Tag", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.XRobotsTag = &value
 		}
 		response.Headers200 = &headers
 	}

@@ -17,7 +17,7 @@ func TestM3A2PublishingMigrationModuleIsRegistered(t *testing.T) {
 			continue
 		}
 		found = true
-		require.ElementsMatch(t, []string{"accounts", "localization"}, module.Dependencies)
+		require.ElementsMatch(t, []string{"accounts", "identity", "localization"}, module.Dependencies)
 		require.NotNil(t, module.Bundles)
 	}
 	require.True(t, found)

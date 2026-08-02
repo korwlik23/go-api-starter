@@ -56,12 +56,12 @@ func TestOpenAPISurfaceIsolation(t *testing.T) {
 		"updateTranslationCatalog", "updateAdminUserStatus", "updateMembershipStatus", "verifyMFA",
 	}, surfaces["admin"])
 	require.ElementsMatch(t, []string{
-		"getPublicContent", "getPublicMenu", "getPublicPost", "getTranslationCatalog",
-		"listLocales", "listPublicPosts",
+		"exchangePublicPreview", "getPublicContent", "getPublicMenu", "getPublicPost",
+		"getTranslationCatalog", "listLocales", "listPublicPosts",
 	}, surfaces["public"])
 	require.ElementsMatch(t, []string{
-		"getLiveness", "getPublicContent", "getPublicMenu", "getPublicPost",
-		"getReadiness", "getTranslationCatalog", "listLocales", "listPublicPosts",
+		"exchangePublicPreview", "getLiveness", "getPublicContent", "getPublicMenu",
+		"getPublicPost", "getReadiness", "getTranslationCatalog", "listLocales", "listPublicPosts",
 	}, surfaces["site-server"])
 }
 
@@ -83,12 +83,12 @@ func TestGeneratedSurfaceBundlesContainOnlyTheirOperations(t *testing.T) {
 			"updateTranslationCatalog", "updateAdminUserStatus", "updateMembershipStatus", "verifyMFA",
 		},
 		"public": {
-			"getPublicContent", "getPublicMenu", "getPublicPost", "getTranslationCatalog",
-			"listLocales", "listPublicPosts",
+			"exchangePublicPreview", "getPublicContent", "getPublicMenu", "getPublicPost",
+			"getTranslationCatalog", "listLocales", "listPublicPosts",
 		},
 		"site-server": {
-			"getLiveness", "getPublicContent", "getPublicMenu", "getPublicPost",
-			"getReadiness", "getTranslationCatalog", "listLocales", "listPublicPosts",
+			"exchangePublicPreview", "getLiveness", "getPublicContent", "getPublicMenu",
+			"getPublicPost", "getReadiness", "getTranslationCatalog", "listLocales", "listPublicPosts",
 		},
 	}
 

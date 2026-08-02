@@ -15,7 +15,7 @@ func TestM3A2PublishingMigrationModuleIsWired(t *testing.T) {
 	for _, module := range modules {
 		if module.ID == "publishing" {
 			publishingModuleID = module.ID
-			require.ElementsMatch(t, []string{"accounts", "localization"}, module.Dependencies)
+			require.ElementsMatch(t, []string{"accounts", "identity", "localization"}, module.Dependencies)
 		}
 	}
 	require.Equal(t, "publishing", publishingModuleID)

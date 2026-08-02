@@ -120,6 +120,30 @@ paths:
         '404': {$ref: ../../common/errors.yaml#/components/responses/NotFound}
         '429': {$ref: ../../common/errors.yaml#/components/responses/TooManyRequests}
         '500': {$ref: ../../common/errors.yaml#/components/responses/InternalServerError}
+  /public/previews/exchange:
+    post:
+      tags: [Publishing]
+      summary: Consume one preview token and return its immutable snapshot.
+      operationId: exchangePublicPreview
+      x-surfaces: [public, site-server]
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/PreviewExchangeRequest'}
+      responses:
+        '200':
+          description: One-time preview payload; never cache or index this response.
+          headers:
+            Cache-Control: {schema: {type: string, enum: [no-store]}}
+            X-Robots-Tag: {schema: {type: string, enum: ['noindex, nofollow']}}
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/PreviewExchangeResponse'}
+        '404': {$ref: ../../common/errors.yaml#/components/responses/NotFound}
+        '429': {$ref: ../../common/errors.yaml#/components/responses/TooManyRequests}
+        '500': {$ref: ../../common/errors.yaml#/components/responses/InternalServerError}
 components:
   schemas:
     PublicContent:
@@ -247,3 +271,20 @@ components:
         children:
           type: array
           items: {$ref: '#/components/schemas/PublicMenuItem'}
+    PreviewExchangeRequest:
+      type: object
+      additionalProperties: false
+      required: [token]
+      properties:
+        token: {type: string, minLength: 1}
+    PreviewExchangeResponse:
+      type: object
+      additionalProperties: false
+      required: [revision_id, content_id, translation_id, source_version, snapshot, expires_at]
+      properties:
+        revision_id: {type: string, format: uuid}
+        content_id: {type: string, format: uuid}
+        translation_id: {type: string, format: uuid}
+        source_version: {type: integer, minimum: 1}
+        snapshot: {type: object, additionalProperties: true}
+        expires_at: {type: string, format: date-time}
