@@ -1,0 +1,23 @@
+package navigation
+
+import (
+	"testing"
+
+	"github.com/korwlik23/go-api-starter/internal/modular"
+	"github.com/stretchr/testify/require"
+)
+
+func TestM3B4NavigationManifestIsDisableableAndPermissionScoped(t *testing.T) {
+	t.Parallel()
+
+	manifest := Manifest()
+	require.NoError(t, modular.ValidateManifest(manifest))
+	require.Equal(t, "navigation", manifest.ID)
+	require.Equal(t, modular.TierDefault, manifest.Tier)
+	require.True(t, manifest.Disableable)
+	require.ElementsMatch(t, []string{"accounts", "authorization", "localization", "audit"}, manifest.Dependencies)
+	require.Contains(t, manifest.ProvidedCapabilities, "navigation.menus")
+	require.Len(t, manifest.Permissions, 3)
+	require.Contains(t, manifest.Routes, modular.Route{Method: "GET", Path: "/api/v1/navigation/menus", Permission: PermissionMenusReadOwn})
+	require.Contains(t, manifest.Routes, modular.Route{Method: "POST", Path: "/api/v1/navigation/menus/:menu_id/reorder", Permission: PermissionMenusWriteOwn})
+}

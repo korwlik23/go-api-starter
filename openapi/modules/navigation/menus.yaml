@@ -1,0 +1,272 @@
+paths:
+  /navigation/menus:
+    get:
+      tags: [Navigation]
+      summary: List account-scoped navigation menus with bounded pagination.
+      operationId: listNavigationMenus
+      x-surfaces: [admin]
+      x-required-permission: navigation.menus.read.own
+      security:
+        - SessionCookie: []
+          CSRFToken: []
+      parameters:
+        - name: locale_id
+          in: query
+          schema: {type: string, format: uuid}
+        - name: enabled
+          in: query
+          schema: {type: boolean}
+        - name: limit
+          in: query
+          schema: {type: integer, minimum: 1, maximum: 100, default: 25}
+        - name: after_updated_at
+          in: query
+          schema: {type: string, format: date-time}
+        - name: after_id
+          in: query
+          schema: {type: string, format: uuid}
+      responses:
+        '200':
+          description: Account-scoped menus in stable updated-at/id order.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/MenuListResponse'}
+        '401': {$ref: ../../common/errors.yaml#/components/responses/Unauthorized}
+        '403': {$ref: ../../common/errors.yaml#/components/responses/Forbidden}
+    post:
+      tags: [Navigation]
+      summary: Create a locale-specific navigation menu and ordered tree.
+      operationId: createNavigationMenu
+      x-surfaces: [admin]
+      x-required-permission: navigation.menus.write.own
+      security:
+        - SessionCookie: []
+          CSRFToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/MenuMutationRequest'}
+      responses:
+        '201':
+          description: The menu was created with stable item IDs.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Menu'}
+        '400': {$ref: ../../common/errors.yaml#/components/responses/BadRequest}
+        '401': {$ref: ../../common/errors.yaml#/components/responses/Unauthorized}
+        '403': {$ref: ../../common/errors.yaml#/components/responses/Forbidden}
+        '409': {$ref: ../../common/errors.yaml#/components/responses/Conflict}
+        '422': {$ref: ../../common/errors.yaml#/components/responses/BadRequest}
+  /navigation/menus/{menu_id}:
+    parameters:
+      - name: menu_id
+        in: path
+        required: true
+        schema: {type: string, format: uuid}
+    get:
+      tags: [Navigation]
+      summary: Read one account-scoped navigation menu tree.
+      operationId: getNavigationMenu
+      x-surfaces: [admin]
+      x-required-permission: navigation.menus.read.own
+      security:
+        - SessionCookie: []
+          CSRFToken: []
+      responses:
+        '200':
+          description: The menu and its ordered tree.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Menu'}
+        '401': {$ref: ../../common/errors.yaml#/components/responses/Unauthorized}
+        '403': {$ref: ../../common/errors.yaml#/components/responses/Forbidden}
+        '404': {$ref: ../../common/errors.yaml#/components/responses/NotFound}
+    patch:
+      tags: [Navigation]
+      summary: Replace menu metadata/tree using optimistic concurrency.
+      operationId: updateNavigationMenu
+      x-surfaces: [admin]
+      x-required-permission: navigation.menus.write.own
+      security:
+        - SessionCookie: []
+          CSRFToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - {$ref: '#/components/schemas/MenuMutationRequest'}
+                - type: object
+                  required: [expected_version]
+                  properties:
+                    expected_version: {type: integer, minimum: 1}
+      responses:
+        '200':
+          description: The menu was updated and versions advanced.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Menu'}
+        '400': {$ref: ../../common/errors.yaml#/components/responses/BadRequest}
+        '401': {$ref: ../../common/errors.yaml#/components/responses/Unauthorized}
+        '403': {$ref: ../../common/errors.yaml#/components/responses/Forbidden}
+        '404': {$ref: ../../common/errors.yaml#/components/responses/NotFound}
+        '409': {$ref: ../../common/errors.yaml#/components/responses/Conflict}
+        '422': {$ref: ../../common/errors.yaml#/components/responses/BadRequest}
+    delete:
+      tags: [Navigation]
+      summary: Soft-delete a menu and its items using optimistic concurrency.
+      operationId: deleteNavigationMenu
+      x-surfaces: [admin]
+      x-required-permission: navigation.menus.write.own
+      security:
+        - SessionCookie: []
+          CSRFToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/ExpectedVersionRequest'}
+      responses:
+        '204': {description: The menu was soft-deleted.}
+        '400': {$ref: ../../common/errors.yaml#/components/responses/BadRequest}
+        '401': {$ref: ../../common/errors.yaml#/components/responses/Unauthorized}
+        '403': {$ref: ../../common/errors.yaml#/components/responses/Forbidden}
+        '404': {$ref: ../../common/errors.yaml#/components/responses/NotFound}
+        '409': {$ref: ../../common/errors.yaml#/components/responses/Conflict}
+  /navigation/menus/{menu_id}/reorder:
+    parameters:
+      - name: menu_id
+        in: path
+        required: true
+        schema: {type: string, format: uuid}
+    post:
+      tags: [Navigation]
+      summary: Reorder and reparent a complete menu tree atomically.
+      operationId: reorderNavigationMenu
+      x-surfaces: [admin]
+      x-required-permission: navigation.menus.write.own
+      security:
+        - SessionCookie: []
+          CSRFToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/MenuReorderRequest'}
+      responses:
+        '200':
+          description: The reordered menu tree.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Menu'}
+        '400': {$ref: ../../common/errors.yaml#/components/responses/BadRequest}
+        '401': {$ref: ../../common/errors.yaml#/components/responses/Unauthorized}
+        '403': {$ref: ../../common/errors.yaml#/components/responses/Forbidden}
+        '404': {$ref: ../../common/errors.yaml#/components/responses/NotFound}
+        '409': {$ref: ../../common/errors.yaml#/components/responses/Conflict}
+        '422': {$ref: ../../common/errors.yaml#/components/responses/BadRequest}
+components:
+  schemas:
+    MenuListResponse:
+      type: object
+      additionalProperties: false
+      required: [items]
+      properties:
+        items:
+          type: array
+          items: {$ref: '#/components/schemas/Menu'}
+        next:
+          $ref: '#/components/schemas/MenuCursor'
+    MenuCursor:
+      type: object
+      additionalProperties: false
+      required: [updated_at, id]
+      properties:
+        updated_at: {type: string, format: date-time}
+        id: {type: string, format: uuid}
+    Menu:
+      type: object
+      additionalProperties: false
+      required: [id, account_id, locale_id, key, name, enabled, version, items, created_at, updated_at]
+      properties:
+        id: {type: string, format: uuid}
+        account_id: {type: string, format: uuid}
+        locale_id: {type: string, format: uuid}
+        key: {type: string, minLength: 1, maxLength: 128}
+        name: {type: string, minLength: 1, maxLength: 255}
+        enabled: {type: boolean}
+        version: {type: integer, minimum: 1}
+        items:
+          type: array
+          items: {$ref: '#/components/schemas/MenuItem'}
+        created_at: {type: string, format: date-time}
+        updated_at: {type: string, format: date-time}
+    MenuItem:
+      type: object
+      additionalProperties: false
+      required: [id, label, target_kind, target, position, enabled, version]
+      properties:
+        id: {type: string, format: uuid}
+        parent_id: {type: string, format: uuid}
+        label: {type: string, minLength: 1, maxLength: 255}
+        target_kind: {type: string, enum: [internal_path, external_url, content_key]}
+        target: {type: string, minLength: 1, maxLength: 1024}
+        position: {type: integer, minimum: 0}
+        enabled: {type: boolean}
+        version: {type: integer, minimum: 1}
+        children:
+          type: array
+          items: {$ref: '#/components/schemas/MenuItem'}
+    MenuItemInput:
+      type: object
+      additionalProperties: false
+      required: [label, target_kind, target, position, enabled]
+      properties:
+        id: {type: string, format: uuid}
+        parent_id: {type: string, format: uuid}
+        label: {type: string, minLength: 1, maxLength: 255}
+        target_kind: {type: string, enum: [internal_path, external_url, content_key]}
+        target: {type: string, minLength: 1, maxLength: 1024}
+        position: {type: integer, minimum: 0}
+        enabled: {type: boolean}
+        children:
+          type: array
+          items: {$ref: '#/components/schemas/MenuItemInput'}
+    MenuMutationRequest:
+      type: object
+      additionalProperties: false
+      required: [locale_id, key, name, enabled, items]
+      properties:
+        locale_id: {type: string, format: uuid}
+        key: {type: string, minLength: 1, maxLength: 128}
+        name: {type: string, minLength: 1, maxLength: 255}
+        enabled: {type: boolean}
+        items:
+          type: array
+          maxItems: 500
+          items: {$ref: '#/components/schemas/MenuItemInput'}
+    ExpectedVersionRequest:
+      type: object
+      additionalProperties: false
+      required: [expected_version]
+      properties:
+        expected_version: {type: integer, minimum: 1}
+    MenuReorderRequest:
+      type: object
+      additionalProperties: false
+      required: [expected_version, items]
+      properties:
+        expected_version: {type: integer, minimum: 1}
+        items:
+          type: array
+          maxItems: 500
+          items:
+            type: object
+            additionalProperties: false
+            required: [id, position]
+            properties:
+              id: {type: string, format: uuid}
+              parent_id: {type: string, format: uuid}
+              position: {type: integer, minimum: 0}

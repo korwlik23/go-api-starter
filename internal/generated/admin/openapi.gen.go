@@ -391,6 +391,48 @@ func (e MembershipStatusRequestStatus) Valid() bool {
 	}
 }
 
+// Defines values for MenuItemTargetKind.
+const (
+	MenuItemTargetKindContentKey   MenuItemTargetKind = "content_key"
+	MenuItemTargetKindExternalUrl  MenuItemTargetKind = "external_url"
+	MenuItemTargetKindInternalPath MenuItemTargetKind = "internal_path"
+)
+
+// Valid indicates whether the value is a known member of the MenuItemTargetKind enum.
+func (e MenuItemTargetKind) Valid() bool {
+	switch e {
+	case MenuItemTargetKindContentKey:
+		return true
+	case MenuItemTargetKindExternalUrl:
+		return true
+	case MenuItemTargetKindInternalPath:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for MenuItemInputTargetKind.
+const (
+	MenuItemInputTargetKindContentKey   MenuItemInputTargetKind = "content_key"
+	MenuItemInputTargetKindExternalUrl  MenuItemInputTargetKind = "external_url"
+	MenuItemInputTargetKindInternalPath MenuItemInputTargetKind = "internal_path"
+)
+
+// Valid indicates whether the value is a known member of the MenuItemInputTargetKind enum.
+func (e MenuItemInputTargetKind) Valid() bool {
+	switch e {
+	case MenuItemInputTargetKindContentKey:
+		return true
+	case MenuItemInputTargetKindExternalUrl:
+		return true
+	case MenuItemInputTargetKindInternalPath:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for PasswordResetResponseStatus.
 const (
 	PasswordReset PasswordResetResponseStatus = "password_reset"
@@ -823,6 +865,11 @@ type ErrorEnvelope struct {
 	Error Problem `json:"error"`
 }
 
+// ExpectedVersionRequest defines model for ExpectedVersionRequest.
+type ExpectedVersionRequest struct {
+	ExpectedVersion int `json:"expected_version"`
+}
+
 // FieldErrors defines model for FieldErrors.
 type FieldErrors map[string][]string
 
@@ -1024,6 +1071,82 @@ type MembershipStatusRequest struct {
 
 // MembershipStatusRequestStatus defines model for MembershipStatusRequest.Status.
 type MembershipStatusRequestStatus string
+
+// Menu defines model for Menu.
+type Menu struct {
+	AccountId openapi_types.UUID `json:"account_id"`
+	CreatedAt time.Time          `json:"created_at"`
+	Enabled   bool               `json:"enabled"`
+	Id        openapi_types.UUID `json:"id"`
+	Items     []MenuItem         `json:"items"`
+	Key       string             `json:"key"`
+	LocaleId  openapi_types.UUID `json:"locale_id"`
+	Name      string             `json:"name"`
+	UpdatedAt time.Time          `json:"updated_at"`
+	Version   int                `json:"version"`
+}
+
+// MenuCursor defines model for MenuCursor.
+type MenuCursor struct {
+	Id        openapi_types.UUID `json:"id"`
+	UpdatedAt time.Time          `json:"updated_at"`
+}
+
+// MenuItem defines model for MenuItem.
+type MenuItem struct {
+	Children   *[]MenuItem         `json:"children,omitempty"`
+	Enabled    bool                `json:"enabled"`
+	Id         openapi_types.UUID  `json:"id"`
+	Label      string              `json:"label"`
+	ParentId   *openapi_types.UUID `json:"parent_id,omitempty"`
+	Position   int                 `json:"position"`
+	Target     string              `json:"target"`
+	TargetKind MenuItemTargetKind  `json:"target_kind"`
+	Version    int                 `json:"version"`
+}
+
+// MenuItemTargetKind defines model for MenuItem.TargetKind.
+type MenuItemTargetKind string
+
+// MenuItemInput defines model for MenuItemInput.
+type MenuItemInput struct {
+	Children   *[]MenuItemInput        `json:"children,omitempty"`
+	Enabled    bool                    `json:"enabled"`
+	Id         *openapi_types.UUID     `json:"id,omitempty"`
+	Label      string                  `json:"label"`
+	ParentId   *openapi_types.UUID     `json:"parent_id,omitempty"`
+	Position   int                     `json:"position"`
+	Target     string                  `json:"target"`
+	TargetKind MenuItemInputTargetKind `json:"target_kind"`
+}
+
+// MenuItemInputTargetKind defines model for MenuItemInput.TargetKind.
+type MenuItemInputTargetKind string
+
+// MenuListResponse defines model for MenuListResponse.
+type MenuListResponse struct {
+	Items []Menu      `json:"items"`
+	Next  *MenuCursor `json:"next,omitempty"`
+}
+
+// MenuMutationRequest defines model for MenuMutationRequest.
+type MenuMutationRequest struct {
+	Enabled  bool               `json:"enabled"`
+	Items    []MenuItemInput    `json:"items"`
+	Key      string             `json:"key"`
+	LocaleId openapi_types.UUID `json:"locale_id"`
+	Name     string             `json:"name"`
+}
+
+// MenuReorderRequest defines model for MenuReorderRequest.
+type MenuReorderRequest struct {
+	ExpectedVersion int `json:"expected_version"`
+	Items           []struct {
+		Id       openapi_types.UUID  `json:"id"`
+		ParentId *openapi_types.UUID `json:"parent_id,omitempty"`
+		Position int                 `json:"position"`
+	} `json:"items"`
+}
 
 // ModuleListResponse defines model for ModuleListResponse.
 type ModuleListResponse struct {
@@ -1371,6 +1494,25 @@ type StartMediaUploadParams struct {
 	ContentLength  int64  `json:"Content-Length"`
 }
 
+// ListNavigationMenusParams defines parameters for ListNavigationMenus.
+type ListNavigationMenusParams struct {
+	LocaleId       *openapi_types.UUID `form:"locale_id,omitempty" json:"locale_id,omitempty"`
+	Enabled        *bool               `form:"enabled,omitempty" json:"enabled,omitempty"`
+	Limit          *int                `form:"limit,omitempty" json:"limit,omitempty"`
+	AfterUpdatedAt *time.Time          `form:"after_updated_at,omitempty" json:"after_updated_at,omitempty"`
+	AfterId        *openapi_types.UUID `form:"after_id,omitempty" json:"after_id,omitempty"`
+}
+
+// UpdateNavigationMenuJSONBody defines parameters for UpdateNavigationMenu.
+type UpdateNavigationMenuJSONBody struct {
+	Enabled         bool               `json:"enabled"`
+	ExpectedVersion int                `json:"expected_version"`
+	Items           []MenuItemInput    `json:"items"`
+	Key             string             `json:"key"`
+	LocaleId        openapi_types.UUID `json:"locale_id"`
+	Name            string             `json:"name"`
+}
+
 // ListAdminUsersParams defines parameters for ListAdminUsers.
 type ListAdminUsersParams struct {
 	Status *ListAdminUsersParamsStatus `form:"status,omitempty" json:"status,omitempty"`
@@ -1442,6 +1584,18 @@ type DeleteMediaAssetJSONRequestBody = DeleteAssetRequest
 
 // FinalizeMediaUploadJSONRequestBody defines body for FinalizeMediaUpload for application/json ContentType.
 type FinalizeMediaUploadJSONRequestBody = FinalizeUploadRequest
+
+// CreateNavigationMenuJSONRequestBody defines body for CreateNavigationMenu for application/json ContentType.
+type CreateNavigationMenuJSONRequestBody = MenuMutationRequest
+
+// DeleteNavigationMenuJSONRequestBody defines body for DeleteNavigationMenu for application/json ContentType.
+type DeleteNavigationMenuJSONRequestBody = ExpectedVersionRequest
+
+// UpdateNavigationMenuJSONRequestBody defines body for UpdateNavigationMenu for application/json ContentType.
+type UpdateNavigationMenuJSONRequestBody UpdateNavigationMenuJSONBody
+
+// ReorderNavigationMenuJSONRequestBody defines body for ReorderNavigationMenu for application/json ContentType.
+type ReorderNavigationMenuJSONRequestBody = MenuReorderRequest
 
 // UpdateAdminUserStatusJSONRequestBody defines body for UpdateAdminUserStatus for application/json ContentType.
 type UpdateAdminUserStatusJSONRequestBody = AdminUserStatusRequest
@@ -1983,6 +2137,72 @@ type ClientInterface interface {
 	//
 	// Corresponds with POST /media/uploads/{upload_id}/finalize (the `FinalizeMediaUpload` operationId).
 	FinalizeMediaUpload(ctx context.Context, uploadId openapi_types.UUID, body FinalizeMediaUploadJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ListNavigationMenus List account-scoped navigation menus with bounded pagination.
+	//
+	// Corresponds with GET /navigation/menus (the `ListNavigationMenus` operationId).
+	ListNavigationMenus(ctx context.Context, params *ListNavigationMenusParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// CreateNavigationMenuWithBody Create a locale-specific navigation menu and ordered tree.
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with POST /navigation/menus (the `CreateNavigationMenu` operationId).
+	CreateNavigationMenuWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// CreateNavigationMenu Create a locale-specific navigation menu and ordered tree.
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with POST /navigation/menus (the `CreateNavigationMenu` operationId).
+	CreateNavigationMenu(ctx context.Context, body CreateNavigationMenuJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// DeleteNavigationMenuWithBody Soft-delete a menu and its items using optimistic concurrency.
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with DELETE /navigation/menus/{menu_id} (the `DeleteNavigationMenu` operationId).
+	DeleteNavigationMenuWithBody(ctx context.Context, menuId openapi_types.UUID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// DeleteNavigationMenu Soft-delete a menu and its items using optimistic concurrency.
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with DELETE /navigation/menus/{menu_id} (the `DeleteNavigationMenu` operationId).
+	DeleteNavigationMenu(ctx context.Context, menuId openapi_types.UUID, body DeleteNavigationMenuJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetNavigationMenu Read one account-scoped navigation menu tree.
+	//
+	// Corresponds with GET /navigation/menus/{menu_id} (the `GetNavigationMenu` operationId).
+	GetNavigationMenu(ctx context.Context, menuId openapi_types.UUID, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// UpdateNavigationMenuWithBody Replace menu metadata/tree using optimistic concurrency.
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with PATCH /navigation/menus/{menu_id} (the `UpdateNavigationMenu` operationId).
+	UpdateNavigationMenuWithBody(ctx context.Context, menuId openapi_types.UUID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// UpdateNavigationMenu Replace menu metadata/tree using optimistic concurrency.
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with PATCH /navigation/menus/{menu_id} (the `UpdateNavigationMenu` operationId).
+	UpdateNavigationMenu(ctx context.Context, menuId openapi_types.UUID, body UpdateNavigationMenuJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ReorderNavigationMenuWithBody Reorder and reparent a complete menu tree atomically.
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with POST /navigation/menus/{menu_id}/reorder (the `ReorderNavigationMenu` operationId).
+	ReorderNavigationMenuWithBody(ctx context.Context, menuId openapi_types.UUID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ReorderNavigationMenu Reorder and reparent a complete menu tree atomically.
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with POST /navigation/menus/{menu_id}/reorder (the `ReorderNavigationMenu` operationId).
+	ReorderNavigationMenu(ctx context.Context, menuId openapi_types.UUID, body ReorderNavigationMenuJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// ListEnabledModules List the runtime module activation projection.
 	//
@@ -2937,6 +3157,172 @@ func (c *Client) FinalizeMediaUploadWithBody(ctx context.Context, uploadId opena
 // Corresponds with POST /media/uploads/{upload_id}/finalize (the `FinalizeMediaUpload` operationId).
 func (c *Client) FinalizeMediaUpload(ctx context.Context, uploadId openapi_types.UUID, body FinalizeMediaUploadJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewFinalizeMediaUploadRequest(c.Server, uploadId, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// ListNavigationMenus List account-scoped navigation menus with bounded pagination.
+//
+// Corresponds with GET /navigation/menus (the `ListNavigationMenus` operationId).
+func (c *Client) ListNavigationMenus(ctx context.Context, params *ListNavigationMenusParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewListNavigationMenusRequest(c.Server, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// CreateNavigationMenuWithBody Create a locale-specific navigation menu and ordered tree.
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with POST /navigation/menus (the `CreateNavigationMenu` operationId).
+func (c *Client) CreateNavigationMenuWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCreateNavigationMenuRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// CreateNavigationMenu Create a locale-specific navigation menu and ordered tree.
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with POST /navigation/menus (the `CreateNavigationMenu` operationId).
+func (c *Client) CreateNavigationMenu(ctx context.Context, body CreateNavigationMenuJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCreateNavigationMenuRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// DeleteNavigationMenuWithBody Soft-delete a menu and its items using optimistic concurrency.
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with DELETE /navigation/menus/{menu_id} (the `DeleteNavigationMenu` operationId).
+func (c *Client) DeleteNavigationMenuWithBody(ctx context.Context, menuId openapi_types.UUID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDeleteNavigationMenuRequestWithBody(c.Server, menuId, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// DeleteNavigationMenu Soft-delete a menu and its items using optimistic concurrency.
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with DELETE /navigation/menus/{menu_id} (the `DeleteNavigationMenu` operationId).
+func (c *Client) DeleteNavigationMenu(ctx context.Context, menuId openapi_types.UUID, body DeleteNavigationMenuJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDeleteNavigationMenuRequest(c.Server, menuId, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// GetNavigationMenu Read one account-scoped navigation menu tree.
+//
+// Corresponds with GET /navigation/menus/{menu_id} (the `GetNavigationMenu` operationId).
+func (c *Client) GetNavigationMenu(ctx context.Context, menuId openapi_types.UUID, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetNavigationMenuRequest(c.Server, menuId)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// UpdateNavigationMenuWithBody Replace menu metadata/tree using optimistic concurrency.
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with PATCH /navigation/menus/{menu_id} (the `UpdateNavigationMenu` operationId).
+func (c *Client) UpdateNavigationMenuWithBody(ctx context.Context, menuId openapi_types.UUID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewUpdateNavigationMenuRequestWithBody(c.Server, menuId, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// UpdateNavigationMenu Replace menu metadata/tree using optimistic concurrency.
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with PATCH /navigation/menus/{menu_id} (the `UpdateNavigationMenu` operationId).
+func (c *Client) UpdateNavigationMenu(ctx context.Context, menuId openapi_types.UUID, body UpdateNavigationMenuJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewUpdateNavigationMenuRequest(c.Server, menuId, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// ReorderNavigationMenuWithBody Reorder and reparent a complete menu tree atomically.
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with POST /navigation/menus/{menu_id}/reorder (the `ReorderNavigationMenu` operationId).
+func (c *Client) ReorderNavigationMenuWithBody(ctx context.Context, menuId openapi_types.UUID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewReorderNavigationMenuRequestWithBody(c.Server, menuId, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// ReorderNavigationMenu Reorder and reparent a complete menu tree atomically.
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with POST /navigation/menus/{menu_id}/reorder (the `ReorderNavigationMenu` operationId).
+func (c *Client) ReorderNavigationMenu(ctx context.Context, menuId openapi_types.UUID, body ReorderNavigationMenuJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewReorderNavigationMenuRequest(c.Server, menuId, body)
 	if err != nil {
 		return nil, err
 	}
@@ -4742,6 +5128,323 @@ func NewFinalizeMediaUploadRequestWithBody(server string, uploadId openapi_types
 	return req, nil
 }
 
+// NewListNavigationMenusRequest constructs an http.Request for the ListNavigationMenus method
+func NewListNavigationMenusRequest(server string, params *ListNavigationMenusParams) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/navigation/menus")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		// queryValues collects non-styled parameters (passthrough, JSON)
+		// that are safe to round-trip through url.Values.Encode().
+		queryValues := queryURL.Query()
+		// rawQueryFragments collects pre-encoded query fragments from
+		// styled parameters, preserving literal commas as delimiters
+		// per the OpenAPI spec (e.g. "color=blue,black,brown").
+		var rawQueryFragments []string
+
+		if params.LocaleId != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "locale_id", *params.LocaleId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: "uuid"}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.Enabled != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "enabled", *params.Enabled, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "boolean", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.Limit != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "limit", *params.Limit, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "integer", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.AfterUpdatedAt != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "after_updated_at", *params.AfterUpdatedAt, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: "date-time"}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.AfterId != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "after_id", *params.AfterId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: "uuid"}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if encoded := queryValues.Encode(); encoded != "" {
+			rawQueryFragments = append(rawQueryFragments, encoded)
+		}
+		queryURL.RawQuery = strings.Join(rawQueryFragments, "&")
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewCreateNavigationMenuRequest calls the generic CreateNavigationMenu builder with application/json body
+func NewCreateNavigationMenuRequest(server string, body CreateNavigationMenuJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewCreateNavigationMenuRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewCreateNavigationMenuRequestWithBody constructs an http.Request for the CreateNavigationMenu method, with any body, and a specified content type
+func NewCreateNavigationMenuRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/navigation/menus")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPost, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewDeleteNavigationMenuRequest calls the generic DeleteNavigationMenu builder with application/json body
+func NewDeleteNavigationMenuRequest(server string, menuId openapi_types.UUID, body DeleteNavigationMenuJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewDeleteNavigationMenuRequestWithBody(server, menuId, "application/json", bodyReader)
+}
+
+// NewDeleteNavigationMenuRequestWithBody constructs an http.Request for the DeleteNavigationMenu method, with any body, and a specified content type
+func NewDeleteNavigationMenuRequestWithBody(server string, menuId openapi_types.UUID, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "menu_id", menuId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: "uuid"})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/navigation/menus/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodDelete, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewGetNavigationMenuRequest constructs an http.Request for the GetNavigationMenu method
+func NewGetNavigationMenuRequest(server string, menuId openapi_types.UUID) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "menu_id", menuId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: "uuid"})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/navigation/menus/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewUpdateNavigationMenuRequest calls the generic UpdateNavigationMenu builder with application/json body
+func NewUpdateNavigationMenuRequest(server string, menuId openapi_types.UUID, body UpdateNavigationMenuJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewUpdateNavigationMenuRequestWithBody(server, menuId, "application/json", bodyReader)
+}
+
+// NewUpdateNavigationMenuRequestWithBody constructs an http.Request for the UpdateNavigationMenu method, with any body, and a specified content type
+func NewUpdateNavigationMenuRequestWithBody(server string, menuId openapi_types.UUID, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "menu_id", menuId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: "uuid"})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/navigation/menus/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPatch, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewReorderNavigationMenuRequest calls the generic ReorderNavigationMenu builder with application/json body
+func NewReorderNavigationMenuRequest(server string, menuId openapi_types.UUID, body ReorderNavigationMenuJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewReorderNavigationMenuRequestWithBody(server, menuId, "application/json", bodyReader)
+}
+
+// NewReorderNavigationMenuRequestWithBody constructs an http.Request for the ReorderNavigationMenu method, with any body, and a specified content type
+func NewReorderNavigationMenuRequestWithBody(server string, menuId openapi_types.UUID, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "menu_id", menuId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: "uuid"})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/navigation/menus/%s/reorder", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPost, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
 // NewListEnabledModulesRequest constructs an http.Request for the ListEnabledModules method
 func NewListEnabledModulesRequest(server string) (*http.Request, error) {
 	var err error
@@ -5382,6 +6085,76 @@ type ClientWithResponsesInterface interface {
 	//
 	// Corresponds with POST /media/uploads/{upload_id}/finalize (the `FinalizeMediaUpload` operationId).
 	FinalizeMediaUploadWithResponse(ctx context.Context, uploadId openapi_types.UUID, body FinalizeMediaUploadJSONRequestBody, reqEditors ...RequestEditorFn) (*FinalizeMediaUploadResponse, error)
+
+	// ListNavigationMenusWithResponse List account-scoped navigation menus with bounded pagination.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /navigation/menus (the `ListNavigationMenus` operationId).
+	ListNavigationMenusWithResponse(ctx context.Context, params *ListNavigationMenusParams, reqEditors ...RequestEditorFn) (*ListNavigationMenusResponse, error)
+
+	// CreateNavigationMenuWithBodyWithResponse Create a locale-specific navigation menu and ordered tree.
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /navigation/menus (the `CreateNavigationMenu` operationId).
+	CreateNavigationMenuWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateNavigationMenuResponse, error)
+
+	// CreateNavigationMenuWithResponse Create a locale-specific navigation menu and ordered tree.
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /navigation/menus (the `CreateNavigationMenu` operationId).
+	CreateNavigationMenuWithResponse(ctx context.Context, body CreateNavigationMenuJSONRequestBody, reqEditors ...RequestEditorFn) (*CreateNavigationMenuResponse, error)
+
+	// DeleteNavigationMenuWithBodyWithResponse Soft-delete a menu and its items using optimistic concurrency.
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with DELETE /navigation/menus/{menu_id} (the `DeleteNavigationMenu` operationId).
+	DeleteNavigationMenuWithBodyWithResponse(ctx context.Context, menuId openapi_types.UUID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*DeleteNavigationMenuResponse, error)
+
+	// DeleteNavigationMenuWithResponse Soft-delete a menu and its items using optimistic concurrency.
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with DELETE /navigation/menus/{menu_id} (the `DeleteNavigationMenu` operationId).
+	DeleteNavigationMenuWithResponse(ctx context.Context, menuId openapi_types.UUID, body DeleteNavigationMenuJSONRequestBody, reqEditors ...RequestEditorFn) (*DeleteNavigationMenuResponse, error)
+
+	// GetNavigationMenuWithResponse Read one account-scoped navigation menu tree.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /navigation/menus/{menu_id} (the `GetNavigationMenu` operationId).
+	GetNavigationMenuWithResponse(ctx context.Context, menuId openapi_types.UUID, reqEditors ...RequestEditorFn) (*GetNavigationMenuResponse, error)
+
+	// UpdateNavigationMenuWithBodyWithResponse Replace menu metadata/tree using optimistic concurrency.
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with PATCH /navigation/menus/{menu_id} (the `UpdateNavigationMenu` operationId).
+	UpdateNavigationMenuWithBodyWithResponse(ctx context.Context, menuId openapi_types.UUID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*UpdateNavigationMenuResponse, error)
+
+	// UpdateNavigationMenuWithResponse Replace menu metadata/tree using optimistic concurrency.
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with PATCH /navigation/menus/{menu_id} (the `UpdateNavigationMenu` operationId).
+	UpdateNavigationMenuWithResponse(ctx context.Context, menuId openapi_types.UUID, body UpdateNavigationMenuJSONRequestBody, reqEditors ...RequestEditorFn) (*UpdateNavigationMenuResponse, error)
+
+	// ReorderNavigationMenuWithBodyWithResponse Reorder and reparent a complete menu tree atomically.
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /navigation/menus/{menu_id}/reorder (the `ReorderNavigationMenu` operationId).
+	ReorderNavigationMenuWithBodyWithResponse(ctx context.Context, menuId openapi_types.UUID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*ReorderNavigationMenuResponse, error)
+
+	// ReorderNavigationMenuWithResponse Reorder and reparent a complete menu tree atomically.
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /navigation/menus/{menu_id}/reorder (the `ReorderNavigationMenu` operationId).
+	ReorderNavigationMenuWithResponse(ctx context.Context, menuId openapi_types.UUID, body ReorderNavigationMenuJSONRequestBody, reqEditors ...RequestEditorFn) (*ReorderNavigationMenuResponse, error)
 
 	// ListEnabledModulesWithResponse List the runtime module activation projection.
 	//
@@ -7761,6 +8534,434 @@ func (r FinalizeMediaUploadResponse) ContentType() string {
 	return ""
 }
 
+type ListNavigationMenusResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *MenuListResponse
+	// JSON401 the response for an HTTP 401 `application/json` response
+	JSON401 *Unauthorized
+	// JSON403 the response for an HTTP 403 `application/json` response
+	JSON403 *Forbidden
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r ListNavigationMenusResponse) GetJSON200() *MenuListResponse {
+	return r.JSON200
+}
+
+// GetJSON401 returns the response for an HTTP 401 `application/json` response
+func (r ListNavigationMenusResponse) GetJSON401() *Unauthorized {
+	return r.JSON401
+}
+
+// GetJSON403 returns the response for an HTTP 403 `application/json` response
+func (r ListNavigationMenusResponse) GetJSON403() *Forbidden {
+	return r.JSON403
+}
+
+// GetBody returns the raw response body bytes
+func (r ListNavigationMenusResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r ListNavigationMenusResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ListNavigationMenusResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r ListNavigationMenusResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type CreateNavigationMenuResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON201 the response for an HTTP 201 `application/json` response
+	JSON201 *Menu
+	// JSON400 the response for an HTTP 400 `application/json` response
+	JSON400 *BadRequest
+	// JSON401 the response for an HTTP 401 `application/json` response
+	JSON401 *Unauthorized
+	// JSON403 the response for an HTTP 403 `application/json` response
+	JSON403 *Forbidden
+	// JSON409 the response for an HTTP 409 `application/json` response
+	JSON409 *Conflict
+	// JSON422 the response for an HTTP 422 `application/json` response
+	JSON422 *BadRequest
+}
+
+// GetJSON201 returns the response for an HTTP 201 `application/json` response
+func (r CreateNavigationMenuResponse) GetJSON201() *Menu {
+	return r.JSON201
+}
+
+// GetJSON400 returns the response for an HTTP 400 `application/json` response
+func (r CreateNavigationMenuResponse) GetJSON400() *BadRequest {
+	return r.JSON400
+}
+
+// GetJSON401 returns the response for an HTTP 401 `application/json` response
+func (r CreateNavigationMenuResponse) GetJSON401() *Unauthorized {
+	return r.JSON401
+}
+
+// GetJSON403 returns the response for an HTTP 403 `application/json` response
+func (r CreateNavigationMenuResponse) GetJSON403() *Forbidden {
+	return r.JSON403
+}
+
+// GetJSON409 returns the response for an HTTP 409 `application/json` response
+func (r CreateNavigationMenuResponse) GetJSON409() *Conflict {
+	return r.JSON409
+}
+
+// GetJSON422 returns the response for an HTTP 422 `application/json` response
+func (r CreateNavigationMenuResponse) GetJSON422() *BadRequest {
+	return r.JSON422
+}
+
+// GetBody returns the raw response body bytes
+func (r CreateNavigationMenuResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r CreateNavigationMenuResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r CreateNavigationMenuResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r CreateNavigationMenuResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type DeleteNavigationMenuResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON400 the response for an HTTP 400 `application/json` response
+	JSON400 *BadRequest
+	// JSON401 the response for an HTTP 401 `application/json` response
+	JSON401 *Unauthorized
+	// JSON403 the response for an HTTP 403 `application/json` response
+	JSON403 *Forbidden
+	// JSON404 the response for an HTTP 404 `application/json` response
+	JSON404 *NotFound
+	// JSON409 the response for an HTTP 409 `application/json` response
+	JSON409 *Conflict
+}
+
+// GetJSON400 returns the response for an HTTP 400 `application/json` response
+func (r DeleteNavigationMenuResponse) GetJSON400() *BadRequest {
+	return r.JSON400
+}
+
+// GetJSON401 returns the response for an HTTP 401 `application/json` response
+func (r DeleteNavigationMenuResponse) GetJSON401() *Unauthorized {
+	return r.JSON401
+}
+
+// GetJSON403 returns the response for an HTTP 403 `application/json` response
+func (r DeleteNavigationMenuResponse) GetJSON403() *Forbidden {
+	return r.JSON403
+}
+
+// GetJSON404 returns the response for an HTTP 404 `application/json` response
+func (r DeleteNavigationMenuResponse) GetJSON404() *NotFound {
+	return r.JSON404
+}
+
+// GetJSON409 returns the response for an HTTP 409 `application/json` response
+func (r DeleteNavigationMenuResponse) GetJSON409() *Conflict {
+	return r.JSON409
+}
+
+// GetBody returns the raw response body bytes
+func (r DeleteNavigationMenuResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r DeleteNavigationMenuResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r DeleteNavigationMenuResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r DeleteNavigationMenuResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type GetNavigationMenuResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *Menu
+	// JSON401 the response for an HTTP 401 `application/json` response
+	JSON401 *Unauthorized
+	// JSON403 the response for an HTTP 403 `application/json` response
+	JSON403 *Forbidden
+	// JSON404 the response for an HTTP 404 `application/json` response
+	JSON404 *NotFound
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r GetNavigationMenuResponse) GetJSON200() *Menu {
+	return r.JSON200
+}
+
+// GetJSON401 returns the response for an HTTP 401 `application/json` response
+func (r GetNavigationMenuResponse) GetJSON401() *Unauthorized {
+	return r.JSON401
+}
+
+// GetJSON403 returns the response for an HTTP 403 `application/json` response
+func (r GetNavigationMenuResponse) GetJSON403() *Forbidden {
+	return r.JSON403
+}
+
+// GetJSON404 returns the response for an HTTP 404 `application/json` response
+func (r GetNavigationMenuResponse) GetJSON404() *NotFound {
+	return r.JSON404
+}
+
+// GetBody returns the raw response body bytes
+func (r GetNavigationMenuResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r GetNavigationMenuResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetNavigationMenuResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r GetNavigationMenuResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type UpdateNavigationMenuResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *Menu
+	// JSON400 the response for an HTTP 400 `application/json` response
+	JSON400 *BadRequest
+	// JSON401 the response for an HTTP 401 `application/json` response
+	JSON401 *Unauthorized
+	// JSON403 the response for an HTTP 403 `application/json` response
+	JSON403 *Forbidden
+	// JSON404 the response for an HTTP 404 `application/json` response
+	JSON404 *NotFound
+	// JSON409 the response for an HTTP 409 `application/json` response
+	JSON409 *Conflict
+	// JSON422 the response for an HTTP 422 `application/json` response
+	JSON422 *BadRequest
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r UpdateNavigationMenuResponse) GetJSON200() *Menu {
+	return r.JSON200
+}
+
+// GetJSON400 returns the response for an HTTP 400 `application/json` response
+func (r UpdateNavigationMenuResponse) GetJSON400() *BadRequest {
+	return r.JSON400
+}
+
+// GetJSON401 returns the response for an HTTP 401 `application/json` response
+func (r UpdateNavigationMenuResponse) GetJSON401() *Unauthorized {
+	return r.JSON401
+}
+
+// GetJSON403 returns the response for an HTTP 403 `application/json` response
+func (r UpdateNavigationMenuResponse) GetJSON403() *Forbidden {
+	return r.JSON403
+}
+
+// GetJSON404 returns the response for an HTTP 404 `application/json` response
+func (r UpdateNavigationMenuResponse) GetJSON404() *NotFound {
+	return r.JSON404
+}
+
+// GetJSON409 returns the response for an HTTP 409 `application/json` response
+func (r UpdateNavigationMenuResponse) GetJSON409() *Conflict {
+	return r.JSON409
+}
+
+// GetJSON422 returns the response for an HTTP 422 `application/json` response
+func (r UpdateNavigationMenuResponse) GetJSON422() *BadRequest {
+	return r.JSON422
+}
+
+// GetBody returns the raw response body bytes
+func (r UpdateNavigationMenuResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r UpdateNavigationMenuResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r UpdateNavigationMenuResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r UpdateNavigationMenuResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type ReorderNavigationMenuResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *Menu
+	// JSON400 the response for an HTTP 400 `application/json` response
+	JSON400 *BadRequest
+	// JSON401 the response for an HTTP 401 `application/json` response
+	JSON401 *Unauthorized
+	// JSON403 the response for an HTTP 403 `application/json` response
+	JSON403 *Forbidden
+	// JSON404 the response for an HTTP 404 `application/json` response
+	JSON404 *NotFound
+	// JSON409 the response for an HTTP 409 `application/json` response
+	JSON409 *Conflict
+	// JSON422 the response for an HTTP 422 `application/json` response
+	JSON422 *BadRequest
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r ReorderNavigationMenuResponse) GetJSON200() *Menu {
+	return r.JSON200
+}
+
+// GetJSON400 returns the response for an HTTP 400 `application/json` response
+func (r ReorderNavigationMenuResponse) GetJSON400() *BadRequest {
+	return r.JSON400
+}
+
+// GetJSON401 returns the response for an HTTP 401 `application/json` response
+func (r ReorderNavigationMenuResponse) GetJSON401() *Unauthorized {
+	return r.JSON401
+}
+
+// GetJSON403 returns the response for an HTTP 403 `application/json` response
+func (r ReorderNavigationMenuResponse) GetJSON403() *Forbidden {
+	return r.JSON403
+}
+
+// GetJSON404 returns the response for an HTTP 404 `application/json` response
+func (r ReorderNavigationMenuResponse) GetJSON404() *NotFound {
+	return r.JSON404
+}
+
+// GetJSON409 returns the response for an HTTP 409 `application/json` response
+func (r ReorderNavigationMenuResponse) GetJSON409() *Conflict {
+	return r.JSON409
+}
+
+// GetJSON422 returns the response for an HTTP 422 `application/json` response
+func (r ReorderNavigationMenuResponse) GetJSON422() *BadRequest {
+	return r.JSON422
+}
+
+// GetBody returns the raw response body bytes
+func (r ReorderNavigationMenuResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r ReorderNavigationMenuResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ReorderNavigationMenuResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r ReorderNavigationMenuResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
 // ListEnabledModulesResponse200Headers the declared response headers of an HTTP 200 response for ListEnabledModules
 type ListEnabledModulesResponse200Headers struct {
 	CacheControl *string
@@ -8741,6 +9942,136 @@ func (c *ClientWithResponses) FinalizeMediaUploadWithResponse(ctx context.Contex
 		return nil, err
 	}
 	return ParseFinalizeMediaUploadResponse(rsp)
+}
+
+// ListNavigationMenusWithResponse List account-scoped navigation menus with bounded pagination.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /navigation/menus (the `ListNavigationMenus` operationId).
+func (c *ClientWithResponses) ListNavigationMenusWithResponse(ctx context.Context, params *ListNavigationMenusParams, reqEditors ...RequestEditorFn) (*ListNavigationMenusResponse, error) {
+	rsp, err := c.ListNavigationMenus(ctx, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseListNavigationMenusResponse(rsp)
+}
+
+// CreateNavigationMenuWithBodyWithResponse Create a locale-specific navigation menu and ordered tree.
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /navigation/menus (the `CreateNavigationMenu` operationId).
+func (c *ClientWithResponses) CreateNavigationMenuWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateNavigationMenuResponse, error) {
+	rsp, err := c.CreateNavigationMenuWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseCreateNavigationMenuResponse(rsp)
+}
+
+// CreateNavigationMenuWithResponse Create a locale-specific navigation menu and ordered tree.
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /navigation/menus (the `CreateNavigationMenu` operationId).
+func (c *ClientWithResponses) CreateNavigationMenuWithResponse(ctx context.Context, body CreateNavigationMenuJSONRequestBody, reqEditors ...RequestEditorFn) (*CreateNavigationMenuResponse, error) {
+	rsp, err := c.CreateNavigationMenu(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseCreateNavigationMenuResponse(rsp)
+}
+
+// DeleteNavigationMenuWithBodyWithResponse Soft-delete a menu and its items using optimistic concurrency.
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with DELETE /navigation/menus/{menu_id} (the `DeleteNavigationMenu` operationId).
+func (c *ClientWithResponses) DeleteNavigationMenuWithBodyWithResponse(ctx context.Context, menuId openapi_types.UUID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*DeleteNavigationMenuResponse, error) {
+	rsp, err := c.DeleteNavigationMenuWithBody(ctx, menuId, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseDeleteNavigationMenuResponse(rsp)
+}
+
+// DeleteNavigationMenuWithResponse Soft-delete a menu and its items using optimistic concurrency.
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with DELETE /navigation/menus/{menu_id} (the `DeleteNavigationMenu` operationId).
+func (c *ClientWithResponses) DeleteNavigationMenuWithResponse(ctx context.Context, menuId openapi_types.UUID, body DeleteNavigationMenuJSONRequestBody, reqEditors ...RequestEditorFn) (*DeleteNavigationMenuResponse, error) {
+	rsp, err := c.DeleteNavigationMenu(ctx, menuId, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseDeleteNavigationMenuResponse(rsp)
+}
+
+// GetNavigationMenuWithResponse Read one account-scoped navigation menu tree.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /navigation/menus/{menu_id} (the `GetNavigationMenu` operationId).
+func (c *ClientWithResponses) GetNavigationMenuWithResponse(ctx context.Context, menuId openapi_types.UUID, reqEditors ...RequestEditorFn) (*GetNavigationMenuResponse, error) {
+	rsp, err := c.GetNavigationMenu(ctx, menuId, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetNavigationMenuResponse(rsp)
+}
+
+// UpdateNavigationMenuWithBodyWithResponse Replace menu metadata/tree using optimistic concurrency.
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with PATCH /navigation/menus/{menu_id} (the `UpdateNavigationMenu` operationId).
+func (c *ClientWithResponses) UpdateNavigationMenuWithBodyWithResponse(ctx context.Context, menuId openapi_types.UUID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*UpdateNavigationMenuResponse, error) {
+	rsp, err := c.UpdateNavigationMenuWithBody(ctx, menuId, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseUpdateNavigationMenuResponse(rsp)
+}
+
+// UpdateNavigationMenuWithResponse Replace menu metadata/tree using optimistic concurrency.
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with PATCH /navigation/menus/{menu_id} (the `UpdateNavigationMenu` operationId).
+func (c *ClientWithResponses) UpdateNavigationMenuWithResponse(ctx context.Context, menuId openapi_types.UUID, body UpdateNavigationMenuJSONRequestBody, reqEditors ...RequestEditorFn) (*UpdateNavigationMenuResponse, error) {
+	rsp, err := c.UpdateNavigationMenu(ctx, menuId, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseUpdateNavigationMenuResponse(rsp)
+}
+
+// ReorderNavigationMenuWithBodyWithResponse Reorder and reparent a complete menu tree atomically.
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /navigation/menus/{menu_id}/reorder (the `ReorderNavigationMenu` operationId).
+func (c *ClientWithResponses) ReorderNavigationMenuWithBodyWithResponse(ctx context.Context, menuId openapi_types.UUID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*ReorderNavigationMenuResponse, error) {
+	rsp, err := c.ReorderNavigationMenuWithBody(ctx, menuId, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseReorderNavigationMenuResponse(rsp)
+}
+
+// ReorderNavigationMenuWithResponse Reorder and reparent a complete menu tree atomically.
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /navigation/menus/{menu_id}/reorder (the `ReorderNavigationMenu` operationId).
+func (c *ClientWithResponses) ReorderNavigationMenuWithResponse(ctx context.Context, menuId openapi_types.UUID, body ReorderNavigationMenuJSONRequestBody, reqEditors ...RequestEditorFn) (*ReorderNavigationMenuResponse, error) {
+	rsp, err := c.ReorderNavigationMenu(ctx, menuId, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseReorderNavigationMenuResponse(rsp)
 }
 
 // ListEnabledModulesWithResponse List the runtime module activation projection.
@@ -10657,6 +11988,347 @@ func ParseFinalizeMediaUploadResponse(rsp *http.Response) (*FinalizeMediaUploadR
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
 		var dest Asset
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest BadRequest
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest Unauthorized
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest Forbidden
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest Conflict
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON409 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest BadRequest
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON422 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseListNavigationMenusResponse parses an HTTP response from a ListNavigationMenusWithResponse call
+func ParseListNavigationMenusResponse(rsp *http.Response) (*ListNavigationMenusResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ListNavigationMenusResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest MenuListResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest Unauthorized
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest Forbidden
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseCreateNavigationMenuResponse parses an HTTP response from a CreateNavigationMenuWithResponse call
+func ParseCreateNavigationMenuResponse(rsp *http.Response) (*CreateNavigationMenuResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &CreateNavigationMenuResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 201:
+		var dest Menu
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON201 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest BadRequest
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest Unauthorized
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest Forbidden
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest Conflict
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON409 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest BadRequest
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON422 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseDeleteNavigationMenuResponse parses an HTTP response from a DeleteNavigationMenuWithResponse call
+func ParseDeleteNavigationMenuResponse(rsp *http.Response) (*DeleteNavigationMenuResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &DeleteNavigationMenuResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case rsp.StatusCode == 204:
+		break // No content-type
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest BadRequest
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest Unauthorized
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest Forbidden
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest Conflict
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON409 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetNavigationMenuResponse parses an HTTP response from a GetNavigationMenuWithResponse call
+func ParseGetNavigationMenuResponse(rsp *http.Response) (*GetNavigationMenuResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetNavigationMenuResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest Menu
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest Unauthorized
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest Forbidden
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseUpdateNavigationMenuResponse parses an HTTP response from a UpdateNavigationMenuWithResponse call
+func ParseUpdateNavigationMenuResponse(rsp *http.Response) (*UpdateNavigationMenuResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &UpdateNavigationMenuResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest Menu
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest BadRequest
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest Unauthorized
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest Forbidden
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest Conflict
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON409 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest BadRequest
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON422 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseReorderNavigationMenuResponse parses an HTTP response from a ReorderNavigationMenuWithResponse call
+func ParseReorderNavigationMenuResponse(rsp *http.Response) (*ReorderNavigationMenuResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ReorderNavigationMenuResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest Menu
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
