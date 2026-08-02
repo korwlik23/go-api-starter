@@ -104,6 +104,8 @@ func TestA2(t *testing.T) {
 	require.Equal(t, 2*time.Minute, cfg.Database.MigrationLockTimeout)
 	require.Equal(t, []string{"th", "en", "ja"}, cfg.Localization.InitialLocales)
 	require.Equal(t, "th", cfg.Localization.DefaultLocale)
+	require.Empty(t, cfg.Publishing.PublicAccountID)
+	require.Empty(t, cfg.Media.StorageRoot)
 	require.Equal(t, 120, cfg.RateLimits.Baseline.Capacity)
 	require.Equal(t, time.Minute, cfg.RateLimits.Baseline.Window)
 	require.False(t, cfg.Redis.Enabled)

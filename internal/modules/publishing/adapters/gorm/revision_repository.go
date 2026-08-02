@@ -42,7 +42,17 @@ func NewRevisionRepository(db *gormdb.DB) (*RevisionRepository, error) {
 	if err != nil {
 		return nil, ErrInvalidRevisionRepository
 	}
-	return &RevisionRepository{db: db, connections: manager}, nil
+	return NewRevisionRepositoryWithDependencies(db, manager)
+}
+
+func NewRevisionRepositoryWithDependencies(
+	db *gormdb.DB,
+	connections database.ConnectionProvider,
+) (*RevisionRepository, error) {
+	if db == nil || connections == nil {
+		return nil, ErrInvalidRevisionRepository
+	}
+	return &RevisionRepository{db: db, connections: connections}, nil
 }
 
 func (repository *RevisionRepository) connection(ctx context.Context) (*gormdb.DB, error) {

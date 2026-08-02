@@ -216,19 +216,21 @@ func (repository *ContentRepository) resolveLocaleID(
 	if err != nil {
 		return nil, "", err
 	}
-	var localeID databaseid.ID
-	result := db.Table("locales").Select("id").Where("tag = ?", value).Limit(1).Scan(&localeID)
+	var localeRecord struct {
+		ID databaseid.ID `gorm:"column:id"`
+	}
+	result := db.Table("locales").Select("id").Where("tag = ?", value).Limit(1).Scan(&localeRecord)
 	if result.Error != nil {
 		return nil, "", fmt.Errorf("resolve content locale: %w", result.Error)
 	}
-	if result.RowsAffected == 0 || localeID.String() == "" {
+	if result.RowsAffected == 0 || localeRecord.ID.String() == "" {
 		return nil, "", ports.ErrContentNotFound
 	}
-	encoded, err := databaseid.Encode(repository.db.Dialector.Name(), localeID.String())
+	encoded, err := databaseid.Encode(repository.db.Dialector.Name(), localeRecord.ID.String())
 	if err != nil {
 		return nil, "", err
 	}
-	return encoded, localeID.String(), nil
+	return encoded, localeRecord.ID.String(), nil
 }
 
 func nullableString(value string) any {

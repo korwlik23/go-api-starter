@@ -164,6 +164,12 @@ func Load(lookup LookupFunc) (Config, error) {
 	if cfg.Localization.DefaultLocale, err = stringValue(lookup, "DEFAULT_LOCALE"); err != nil {
 		return Config{}, err
 	}
+	if cfg.Publishing.PublicAccountID, err = optionalStringValue(lookup, "PUBLIC_ACCOUNT_ID"); err != nil {
+		return Config{}, err
+	}
+	if cfg.Media.StorageRoot, err = optionalStringValue(lookup, "MEDIA_STORAGE_ROOT"); err != nil {
+		return Config{}, err
+	}
 	if cfg.RateLimits.Baseline, err = rateLimitValue(lookup, "RATE_LIMIT_BASELINE_CAPACITY", "RATE_LIMIT_BASELINE_WINDOW"); err != nil {
 		return Config{}, err
 	}
@@ -212,7 +218,7 @@ func stringValue(lookup LookupFunc, key string) (string, error) {
 func optionalStringValue(lookup LookupFunc, key string) (string, error) {
 	value, ok := lookup(key)
 	if !ok {
-		return "", missingKeyError(key)
+		return "", nil
 	}
 	return strings.TrimSpace(value), nil
 }

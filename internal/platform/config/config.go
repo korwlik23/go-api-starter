@@ -19,6 +19,8 @@ type Config struct {
 	Authentication AuthenticationConfig
 	Database       DatabaseConfig
 	Localization   LocalizationConfig
+	Publishing     PublishingConfig
+	Media          MediaConfig
 	RateLimits     RateLimitsConfig
 	Redis          RedisConfig
 }
@@ -94,6 +96,20 @@ type DatabaseConfig struct {
 type LocalizationConfig struct {
 	InitialLocales []string
 	DefaultLocale  string
+}
+
+// PublishingConfig contains optional runtime selectors for the public CMS
+// surface. An empty account ID keeps public publishing disabled until an
+// operator explicitly selects the account exposed by this API process.
+type PublishingConfig struct {
+	PublicAccountID string
+}
+
+// MediaConfig contains the private object-store root used by the local media
+// adapter. Remote providers can replace this adapter without changing the
+// media application contract.
+type MediaConfig struct {
+	StorageRoot string
 }
 
 type RateLimitConfig struct {

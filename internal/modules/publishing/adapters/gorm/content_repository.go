@@ -26,7 +26,19 @@ func NewContentRepository(db *gormdb.DB) (*ContentRepository, error) {
 	if err != nil {
 		return nil, ErrInvalidContentRepository
 	}
-	return &ContentRepository{db: db, connections: manager}, nil
+	return NewContentRepositoryWithDependencies(db, manager)
+}
+
+// NewContentRepositoryWithDependencies lets publishing use a shared
+// transaction boundary for content, workflow, revisions, and audit.
+func NewContentRepositoryWithDependencies(
+	db *gormdb.DB,
+	connections database.ConnectionProvider,
+) (*ContentRepository, error) {
+	if db == nil || connections == nil {
+		return nil, ErrInvalidContentRepository
+	}
+	return &ContentRepository{db: db, connections: connections}, nil
 }
 
 func (repository *ContentRepository) connection(ctx context.Context) (*gormdb.DB, error) {

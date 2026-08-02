@@ -2,6 +2,7 @@ package gorm
 
 import (
 	"context"
+	"regexp"
 	"testing"
 	"time"
 
@@ -9,6 +10,23 @@ import (
 	"github.com/korwlik23/go-api-starter/internal/modules/publishing/ports"
 	"github.com/stretchr/testify/require"
 )
+
+func TestM3F6ResolveLocaleByTagScansStructuredUUIDProjection(t *testing.T) {
+	t.Parallel()
+
+	db, mock := contentRepositoryDatabase(t)
+	repository, err := NewContentRepository(db)
+	require.NoError(t, err)
+	mock.ExpectQuery(regexp.QuoteMeta(`SELECT id FROM "locales" WHERE tag = $1 LIMIT $2`)).
+		WithArgs("th", 1).
+		WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow("018f1f64-7b2a-7c10-8bf2-3c40d5f67586"))
+
+	encoded, canonical, err := repository.resolveLocaleID(context.Background(), "th")
+	require.NoError(t, err)
+	require.Equal(t, "018f1f64-7b2a-7c10-8bf2-3c40d5f67586", encoded)
+	require.Equal(t, "018f1f64-7b2a-7c10-8bf2-3c40d5f67586", canonical)
+	require.NoError(t, mock.ExpectationsWereMet())
+}
 
 func TestM3A5SoftDeleteMapsStaleTranslationVersionToConflict(t *testing.T) {
 	t.Parallel()

@@ -39,6 +39,8 @@ var errAuthorizationComposition = errors.New(
 type authorizationRuntime struct {
 	transactions             *database.TransactionManager
 	auditor                  authorizationAuditAppender
+	accounts                 *accountsapp.ResolveAccount
+	evaluator                *authorizationapp.EvaluatePermission
 	currentAccount           *accountshttp.CurrentAccountHandler
 	effectivePermissions     *authorizationhttp.PermissionHandler
 	modules                  *operationshttp.ModuleHandler
@@ -382,6 +384,8 @@ func buildAuthorizationRuntime(
 	return authorizationRuntime{
 		transactions:   transactions,
 		auditor:        auditor,
+		accounts:       resolveAccount,
+		evaluator:      evaluator,
 		currentAccount: currentAccount, effectivePermissions: effective,
 		modules: moduleHandler, currentAccountGuard: currentAccountGuard,
 		effectiveGuard: effectiveGuard, modulesGuard: modulesGuard,

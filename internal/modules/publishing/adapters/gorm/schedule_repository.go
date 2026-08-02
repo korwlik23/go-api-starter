@@ -40,7 +40,17 @@ func NewScheduleRepository(db *gormdb.DB) (*ScheduleRepository, error) {
 	if err != nil {
 		return nil, ErrInvalidContentRepository
 	}
-	return &ScheduleRepository{db: db, connections: manager, dialect: db.Dialector.Name()}, nil
+	return NewScheduleRepositoryWithDependencies(db, manager)
+}
+
+func NewScheduleRepositoryWithDependencies(
+	db *gormdb.DB,
+	connections database.ConnectionProvider,
+) (*ScheduleRepository, error) {
+	if db == nil || connections == nil {
+		return nil, ErrInvalidContentRepository
+	}
+	return &ScheduleRepository{db: db, connections: connections, dialect: db.Dialector.Name()}, nil
 }
 
 func (repository *ScheduleRepository) connection(ctx context.Context) (*gormdb.DB, error) {

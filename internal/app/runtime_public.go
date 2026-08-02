@@ -71,6 +71,10 @@ func buildPublicRuntime(
 	if err != nil {
 		return fail(err)
 	}
+	cms, err := buildCMSRuntime(db, cfg, authorization)
+	if err != nil {
+		return fail(err)
+	}
 
 	trustedProxies, err := config.ParseTrustedProxyCIDRs(cfg.HTTP.TrustedProxyCIDRs)
 	if err != nil {
@@ -160,6 +164,7 @@ func buildPublicRuntime(
 	RegisterIdentityRoutes(router.Group("/api/v1"), identity)
 	RegisterAuthorizationRoutes(router.Group("/api/v1"), authorization, identity)
 	RegisterAdministrationRoutes(router.Group("/api/v1"), authorization, identity)
+	RegisterCMSRoutes(router.Group("/api/v1"), cms, identity)
 	protectedSystem := router.Group("/api/v1")
 	protectedSystem.Use(identity.authenticate, identity.csrf)
 	RegisterProtectedSystemRoutes(

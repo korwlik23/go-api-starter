@@ -35,16 +35,28 @@ func TestM3B5UpdateAndDeleteRequireExpectedVersion(t *testing.T) {
 	require.ErrorIs(t, err, ErrInvalidRedirectMutation)
 }
 
+func TestM3B5GetRedirectPreservesAccountScope(t *testing.T) {
+	t.Parallel()
+	expected := discoverabilitydomain.Redirect{ID: "018f1f64-7b2a-7c10-8bf2-3c40d5f67582", AccountID: "018f1f64-7b2a-7c10-8bf2-3c40d5f67580"}
+	repository := &redirectRepositoryFake{got: expected}
+	service, err := NewService(Dependencies{Repository: repository, Auditor: &redirectAuditorFake{}, NewID: redirectIDSequence(), Now: time.Now})
+	require.NoError(t, err)
+	result, err := service.Get(context.Background(), expected.AccountID, expected.ID)
+	require.NoError(t, err)
+	require.Equal(t, expected, result)
+}
+
 type redirectRepositoryFake struct {
 	created   ports.CreateRedirectCommand
 	updateErr error
+	got       discoverabilitydomain.Redirect
 }
 
 func (*redirectRepositoryFake) List(context.Context, ports.RedirectListQuery) (ports.RedirectListPage, error) {
 	return ports.RedirectListPage{}, nil
 }
-func (*redirectRepositoryFake) Get(context.Context, string, string) (discoverabilitydomain.Redirect, error) {
-	return discoverabilitydomain.Redirect{}, nil
+func (fake *redirectRepositoryFake) Get(context.Context, string, string) (discoverabilitydomain.Redirect, error) {
+	return fake.got, nil
 }
 func (fake *redirectRepositoryFake) Create(_ context.Context, command ports.CreateRedirectCommand) (discoverabilitydomain.Redirect, error) {
 	fake.created = command

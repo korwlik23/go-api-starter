@@ -19,9 +19,23 @@ func NewWorkflowRepository(db *gormdb.DB) (*WorkflowRepository, error) {
 	if err != nil {
 		return nil, ErrInvalidContentRepository
 	}
+	return NewWorkflowRepositoryWithDependencies(db, manager)
+}
+
+func NewWorkflowRepositoryWithDependencies(
+	db *gormdb.DB,
+	connections database.ConnectionProvider,
+) (*WorkflowRepository, error) {
+	if db == nil || connections == nil {
+		return nil, ErrInvalidContentRepository
+	}
+	content, err := NewContentRepositoryWithDependencies(db, connections)
+	if err != nil {
+		return nil, err
+	}
 	return &WorkflowRepository{
-		db: db, connections: manager,
-		content: &ContentRepository{db: db, connections: manager},
+		db: db, connections: connections,
+		content: content,
 	}, nil
 }
 
