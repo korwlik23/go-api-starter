@@ -6,6 +6,7 @@ type RouteHandlers struct {
 	Content   *ContentHandler
 	Revisions *RevisionHandler
 	Workflow  *WorkflowHandler
+	Schedules *ScheduleHandler
 }
 
 // RegisterRoutes exposes the draft content mutation surface. Authentication,
@@ -24,5 +25,10 @@ func RegisterRoutes(router *gin.RouterGroup, handlers RouteHandlers) {
 	}
 	if handlers.Workflow != nil {
 		router.POST("/publishing/content/:content_id/workflow", handlers.Workflow.Transition)
+	}
+	if handlers.Schedules != nil {
+		router.GET("/publishing/schedules", handlers.Schedules.List)
+		router.POST("/publishing/schedules", handlers.Schedules.Create)
+		router.DELETE("/publishing/schedules/:schedule_id", handlers.Schedules.Cancel)
 	}
 }
