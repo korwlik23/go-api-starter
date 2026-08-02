@@ -94,7 +94,7 @@ func TestBootstrapIntegrationIsAtomicAndIdempotent(t *testing.T) {
 		"password_credentials":    1,
 		"memberships":             1,
 		"roles":                   2,
-		"role_permissions":        9,
+		"role_permissions":        35,
 		"membership_roles":        1,
 		"system_role_assignments": 1,
 		"audit_events":            1,

@@ -31,6 +31,22 @@ func TestPowerShellRunnerPropagatesMigrationLockTimeout(t *testing.T) {
 	}
 }
 
+func TestPowerShellRunnerSerializesDatabasePackages(t *testing.T) {
+	workingDirectory, err := os.Getwd()
+	if err != nil {
+		t.Fatalf("get working directory: %v", err)
+	}
+	content, err := os.ReadFile(
+		filepath.Join(workingDirectory, "test-db.ps1"),
+	)
+	if err != nil {
+		t.Fatalf("read PowerShell runner: %v", err)
+	}
+	if !strings.Contains(string(content), "@('test', '-p', '1', $Package, '-count=1')") {
+		t.Fatal("PowerShell runner must serialize database test packages")
+	}
+}
+
 func TestPowerShellRunnerStopsDatabaseAfterFailedStart(t *testing.T) {
 	powerShell := findPowerShell(t)
 	repositoryRoot := runnerSandbox(t)

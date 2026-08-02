@@ -167,7 +167,7 @@ if ($DryRun) {
     exit 0
 }
 
-$testArguments = @('test', $Package, '-count=1')
+$testArguments = @('test', '-p', '1', $Package, '-count=1')
 if ($Run -ne '') {
     $testArguments += @('-run', "^$Run`$")
 }

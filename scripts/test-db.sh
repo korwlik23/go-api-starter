@@ -150,7 +150,7 @@ if [[ "$dry_run" == true ]]; then
   exit 0
 fi
 
-test_arguments=(test "$package" -count=1)
+test_arguments=(test -p 1 "$package" -count=1)
 if [[ -n "$run_name" ]]; then
   test_arguments+=(-run "^${run_name}$")
 fi

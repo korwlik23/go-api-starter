@@ -31,6 +31,22 @@ func TestBashRunnerPropagatesMigrationLockTimeout(t *testing.T) {
 	}
 }
 
+func TestBashRunnerSerializesDatabasePackages(t *testing.T) {
+	workingDirectory, err := os.Getwd()
+	if err != nil {
+		t.Fatalf("get working directory: %v", err)
+	}
+	content, err := os.ReadFile(
+		filepath.Join(workingDirectory, "test-db.sh"),
+	)
+	if err != nil {
+		t.Fatalf("read Bash runner: %v", err)
+	}
+	if !strings.Contains(string(content), "test_arguments=(test -p 1 \"$package\" -count=1)") {
+		t.Fatal("Bash runner must serialize database test packages")
+	}
+}
+
 func TestBashRunnerStopsDatabaseAfterFailedStart(t *testing.T) {
 	bash := findBash(t)
 	repositoryRoot := runnerSandbox(t)

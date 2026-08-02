@@ -11,6 +11,8 @@ import (
 	mysqlgorm "gorm.io/driver/mysql"
 )
 
+const mysqlSessionSQLMode = "STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,NO_ENGINE_SUBSTITUTION"
+
 func newMySQLConnection(
 	cfg config.DatabaseConfig,
 ) (connection, error) {
@@ -62,6 +64,7 @@ func newMySQLDriverConfig(
 	driverConfig.Loc = location
 	driverConfig.Params = map[string]string{
 		"time_zone": "'+00:00'",
+		"sql_mode":  "'" + mysqlSessionSQLMode + "'",
 	}
 	driverConfig.Timeout = cfg.ConnectTimeout
 	switch cfg.TLSMode {

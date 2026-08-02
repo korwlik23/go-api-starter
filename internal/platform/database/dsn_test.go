@@ -63,6 +63,7 @@ func TestD2MySQLDriverConfigPreservesStructuredValues(t *testing.T) {
 	require.True(t, driverConfig.ParseTime)
 	require.Equal(t, cfg.TimeZone, driverConfig.Loc.String())
 	require.Equal(t, "'+00:00'", driverConfig.Params["time_zone"])
+	require.Equal(t, "'"+mysqlSessionSQLMode+"'", driverConfig.Params["sql_mode"])
 	require.Equal(t, cfg.ConnectTimeout, driverConfig.Timeout)
 	require.Equal(t, "true", driverConfig.TLSConfig)
 	require.False(t, driverConfig.AllowFallbackToPlaintext)

@@ -65,12 +65,16 @@ func TestModuleStateRepositoryReconcilesAtomically(t *testing.T) {
 	registry, err := app.Modules()
 	require.NoError(t, err)
 	enabled := map[string]bool{
-		"identity":      true,
-		"accounts":      true,
-		"authorization": true,
-		"localization":  true,
-		"audit":         true,
-		"operations":    true,
+		"identity":        true,
+		"accounts":        true,
+		"authorization":   true,
+		"localization":    true,
+		"audit":           true,
+		"operations":      true,
+		"publishing":      false,
+		"media":           false,
+		"navigation":      false,
+		"discoverability": false,
 	}
 
 	first, err := reconciler.Execute(ctx, operationsapp.ReconcileRequest{
@@ -93,8 +97,8 @@ func TestModuleStateRepositoryReconcilesAtomically(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, second.Revision, currentRevision)
 
-	require.Equal(t, int64(6), tableCount(t, ctx, db, "module_states"))
-	require.Equal(t, int64(9), tableCount(t, ctx, db, "permissions"))
+	require.Equal(t, int64(10), tableCount(t, ctx, db, "module_states"))
+	require.Equal(t, int64(35), tableCount(t, ctx, db, "permissions"))
 	snapshot, err := repository.CurrentSnapshot(ctx)
 	require.NoError(t, err)
 	require.NoError(t, operationsapp.VerifyProjection(registry, enabled, snapshot))
