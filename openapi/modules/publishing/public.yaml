@@ -24,11 +24,15 @@ paths:
         '200':
           description: The published content translation and its published alternate locales.
           headers:
-            Cache-Control:
-              schema: {type: string}
+            Cache-Control: {schema: {type: string}}
+            ETag: {schema: {type: string}}
           content:
             application/json:
               schema: {$ref: '#/components/schemas/PublicContent'}
+        '304':
+          description: The published content has not changed.
+          headers:
+            ETag: {schema: {type: string}}
         '404': {$ref: ../../common/errors.yaml#/components/responses/NotFound}
         '429': {$ref: ../../common/errors.yaml#/components/responses/TooManyRequests}
         '500': {$ref: ../../common/errors.yaml#/components/responses/InternalServerError}
@@ -57,11 +61,15 @@ paths:
         '200':
           description: Published posts ordered by the public content cursor.
           headers:
-            Cache-Control:
-              schema: {type: string}
+            Cache-Control: {schema: {type: string}}
+            ETag: {schema: {type: string}}
           content:
             application/json:
               schema: {$ref: '#/components/schemas/PublicPostListResponse'}
+        '304':
+          description: The published post list has not changed.
+          headers:
+            ETag: {schema: {type: string}}
         '400': {$ref: ../../common/errors.yaml#/components/responses/BadRequest}
         '404': {$ref: ../../common/errors.yaml#/components/responses/NotFound}
         '429': {$ref: ../../common/errors.yaml#/components/responses/TooManyRequests}
@@ -87,9 +95,14 @@ paths:
           description: The published post.
           headers:
             Cache-Control: {schema: {type: string}}
+            ETag: {schema: {type: string}}
           content:
             application/json:
               schema: {$ref: '#/components/schemas/PublicContent'}
+        '304':
+          description: The published post has not changed.
+          headers:
+            ETag: {schema: {type: string}}
         '404': {$ref: ../../common/errors.yaml#/components/responses/NotFound}
         '429': {$ref: ../../common/errors.yaml#/components/responses/TooManyRequests}
         '500': {$ref: ../../common/errors.yaml#/components/responses/InternalServerError}
@@ -114,9 +127,14 @@ paths:
           description: Enabled menu with enabled items only.
           headers:
             Cache-Control: {schema: {type: string}}
+            ETag: {schema: {type: string}}
           content:
             application/json:
               schema: {$ref: '#/components/schemas/PublicMenu'}
+        '304':
+          description: The public menu has not changed.
+          headers:
+            ETag: {schema: {type: string}}
         '404': {$ref: ../../common/errors.yaml#/components/responses/NotFound}
         '429': {$ref: ../../common/errors.yaml#/components/responses/TooManyRequests}
         '500': {$ref: ../../common/errors.yaml#/components/responses/InternalServerError}

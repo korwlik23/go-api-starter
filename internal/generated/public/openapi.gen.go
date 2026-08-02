@@ -1103,6 +1103,12 @@ func (r GetTranslationCatalogResponse) ContentType() string {
 // GetPublicContentResponse200Headers the declared response headers of an HTTP 200 response for GetPublicContent
 type GetPublicContentResponse200Headers struct {
 	CacheControl *string
+	ETag         *string
+}
+
+// GetPublicContentResponse304Headers the declared response headers of an HTTP 304 response for GetPublicContent
+type GetPublicContentResponse304Headers struct {
+	ETag *string
 }
 
 type GetPublicContentResponse struct {
@@ -1118,6 +1124,8 @@ type GetPublicContentResponse struct {
 	JSON500 *InternalServerError
 	// Headers200 the parsed response headers for an HTTP 200 response
 	Headers200 *GetPublicContentResponse200Headers
+	// Headers304 the parsed response headers for an HTTP 304 response
+	Headers304 *GetPublicContentResponse304Headers
 }
 
 // GetJSON200 returns the response for an HTTP 200 `application/json` response
@@ -1172,6 +1180,12 @@ func (r GetPublicContentResponse) ContentType() string {
 // GetPublicMenuResponse200Headers the declared response headers of an HTTP 200 response for GetPublicMenu
 type GetPublicMenuResponse200Headers struct {
 	CacheControl *string
+	ETag         *string
+}
+
+// GetPublicMenuResponse304Headers the declared response headers of an HTTP 304 response for GetPublicMenu
+type GetPublicMenuResponse304Headers struct {
+	ETag *string
 }
 
 type GetPublicMenuResponse struct {
@@ -1187,6 +1201,8 @@ type GetPublicMenuResponse struct {
 	JSON500 *InternalServerError
 	// Headers200 the parsed response headers for an HTTP 200 response
 	Headers200 *GetPublicMenuResponse200Headers
+	// Headers304 the parsed response headers for an HTTP 304 response
+	Headers304 *GetPublicMenuResponse304Headers
 }
 
 // GetJSON200 returns the response for an HTTP 200 `application/json` response
@@ -1241,6 +1257,12 @@ func (r GetPublicMenuResponse) ContentType() string {
 // ListPublicPostsResponse200Headers the declared response headers of an HTTP 200 response for ListPublicPosts
 type ListPublicPostsResponse200Headers struct {
 	CacheControl *string
+	ETag         *string
+}
+
+// ListPublicPostsResponse304Headers the declared response headers of an HTTP 304 response for ListPublicPosts
+type ListPublicPostsResponse304Headers struct {
+	ETag *string
 }
 
 type ListPublicPostsResponse struct {
@@ -1258,6 +1280,8 @@ type ListPublicPostsResponse struct {
 	JSON500 *InternalServerError
 	// Headers200 the parsed response headers for an HTTP 200 response
 	Headers200 *ListPublicPostsResponse200Headers
+	// Headers304 the parsed response headers for an HTTP 304 response
+	Headers304 *ListPublicPostsResponse304Headers
 }
 
 // GetJSON200 returns the response for an HTTP 200 `application/json` response
@@ -1317,6 +1341,12 @@ func (r ListPublicPostsResponse) ContentType() string {
 // GetPublicPostResponse200Headers the declared response headers of an HTTP 200 response for GetPublicPost
 type GetPublicPostResponse200Headers struct {
 	CacheControl *string
+	ETag         *string
+}
+
+// GetPublicPostResponse304Headers the declared response headers of an HTTP 304 response for GetPublicPost
+type GetPublicPostResponse304Headers struct {
+	ETag *string
 }
 
 type GetPublicPostResponse struct {
@@ -1332,6 +1362,8 @@ type GetPublicPostResponse struct {
 	JSON500 *InternalServerError
 	// Headers200 the parsed response headers for an HTTP 200 response
 	Headers200 *GetPublicPostResponse200Headers
+	// Headers304 the parsed response headers for an HTTP 304 response
+	Headers304 *GetPublicPostResponse304Headers
 }
 
 // GetJSON200 returns the response for an HTTP 200 `application/json` response
@@ -1651,6 +1683,9 @@ func ParseGetPublicContentResponse(rsp *http.Response) (*GetPublicContentRespons
 		}
 		response.JSON200 = &dest
 
+	case rsp.StatusCode == 304:
+		break // No content-type
+
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
 		var dest NotFound
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
@@ -1684,7 +1719,24 @@ func ParseGetPublicContentResponse(rsp *http.Response) (*GetPublicContentRespons
 			}
 			headers.CacheControl = &value
 		}
+		if values := rsp.Header.Values("ETag"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "ETag", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.ETag = &value
+		}
 		response.Headers200 = &headers
+	case rsp.StatusCode == 304:
+		var headers GetPublicContentResponse304Headers
+		if values := rsp.Header.Values("ETag"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "ETag", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.ETag = &value
+		}
+		response.Headers304 = &headers
 	}
 
 	return response, nil
@@ -1710,6 +1762,9 @@ func ParseGetPublicMenuResponse(rsp *http.Response) (*GetPublicMenuResponse, err
 			return nil, err
 		}
 		response.JSON200 = &dest
+
+	case rsp.StatusCode == 304:
+		break // No content-type
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
 		var dest NotFound
@@ -1744,7 +1799,24 @@ func ParseGetPublicMenuResponse(rsp *http.Response) (*GetPublicMenuResponse, err
 			}
 			headers.CacheControl = &value
 		}
+		if values := rsp.Header.Values("ETag"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "ETag", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.ETag = &value
+		}
 		response.Headers200 = &headers
+	case rsp.StatusCode == 304:
+		var headers GetPublicMenuResponse304Headers
+		if values := rsp.Header.Values("ETag"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "ETag", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.ETag = &value
+		}
+		response.Headers304 = &headers
 	}
 
 	return response, nil
@@ -1770,6 +1842,9 @@ func ParseListPublicPostsResponse(rsp *http.Response) (*ListPublicPostsResponse,
 			return nil, err
 		}
 		response.JSON200 = &dest
+
+	case rsp.StatusCode == 304:
+		break // No content-type
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
 		var dest BadRequest
@@ -1811,7 +1886,24 @@ func ParseListPublicPostsResponse(rsp *http.Response) (*ListPublicPostsResponse,
 			}
 			headers.CacheControl = &value
 		}
+		if values := rsp.Header.Values("ETag"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "ETag", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.ETag = &value
+		}
 		response.Headers200 = &headers
+	case rsp.StatusCode == 304:
+		var headers ListPublicPostsResponse304Headers
+		if values := rsp.Header.Values("ETag"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "ETag", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.ETag = &value
+		}
+		response.Headers304 = &headers
 	}
 
 	return response, nil
@@ -1837,6 +1929,9 @@ func ParseGetPublicPostResponse(rsp *http.Response) (*GetPublicPostResponse, err
 			return nil, err
 		}
 		response.JSON200 = &dest
+
+	case rsp.StatusCode == 304:
+		break // No content-type
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
 		var dest NotFound
@@ -1871,7 +1966,24 @@ func ParseGetPublicPostResponse(rsp *http.Response) (*GetPublicPostResponse, err
 			}
 			headers.CacheControl = &value
 		}
+		if values := rsp.Header.Values("ETag"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "ETag", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.ETag = &value
+		}
 		response.Headers200 = &headers
+	case rsp.StatusCode == 304:
+		var headers GetPublicPostResponse304Headers
+		if values := rsp.Header.Values("ETag"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "ETag", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.ETag = &value
+		}
+		response.Headers304 = &headers
 	}
 
 	return response, nil

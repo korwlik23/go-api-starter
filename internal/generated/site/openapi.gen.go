@@ -849,6 +849,7 @@ type GetPublicContentResponseObject interface {
 
 type GetPublicContent200ResponseHeaders struct {
 	CacheControl *string
+	ETag         *string
 }
 
 type GetPublicContent200JSONResponse struct {
@@ -866,9 +867,28 @@ func (response GetPublicContent200JSONResponse) VisitGetPublicContentResponse(w 
 	if response.Headers.CacheControl != nil {
 		w.Header().Set("Cache-Control", fmt.Sprint(*response.Headers.CacheControl))
 	}
+	if response.Headers.ETag != nil {
+		w.Header().Set("ETag", fmt.Sprint(*response.Headers.ETag))
+	}
 	w.WriteHeader(200)
 	_, err := buf.WriteTo(w)
 	return err
+}
+
+type GetPublicContent304ResponseHeaders struct {
+	ETag *string
+}
+
+type GetPublicContent304Response struct {
+	Headers GetPublicContent304ResponseHeaders
+}
+
+func (response GetPublicContent304Response) VisitGetPublicContentResponse(w http.ResponseWriter) error {
+	if response.Headers.ETag != nil {
+		w.Header().Set("ETag", fmt.Sprint(*response.Headers.ETag))
+	}
+	w.WriteHeader(304)
+	return nil
 }
 
 type GetPublicContent404JSONResponse struct{ NotFoundJSONResponse }
@@ -926,6 +946,7 @@ type GetPublicMenuResponseObject interface {
 
 type GetPublicMenu200ResponseHeaders struct {
 	CacheControl *string
+	ETag         *string
 }
 
 type GetPublicMenu200JSONResponse struct {
@@ -943,9 +964,28 @@ func (response GetPublicMenu200JSONResponse) VisitGetPublicMenuResponse(w http.R
 	if response.Headers.CacheControl != nil {
 		w.Header().Set("Cache-Control", fmt.Sprint(*response.Headers.CacheControl))
 	}
+	if response.Headers.ETag != nil {
+		w.Header().Set("ETag", fmt.Sprint(*response.Headers.ETag))
+	}
 	w.WriteHeader(200)
 	_, err := buf.WriteTo(w)
 	return err
+}
+
+type GetPublicMenu304ResponseHeaders struct {
+	ETag *string
+}
+
+type GetPublicMenu304Response struct {
+	Headers GetPublicMenu304ResponseHeaders
+}
+
+func (response GetPublicMenu304Response) VisitGetPublicMenuResponse(w http.ResponseWriter) error {
+	if response.Headers.ETag != nil {
+		w.Header().Set("ETag", fmt.Sprint(*response.Headers.ETag))
+	}
+	w.WriteHeader(304)
+	return nil
 }
 
 type GetPublicMenu404JSONResponse struct{ NotFoundJSONResponse }
@@ -1003,6 +1043,7 @@ type ListPublicPostsResponseObject interface {
 
 type ListPublicPosts200ResponseHeaders struct {
 	CacheControl *string
+	ETag         *string
 }
 
 type ListPublicPosts200JSONResponse struct {
@@ -1020,9 +1061,28 @@ func (response ListPublicPosts200JSONResponse) VisitListPublicPostsResponse(w ht
 	if response.Headers.CacheControl != nil {
 		w.Header().Set("Cache-Control", fmt.Sprint(*response.Headers.CacheControl))
 	}
+	if response.Headers.ETag != nil {
+		w.Header().Set("ETag", fmt.Sprint(*response.Headers.ETag))
+	}
 	w.WriteHeader(200)
 	_, err := buf.WriteTo(w)
 	return err
+}
+
+type ListPublicPosts304ResponseHeaders struct {
+	ETag *string
+}
+
+type ListPublicPosts304Response struct {
+	Headers ListPublicPosts304ResponseHeaders
+}
+
+func (response ListPublicPosts304Response) VisitListPublicPostsResponse(w http.ResponseWriter) error {
+	if response.Headers.ETag != nil {
+		w.Header().Set("ETag", fmt.Sprint(*response.Headers.ETag))
+	}
+	w.WriteHeader(304)
+	return nil
 }
 
 type ListPublicPosts400JSONResponse struct{ BadRequestJSONResponse }
@@ -1094,6 +1154,7 @@ type GetPublicPostResponseObject interface {
 
 type GetPublicPost200ResponseHeaders struct {
 	CacheControl *string
+	ETag         *string
 }
 
 type GetPublicPost200JSONResponse struct {
@@ -1111,9 +1172,28 @@ func (response GetPublicPost200JSONResponse) VisitGetPublicPostResponse(w http.R
 	if response.Headers.CacheControl != nil {
 		w.Header().Set("Cache-Control", fmt.Sprint(*response.Headers.CacheControl))
 	}
+	if response.Headers.ETag != nil {
+		w.Header().Set("ETag", fmt.Sprint(*response.Headers.ETag))
+	}
 	w.WriteHeader(200)
 	_, err := buf.WriteTo(w)
 	return err
+}
+
+type GetPublicPost304ResponseHeaders struct {
+	ETag *string
+}
+
+type GetPublicPost304Response struct {
+	Headers GetPublicPost304ResponseHeaders
+}
+
+func (response GetPublicPost304Response) VisitGetPublicPostResponse(w http.ResponseWriter) error {
+	if response.Headers.ETag != nil {
+		w.Header().Set("ETag", fmt.Sprint(*response.Headers.ETag))
+	}
+	w.WriteHeader(304)
+	return nil
 }
 
 type GetPublicPost404JSONResponse struct{ NotFoundJSONResponse }

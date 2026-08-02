@@ -2,7 +2,10 @@ package http
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -95,8 +98,7 @@ func (handler *PublicHandler) getContent(ctx *gin.Context, expectedKind *publish
 		writePublicNotFound(ctx)
 		return
 	}
-	ctx.Header("Cache-Control", "public, max-age=60")
-	ctx.JSON(http.StatusOK, publicContentResponseFromView(view))
+	writePublicJSON(ctx, http.StatusOK, publicContentResponseFromView(view))
 }
 
 func publicPathParam(ctx *gin.Context) string {
@@ -129,8 +131,7 @@ func (handler *PublicHandler) GetMenu(ctx *gin.Context) {
 		writePublicError(ctx, err)
 		return
 	}
-	ctx.Header("Cache-Control", "public, max-age=60")
-	ctx.JSON(http.StatusOK, publicMenuResponseFromDomain(menu))
+	writePublicJSON(ctx, http.StatusOK, publicMenuResponseFromDomain(menu))
 }
 
 func (handler *PublicHandler) ListPosts(ctx *gin.Context) {
@@ -168,8 +169,7 @@ func (handler *PublicHandler) ListPosts(ctx *gin.Context) {
 			UpdatedAt: page.Next.UpdatedAt, ID: page.Next.ID,
 		}
 	}
-	ctx.Header("Cache-Control", "public, max-age=60")
-	ctx.JSON(http.StatusOK, responseBody)
+	writePublicJSON(ctx, http.StatusOK, responseBody)
 }
 
 func (handler *PublicHandler) resolveLocale(ctx *gin.Context) (localizationdomain.Locale, bool) {
@@ -341,9 +341,38 @@ func writePublicMenuNotFound(ctx *gin.Context) {
 }
 
 func writePublicProblem(ctx *gin.Context, status int, code, message string) {
+	ctx.Header("Cache-Control", "no-store")
+	ctx.Header("X-Robots-Tag", "noindex, nofollow")
 	response.WriteProblem(
 		ctx, status,
 		platformmiddleware.RequestIDFromContext(ctx.Request.Context()),
 		response.NewProblem(code, message, nil, nil),
 	)
+}
+
+func writePublicJSON(ctx *gin.Context, status int, body any) {
+	payload, err := json.Marshal(body)
+	if err != nil {
+		writePublicProblem(ctx, http.StatusInternalServerError, "internal_error", "The public content request could not be completed.")
+		return
+	}
+	hash := sha256.Sum256(payload)
+	etag := fmt.Sprintf("\"%x\"", hash[:])
+	ctx.Header("Cache-Control", "public, max-age=60, stale-while-revalidate=30, stale-if-error=30")
+	ctx.Header("ETag", etag)
+	if publicETagMatches(ctx.GetHeader("If-None-Match"), etag) {
+		ctx.Status(http.StatusNotModified)
+		return
+	}
+	ctx.Data(status, "application/json; charset=utf-8", payload)
+}
+
+func publicETagMatches(header, current string) bool {
+	for _, candidate := range strings.Split(header, ",") {
+		candidate = strings.TrimSpace(candidate)
+		if candidate == "*" || candidate == current || strings.TrimPrefix(candidate, "W/") == current {
+			return true
+		}
+	}
+	return false
 }

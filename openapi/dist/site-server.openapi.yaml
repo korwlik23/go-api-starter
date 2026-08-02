@@ -119,6 +119,15 @@ paths:
             Cache-Control:
               schema:
                 type: string
+            ETag:
+              schema:
+                type: string
+        '304':
+          description: The published content has not changed.
+          headers:
+            ETag:
+              schema:
+                type: string
         '404':
           $ref: '#/components/responses/NotFound'
         '429':
@@ -154,6 +163,15 @@ paths:
           description: Enabled menu with enabled items only.
           headers:
             Cache-Control:
+              schema:
+                type: string
+            ETag:
+              schema:
+                type: string
+        '304':
+          description: The public menu has not changed.
+          headers:
+            ETag:
               schema:
                 type: string
         '404':
@@ -194,6 +212,15 @@ paths:
             Cache-Control:
               schema:
                 type: string
+            ETag:
+              schema:
+                type: string
+        '304':
+          description: The published post list has not changed.
+          headers:
+            ETag:
+              schema:
+                type: string
         '400':
           $ref: '#/components/responses/BadRequest'
         '404':
@@ -231,6 +258,15 @@ paths:
           description: The published post.
           headers:
             Cache-Control:
+              schema:
+                type: string
+            ETag:
+              schema:
+                type: string
+        '304':
+          description: The published post has not changed.
+          headers:
+            ETag:
               schema:
                 type: string
         '404':

@@ -3,6 +3,7 @@ package http
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -53,7 +54,9 @@ func TestM3C1PublicHandlerReturnsPublishedContentAndStable404(t *testing.T) {
 	request := httptest.NewRequest(http.MethodGet, "/public/content/en/docs/home", nil)
 	router.ServeHTTP(response, request)
 	require.Equal(t, http.StatusOK, response.Code)
-	require.Equal(t, "public, max-age=60", response.Header().Get("Cache-Control"))
+	require.Equal(t, "public, max-age=60, stale-while-revalidate=30, stale-if-error=30", response.Header().Get("Cache-Control"))
+	etag := response.Header().Get("ETag")
+	require.NotEmpty(t, etag)
 	var body map[string]any
 	require.NoError(t, json.Unmarshal(response.Body.Bytes(), &body))
 	require.Equal(t, "published", body["content_status"])
@@ -67,6 +70,57 @@ func TestM3C1PublicHandlerReturnsPublishedContentAndStable404(t *testing.T) {
 	require.Equal(t, http.StatusNotFound, response.Code)
 	require.Contains(t, response.Body.String(), `"code":"public_content_not_found"`)
 	require.NotContains(t, response.Body.String(), "content_id")
+}
+
+func TestM3C4PublicHandlerReturnsNotModifiedForMatchingETag(t *testing.T) {
+	t.Parallel()
+
+	resolver := &publicContentReaderFake{view: contentapp.PublicContentView{
+		Content: publicHTTPDetail(publishingdomain.StatusPublished),
+	}}
+	locales := &publicLocaleReaderFake{locale: localizationdomain.Locale{
+		ID: "018f1f64-7b2a-7c10-8bf2-3c40d5f67583", Tag: "en", Enabled: true,
+	}}
+	handler, err := NewPublicHandler(resolver, &publicPostsReaderFake{}, locales, "018f1f64-7b2a-7c10-8bf2-3c40d5f67580")
+	require.NoError(t, err)
+
+	gin.SetMode(gin.TestMode)
+	router := gin.New()
+	router.GET("/public/content/:locale/*path", handler.GetContent)
+	first := httptest.NewRecorder()
+	router.ServeHTTP(first, httptest.NewRequest(http.MethodGet, "/public/content/en/home", nil))
+	require.Equal(t, http.StatusOK, first.Code)
+	etag := first.Header().Get("ETag")
+	require.NotEmpty(t, etag)
+
+	second := httptest.NewRecorder()
+	request := httptest.NewRequest(http.MethodGet, "/public/content/en/home", nil)
+	request.Header.Set("If-None-Match", etag)
+	router.ServeHTTP(second, request)
+	require.Equal(t, http.StatusNotModified, second.Code)
+	require.Empty(t, second.Body.Bytes())
+	require.Equal(t, etag, second.Header().Get("ETag"))
+}
+
+func TestM3C4PublicHandlerMarksFailuresNoStoreAndNoIndex(t *testing.T) {
+	t.Parallel()
+
+	resolver := &publicContentReaderFake{err: errors.New("database unavailable")}
+	locales := &publicLocaleReaderFake{locale: localizationdomain.Locale{
+		ID: "018f1f64-7b2a-7c10-8bf2-3c40d5f67583", Tag: "en", Enabled: true,
+	}}
+	handler, err := NewPublicHandler(resolver, &publicPostsReaderFake{}, locales, "018f1f64-7b2a-7c10-8bf2-3c40d5f67580")
+	require.NoError(t, err)
+
+	gin.SetMode(gin.TestMode)
+	router := gin.New()
+	router.GET("/public/content/:locale/*path", handler.GetContent)
+	response := httptest.NewRecorder()
+	router.ServeHTTP(response, httptest.NewRequest(http.MethodGet, "/public/content/en/home", nil))
+	require.Equal(t, http.StatusInternalServerError, response.Code)
+	require.Equal(t, "no-store", response.Header().Get("Cache-Control"))
+	require.Equal(t, "noindex, nofollow", response.Header().Get("X-Robots-Tag"))
+	require.Empty(t, response.Header().Get("ETag"))
 }
 
 func TestM3C1PublicHandlerDoesNotRevealUnknownLocale(t *testing.T) {
