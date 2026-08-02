@@ -10,7 +10,7 @@ import (
 func TestM3A5RegisterRoutesExposesDraftMutationContract(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	router := gin.New()
-	RegisterRoutes(router.Group("/api/v1"), RouteHandlers{Content: &ContentHandler{}})
+	RegisterRoutes(router.Group("/api/v1"), RouteHandlers{Content: &ContentHandler{}, Revisions: &RevisionHandler{}})
 
 	routes := make(map[string]struct{})
 	for _, route := range router.Routes() {
@@ -23,6 +23,8 @@ func TestM3A5RegisterRoutesExposesDraftMutationContract(t *testing.T) {
 		"POST /api/v1/publishing/posts",
 		"PATCH /api/v1/publishing/posts/:post_id",
 		"DELETE /api/v1/publishing/posts/:post_id",
+		"GET /api/v1/publishing/content/:content_id/revisions",
+		"POST /api/v1/publishing/content/:content_id/revisions/:revision_id/rollback",
 	} {
 		_, exists := routes[expected]
 		require.True(t, exists, expected)

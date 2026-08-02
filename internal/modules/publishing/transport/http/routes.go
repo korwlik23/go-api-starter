@@ -3,7 +3,8 @@ package http
 import "github.com/gin-gonic/gin"
 
 type RouteHandlers struct {
-	Content *ContentHandler
+	Content   *ContentHandler
+	Revisions *RevisionHandler
 }
 
 // RegisterRoutes exposes the draft content mutation surface. Authentication,
@@ -16,4 +17,8 @@ func RegisterRoutes(router *gin.RouterGroup, handlers RouteHandlers) {
 	router.POST("/publishing/posts", handlers.Content.CreatePost)
 	router.PATCH("/publishing/posts/:post_id", handlers.Content.Update)
 	router.DELETE("/publishing/posts/:post_id", handlers.Content.Delete)
+	if handlers.Revisions != nil {
+		router.GET("/publishing/content/:content_id/revisions", handlers.Revisions.List)
+		router.POST("/publishing/content/:content_id/revisions/:revision_id/rollback", handlers.Revisions.Rollback)
+	}
 }

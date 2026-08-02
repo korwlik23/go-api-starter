@@ -45,6 +45,12 @@ func TestM3A2PublishingMigrationCatalog(t *testing.T) {
 			"content_taxonomy_terms_content_fk",
 			"content_taxonomy_terms_taxonomy_fk",
 		},
+		"000005_create_content_revisions.sql": {
+			"CREATE TABLE content_revisions",
+			"content_revisions_content_created_id_index",
+			"content_revisions_content_fk",
+			"content_revisions_translation_fk",
+		},
 	}
 
 	for dialect, bundle := range module.Bundles {
@@ -83,6 +89,7 @@ func TestM3A2PublishingSchemaUpDown(t *testing.T) {
 		"content_translations",
 		"taxonomies",
 		"content_taxonomy_terms",
+		"content_revisions",
 	} {
 		require.True(t, migrationTableExists(t, ctx, sqlDB, cfg, table), table)
 	}
@@ -102,6 +109,7 @@ func TestM3A2PublishingSchemaUpDown(t *testing.T) {
 	_, err = provider.DownTo(ctx, 0)
 	require.NoError(t, err)
 	for _, table := range []string{
+		"content_revisions",
 		"content_taxonomy_terms",
 		"taxonomies",
 		"content_translations",
@@ -116,6 +124,7 @@ func m3CleanupPublishingSchema(t *testing.T, db *sql.DB) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	for _, table := range []string{
+		"content_revisions",
 		"content_taxonomy_terms",
 		"taxonomies",
 		"content_translations",

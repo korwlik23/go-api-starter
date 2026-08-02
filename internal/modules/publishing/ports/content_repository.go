@@ -13,7 +13,7 @@ var (
 	ErrInvalidContentRepository = errors.New("invalid content repository")
 	ErrInvalidContentQuery      = errors.New("invalid content query")
 	ErrContentNotFound          = errors.New("content not found")
-	ErrContentConflict           = errors.New("content version conflict")
+	ErrContentConflict          = errors.New("content version conflict")
 )
 
 var contentIDPattern = regexp.MustCompile(
