@@ -3228,12 +3228,67 @@ components:
         - aeo
       type: object
     ContentUpdateRequest:
-      allOf:
-        - $ref: '#/components/schemas/ContentMutationRequest'
-        - required:
-            - translation_id
-            - expected_version
-          type: object
+      additionalProperties: false
+      properties:
+        aeo:
+          $ref: '#/components/schemas/AEOFields'
+        blocks:
+          items:
+            $ref: '#/components/schemas/Block'
+          maxItems: 500
+          minItems: 1
+          type: array
+        content_key:
+          maxLength: 128
+          minLength: 1
+          type: string
+        excerpt:
+          maxLength: 2000
+          type: string
+        expected_version:
+          minimum: 1
+          type: integer
+        geo:
+          $ref: '#/components/schemas/GEOFields'
+        kind:
+          enum:
+            - page
+            - post
+          type: string
+        locale:
+          maxLength: 255
+          minLength: 2
+          type: string
+        path:
+          maxLength: 512
+          minLength: 1
+          type: string
+        seo:
+          $ref: '#/components/schemas/SEOFields'
+        slug:
+          maxLength: 160
+          minLength: 1
+          type: string
+        title:
+          maxLength: 255
+          minLength: 1
+          type: string
+        translation_id:
+          format: uuid
+          type: string
+      required:
+        - translation_id
+        - expected_version
+        - locale
+        - slug
+        - path
+        - title
+        - excerpt
+        - blocks
+        - seo
+        - geo
+        - aeo
+      type: object
     CreateRoleRequest:
       additionalProperties: false
       properties:
