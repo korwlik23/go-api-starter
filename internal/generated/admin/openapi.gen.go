@@ -106,6 +106,48 @@ func (e AdminUserStatusRequestStatus) Valid() bool {
 	}
 }
 
+// Defines values for AuditCheckSeverity.
+const (
+	AuditCheckSeverityError   AuditCheckSeverity = "error"
+	AuditCheckSeverityInfo    AuditCheckSeverity = "info"
+	AuditCheckSeverityWarning AuditCheckSeverity = "warning"
+)
+
+// Valid indicates whether the value is a known member of the AuditCheckSeverity enum.
+func (e AuditCheckSeverity) Valid() bool {
+	switch e {
+	case AuditCheckSeverityError:
+		return true
+	case AuditCheckSeverityInfo:
+		return true
+	case AuditCheckSeverityWarning:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for AuditCheckStatus.
+const (
+	AuditCheckStatusError   AuditCheckStatus = "error"
+	AuditCheckStatusPass    AuditCheckStatus = "pass"
+	AuditCheckStatusWarning AuditCheckStatus = "warning"
+)
+
+// Valid indicates whether the value is a known member of the AuditCheckStatus enum.
+func (e AuditCheckStatus) Valid() bool {
+	switch e {
+	case AuditCheckStatusError:
+		return true
+	case AuditCheckStatusPass:
+		return true
+	case AuditCheckStatusWarning:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for AuditEventActorType.
 const (
 	AuditEventActorTypeAnonymous AuditEventActorType = "anonymous"
@@ -136,6 +178,27 @@ const (
 func (e AuditEventScope) Valid() bool {
 	switch e {
 	case AuditEventScopeSystem:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for ContentAuditStatus.
+const (
+	ContentAuditStatusError   ContentAuditStatus = "error"
+	ContentAuditStatusPass    ContentAuditStatus = "pass"
+	ContentAuditStatusWarning ContentAuditStatus = "warning"
+)
+
+// Valid indicates whether the value is a known member of the ContentAuditStatus enum.
+func (e ContentAuditStatus) Valid() bool {
+	switch e {
+	case ContentAuditStatusError:
+		return true
+	case ContentAuditStatusPass:
+		return true
+	case ContentAuditStatusWarning:
 		return true
 	default:
 		return false
@@ -781,6 +844,27 @@ func (e ListAuthorizationRolesParamsScope) Valid() bool {
 	}
 }
 
+// Defines values for ListDiscoverabilityAuditsParamsStatus.
+const (
+	ListDiscoverabilityAuditsParamsStatusError   ListDiscoverabilityAuditsParamsStatus = "error"
+	ListDiscoverabilityAuditsParamsStatusPass    ListDiscoverabilityAuditsParamsStatus = "pass"
+	ListDiscoverabilityAuditsParamsStatusWarning ListDiscoverabilityAuditsParamsStatus = "warning"
+)
+
+// Valid indicates whether the value is a known member of the ListDiscoverabilityAuditsParamsStatus enum.
+func (e ListDiscoverabilityAuditsParamsStatus) Valid() bool {
+	switch e {
+	case ListDiscoverabilityAuditsParamsStatusError:
+		return true
+	case ListDiscoverabilityAuditsParamsStatusPass:
+		return true
+	case ListDiscoverabilityAuditsParamsStatusWarning:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for ListAdminUsersParamsStatus.
 const (
 	ListAdminUsersParamsStatusActive   ListAdminUsersParamsStatus = "active"
@@ -900,6 +984,21 @@ type AssetListResponse struct {
 	Next  *AssetCursor `json:"next,omitempty"`
 }
 
+// AuditCheck defines model for AuditCheck.
+type AuditCheck struct {
+	Message       string             `json:"message"`
+	ObservedValue string             `json:"observed_value"`
+	RuleKey       string             `json:"rule_key"`
+	Severity      AuditCheckSeverity `json:"severity"`
+	Status        AuditCheckStatus   `json:"status"`
+}
+
+// AuditCheckSeverity defines model for AuditCheck.Severity.
+type AuditCheckSeverity string
+
+// AuditCheckStatus defines model for AuditCheck.Status.
+type AuditCheckStatus string
+
 // AuditEvent defines model for AuditEvent.
 type AuditEvent struct {
 	Action      string                 `json:"action"`
@@ -930,6 +1029,36 @@ type AuditEventListResponse struct {
 type CSRFTokenResponse struct {
 	// CsrfToken Session-bound CSRF token for the immediately following unsafe request.
 	CsrfToken string `json:"csrf_token"`
+}
+
+// ContentAudit defines model for ContentAudit.
+type ContentAudit struct {
+	AccountId          openapi_types.UUID `json:"account_id"`
+	Checks             []AuditCheck       `json:"checks"`
+	ContentId          openapi_types.UUID `json:"content_id"`
+	ContentVersion     int                `json:"content_version"`
+	CreatedAt          time.Time          `json:"created_at"`
+	Id                 openapi_types.UUID `json:"id"`
+	LocaleId           openapi_types.UUID `json:"locale_id"`
+	Status             ContentAuditStatus `json:"status"`
+	TranslationId      openapi_types.UUID `json:"translation_id"`
+	TranslationVersion int                `json:"translation_version"`
+	UpdatedAt          time.Time          `json:"updated_at"`
+}
+
+// ContentAuditStatus defines model for ContentAudit.Status.
+type ContentAuditStatus string
+
+// ContentAuditCursor defines model for ContentAuditCursor.
+type ContentAuditCursor struct {
+	Id        openapi_types.UUID `json:"id"`
+	UpdatedAt time.Time          `json:"updated_at"`
+}
+
+// ContentAuditListResponse defines model for ContentAuditListResponse.
+type ContentAuditListResponse struct {
+	Items []ContentAudit      `json:"items"`
+	Next  *ContentAuditCursor `json:"next,omitempty"`
 }
 
 // CreateRoleRequest defines model for CreateRoleRequest.
@@ -1486,6 +1615,12 @@ type RoleRevokeResponse struct {
 // RoleRevokeResponseRevoked defines model for RoleRevokeResponse.Revoked.
 type RoleRevokeResponseRevoked bool
 
+// RunContentAuditRequest defines model for RunContentAuditRequest.
+type RunContentAuditRequest struct {
+	ContentId openapi_types.UUID `json:"content_id"`
+	LocaleId  openapi_types.UUID `json:"locale_id"`
+}
+
 // SEODefaults defines model for SEODefaults.
 type SEODefaults struct {
 	AccountId     openapi_types.UUID `json:"account_id"`
@@ -1680,6 +1815,20 @@ type ListRoleAssignmentsParams struct {
 	PerPage *PerPage `form:"per_page,omitempty" json:"per_page,omitempty"`
 }
 
+// ListDiscoverabilityAuditsParams defines parameters for ListDiscoverabilityAudits.
+type ListDiscoverabilityAuditsParams struct {
+	ContentId      *openapi_types.UUID                    `form:"content_id,omitempty" json:"content_id,omitempty"`
+	TranslationId  *openapi_types.UUID                    `form:"translation_id,omitempty" json:"translation_id,omitempty"`
+	LocaleId       *openapi_types.UUID                    `form:"locale_id,omitempty" json:"locale_id,omitempty"`
+	Status         *ListDiscoverabilityAuditsParamsStatus `form:"status,omitempty" json:"status,omitempty"`
+	Limit          *int                                   `form:"limit,omitempty" json:"limit,omitempty"`
+	AfterUpdatedAt *time.Time                             `form:"after_updated_at,omitempty" json:"after_updated_at,omitempty"`
+	AfterId        *openapi_types.UUID                    `form:"after_id,omitempty" json:"after_id,omitempty"`
+}
+
+// ListDiscoverabilityAuditsParamsStatus defines parameters for ListDiscoverabilityAudits.
+type ListDiscoverabilityAuditsParamsStatus string
+
 // ListDiscoverabilityRedirectsParams defines parameters for ListDiscoverabilityRedirects.
 type ListDiscoverabilityRedirectsParams struct {
 	LocaleId       *openapi_types.UUID `form:"locale_id,omitempty" json:"locale_id,omitempty"`
@@ -1780,6 +1929,9 @@ type AssignRoleJSONRequestBody = RoleAssignmentRequest
 
 // GrantRolePermissionJSONRequestBody defines body for GrantRolePermission for application/json ContentType.
 type GrantRolePermissionJSONRequestBody = PermissionGrantRequest
+
+// RunDiscoverabilityAuditJSONRequestBody defines body for RunDiscoverabilityAudit for application/json ContentType.
+type RunDiscoverabilityAuditJSONRequestBody = RunContentAuditRequest
 
 // CreateDiscoverabilityRedirectJSONRequestBody defines body for CreateDiscoverabilityRedirect for application/json ContentType.
 type CreateDiscoverabilityRedirectJSONRequestBody = RedirectMutationRequest
@@ -2230,6 +2382,30 @@ type ClientInterface interface {
 	//
 	// Corresponds with POST /authorization/roles/{role_id}/permissions (the `GrantRolePermission` operationId).
 	GrantRolePermission(ctx context.Context, roleId string, body GrantRolePermissionJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ListDiscoverabilityAudits List stored deterministic GEO/AEO content audit results.
+	//
+	// Corresponds with GET /discoverability/audits (the `ListDiscoverabilityAudits` operationId).
+	ListDiscoverabilityAudits(ctx context.Context, params *ListDiscoverabilityAuditsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// RunDiscoverabilityAuditWithBody Run and store a deterministic audit for one content translation.
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with POST /discoverability/audits (the `RunDiscoverabilityAudit` operationId).
+	RunDiscoverabilityAuditWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// RunDiscoverabilityAudit Run and store a deterministic audit for one content translation.
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with POST /discoverability/audits (the `RunDiscoverabilityAudit` operationId).
+	RunDiscoverabilityAudit(ctx context.Context, body RunDiscoverabilityAuditJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetDiscoverabilityAudit Read one stored deterministic content audit result.
+	//
+	// Corresponds with GET /discoverability/audits/{audit_id} (the `GetDiscoverabilityAudit` operationId).
+	GetDiscoverabilityAudit(ctx context.Context, auditId openapi_types.UUID, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// ListDiscoverabilityRedirects List account-scoped redirect rules in stable cursor order.
 	//
@@ -3111,6 +3287,70 @@ func (c *Client) GrantRolePermissionWithBody(ctx context.Context, roleId string,
 // Corresponds with POST /authorization/roles/{role_id}/permissions (the `GrantRolePermission` operationId).
 func (c *Client) GrantRolePermission(ctx context.Context, roleId string, body GrantRolePermissionJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewGrantRolePermissionRequest(c.Server, roleId, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// ListDiscoverabilityAudits List stored deterministic GEO/AEO content audit results.
+//
+// Corresponds with GET /discoverability/audits (the `ListDiscoverabilityAudits` operationId).
+func (c *Client) ListDiscoverabilityAudits(ctx context.Context, params *ListDiscoverabilityAuditsParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewListDiscoverabilityAuditsRequest(c.Server, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// RunDiscoverabilityAuditWithBody Run and store a deterministic audit for one content translation.
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with POST /discoverability/audits (the `RunDiscoverabilityAudit` operationId).
+func (c *Client) RunDiscoverabilityAuditWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewRunDiscoverabilityAuditRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// RunDiscoverabilityAudit Run and store a deterministic audit for one content translation.
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with POST /discoverability/audits (the `RunDiscoverabilityAudit` operationId).
+func (c *Client) RunDiscoverabilityAudit(ctx context.Context, body RunDiscoverabilityAuditJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewRunDiscoverabilityAuditRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// GetDiscoverabilityAudit Read one stored deterministic content audit result.
+//
+// Corresponds with GET /discoverability/audits/{audit_id} (the `GetDiscoverabilityAudit` operationId).
+func (c *Client) GetDiscoverabilityAudit(ctx context.Context, auditId openapi_types.UUID, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetDiscoverabilityAuditRequest(c.Server, auditId)
 	if err != nil {
 		return nil, err
 	}
@@ -5007,6 +5247,206 @@ func NewGrantRolePermissionRequestWithBody(server string, roleId string, content
 	return req, nil
 }
 
+// NewListDiscoverabilityAuditsRequest constructs an http.Request for the ListDiscoverabilityAudits method
+func NewListDiscoverabilityAuditsRequest(server string, params *ListDiscoverabilityAuditsParams) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/discoverability/audits")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		// queryValues collects non-styled parameters (passthrough, JSON)
+		// that are safe to round-trip through url.Values.Encode().
+		queryValues := queryURL.Query()
+		// rawQueryFragments collects pre-encoded query fragments from
+		// styled parameters, preserving literal commas as delimiters
+		// per the OpenAPI spec (e.g. "color=blue,black,brown").
+		var rawQueryFragments []string
+
+		if params.ContentId != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "content_id", *params.ContentId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: "uuid"}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.TranslationId != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "translation_id", *params.TranslationId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: "uuid"}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.LocaleId != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "locale_id", *params.LocaleId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: "uuid"}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.Status != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "status", *params.Status, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.Limit != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "limit", *params.Limit, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "integer", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.AfterUpdatedAt != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "after_updated_at", *params.AfterUpdatedAt, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: "date-time"}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.AfterId != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "after_id", *params.AfterId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: "uuid"}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if encoded := queryValues.Encode(); encoded != "" {
+			rawQueryFragments = append(rawQueryFragments, encoded)
+		}
+		queryURL.RawQuery = strings.Join(rawQueryFragments, "&")
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewRunDiscoverabilityAuditRequest calls the generic RunDiscoverabilityAudit builder with application/json body
+func NewRunDiscoverabilityAuditRequest(server string, body RunDiscoverabilityAuditJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewRunDiscoverabilityAuditRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewRunDiscoverabilityAuditRequestWithBody constructs an http.Request for the RunDiscoverabilityAudit method, with any body, and a specified content type
+func NewRunDiscoverabilityAuditRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/discoverability/audits")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPost, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewGetDiscoverabilityAuditRequest constructs an http.Request for the GetDiscoverabilityAudit method
+func NewGetDiscoverabilityAuditRequest(server string, auditId openapi_types.UUID) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "audit_id", auditId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: "uuid"})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/discoverability/audits/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
 // NewListDiscoverabilityRedirectsRequest constructs an http.Request for the ListDiscoverabilityRedirects method
 func NewListDiscoverabilityRedirectsRequest(server string, params *ListDiscoverabilityRedirectsParams) (*http.Request, error) {
 	var err error
@@ -6782,6 +7222,34 @@ type ClientWithResponsesInterface interface {
 	//
 	// Corresponds with POST /authorization/roles/{role_id}/permissions (the `GrantRolePermission` operationId).
 	GrantRolePermissionWithResponse(ctx context.Context, roleId string, body GrantRolePermissionJSONRequestBody, reqEditors ...RequestEditorFn) (*GrantRolePermissionResponse, error)
+
+	// ListDiscoverabilityAuditsWithResponse List stored deterministic GEO/AEO content audit results.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /discoverability/audits (the `ListDiscoverabilityAudits` operationId).
+	ListDiscoverabilityAuditsWithResponse(ctx context.Context, params *ListDiscoverabilityAuditsParams, reqEditors ...RequestEditorFn) (*ListDiscoverabilityAuditsResponse, error)
+
+	// RunDiscoverabilityAuditWithBodyWithResponse Run and store a deterministic audit for one content translation.
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /discoverability/audits (the `RunDiscoverabilityAudit` operationId).
+	RunDiscoverabilityAuditWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*RunDiscoverabilityAuditResponse, error)
+
+	// RunDiscoverabilityAuditWithResponse Run and store a deterministic audit for one content translation.
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /discoverability/audits (the `RunDiscoverabilityAudit` operationId).
+	RunDiscoverabilityAuditWithResponse(ctx context.Context, body RunDiscoverabilityAuditJSONRequestBody, reqEditors ...RequestEditorFn) (*RunDiscoverabilityAuditResponse, error)
+
+	// GetDiscoverabilityAuditWithResponse Read one stored deterministic content audit result.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /discoverability/audits/{audit_id} (the `GetDiscoverabilityAudit` operationId).
+	GetDiscoverabilityAuditWithResponse(ctx context.Context, auditId openapi_types.UUID, reqEditors ...RequestEditorFn) (*GetDiscoverabilityAuditResponse, error)
 
 	// ListDiscoverabilityRedirectsWithResponse List account-scoped redirect rules in stable cursor order.
 	//
@@ -8643,6 +9111,206 @@ func (r GrantRolePermissionResponse) StatusCode() int {
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
 func (r GrantRolePermissionResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type ListDiscoverabilityAuditsResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *ContentAuditListResponse
+	// JSON400 the response for an HTTP 400 `application/json` response
+	JSON400 *BadRequest
+	// JSON401 the response for an HTTP 401 `application/json` response
+	JSON401 *Unauthorized
+	// JSON403 the response for an HTTP 403 `application/json` response
+	JSON403 *Forbidden
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r ListDiscoverabilityAuditsResponse) GetJSON200() *ContentAuditListResponse {
+	return r.JSON200
+}
+
+// GetJSON400 returns the response for an HTTP 400 `application/json` response
+func (r ListDiscoverabilityAuditsResponse) GetJSON400() *BadRequest {
+	return r.JSON400
+}
+
+// GetJSON401 returns the response for an HTTP 401 `application/json` response
+func (r ListDiscoverabilityAuditsResponse) GetJSON401() *Unauthorized {
+	return r.JSON401
+}
+
+// GetJSON403 returns the response for an HTTP 403 `application/json` response
+func (r ListDiscoverabilityAuditsResponse) GetJSON403() *Forbidden {
+	return r.JSON403
+}
+
+// GetBody returns the raw response body bytes
+func (r ListDiscoverabilityAuditsResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r ListDiscoverabilityAuditsResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ListDiscoverabilityAuditsResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r ListDiscoverabilityAuditsResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type RunDiscoverabilityAuditResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON201 the response for an HTTP 201 `application/json` response
+	JSON201 *ContentAudit
+	// JSON400 the response for an HTTP 400 `application/json` response
+	JSON400 *BadRequest
+	// JSON401 the response for an HTTP 401 `application/json` response
+	JSON401 *Unauthorized
+	// JSON403 the response for an HTTP 403 `application/json` response
+	JSON403 *Forbidden
+	// JSON404 the response for an HTTP 404 `application/json` response
+	JSON404 *NotFound
+	// JSON422 the response for an HTTP 422 `application/json` response
+	JSON422 *BadRequest
+}
+
+// GetJSON201 returns the response for an HTTP 201 `application/json` response
+func (r RunDiscoverabilityAuditResponse) GetJSON201() *ContentAudit {
+	return r.JSON201
+}
+
+// GetJSON400 returns the response for an HTTP 400 `application/json` response
+func (r RunDiscoverabilityAuditResponse) GetJSON400() *BadRequest {
+	return r.JSON400
+}
+
+// GetJSON401 returns the response for an HTTP 401 `application/json` response
+func (r RunDiscoverabilityAuditResponse) GetJSON401() *Unauthorized {
+	return r.JSON401
+}
+
+// GetJSON403 returns the response for an HTTP 403 `application/json` response
+func (r RunDiscoverabilityAuditResponse) GetJSON403() *Forbidden {
+	return r.JSON403
+}
+
+// GetJSON404 returns the response for an HTTP 404 `application/json` response
+func (r RunDiscoverabilityAuditResponse) GetJSON404() *NotFound {
+	return r.JSON404
+}
+
+// GetJSON422 returns the response for an HTTP 422 `application/json` response
+func (r RunDiscoverabilityAuditResponse) GetJSON422() *BadRequest {
+	return r.JSON422
+}
+
+// GetBody returns the raw response body bytes
+func (r RunDiscoverabilityAuditResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r RunDiscoverabilityAuditResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r RunDiscoverabilityAuditResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r RunDiscoverabilityAuditResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type GetDiscoverabilityAuditResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *ContentAudit
+	// JSON401 the response for an HTTP 401 `application/json` response
+	JSON401 *Unauthorized
+	// JSON403 the response for an HTTP 403 `application/json` response
+	JSON403 *Forbidden
+	// JSON404 the response for an HTTP 404 `application/json` response
+	JSON404 *NotFound
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r GetDiscoverabilityAuditResponse) GetJSON200() *ContentAudit {
+	return r.JSON200
+}
+
+// GetJSON401 returns the response for an HTTP 401 `application/json` response
+func (r GetDiscoverabilityAuditResponse) GetJSON401() *Unauthorized {
+	return r.JSON401
+}
+
+// GetJSON403 returns the response for an HTTP 403 `application/json` response
+func (r GetDiscoverabilityAuditResponse) GetJSON403() *Forbidden {
+	return r.JSON403
+}
+
+// GetJSON404 returns the response for an HTTP 404 `application/json` response
+func (r GetDiscoverabilityAuditResponse) GetJSON404() *NotFound {
+	return r.JSON404
+}
+
+// GetBody returns the raw response body bytes
+func (r GetDiscoverabilityAuditResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r GetDiscoverabilityAuditResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetDiscoverabilityAuditResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r GetDiscoverabilityAuditResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
@@ -11089,6 +11757,58 @@ func (c *ClientWithResponses) GrantRolePermissionWithResponse(ctx context.Contex
 	return ParseGrantRolePermissionResponse(rsp)
 }
 
+// ListDiscoverabilityAuditsWithResponse List stored deterministic GEO/AEO content audit results.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /discoverability/audits (the `ListDiscoverabilityAudits` operationId).
+func (c *ClientWithResponses) ListDiscoverabilityAuditsWithResponse(ctx context.Context, params *ListDiscoverabilityAuditsParams, reqEditors ...RequestEditorFn) (*ListDiscoverabilityAuditsResponse, error) {
+	rsp, err := c.ListDiscoverabilityAudits(ctx, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseListDiscoverabilityAuditsResponse(rsp)
+}
+
+// RunDiscoverabilityAuditWithBodyWithResponse Run and store a deterministic audit for one content translation.
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /discoverability/audits (the `RunDiscoverabilityAudit` operationId).
+func (c *ClientWithResponses) RunDiscoverabilityAuditWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*RunDiscoverabilityAuditResponse, error) {
+	rsp, err := c.RunDiscoverabilityAuditWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseRunDiscoverabilityAuditResponse(rsp)
+}
+
+// RunDiscoverabilityAuditWithResponse Run and store a deterministic audit for one content translation.
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /discoverability/audits (the `RunDiscoverabilityAudit` operationId).
+func (c *ClientWithResponses) RunDiscoverabilityAuditWithResponse(ctx context.Context, body RunDiscoverabilityAuditJSONRequestBody, reqEditors ...RequestEditorFn) (*RunDiscoverabilityAuditResponse, error) {
+	rsp, err := c.RunDiscoverabilityAudit(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseRunDiscoverabilityAuditResponse(rsp)
+}
+
+// GetDiscoverabilityAuditWithResponse Read one stored deterministic content audit result.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /discoverability/audits/{audit_id} (the `GetDiscoverabilityAudit` operationId).
+func (c *ClientWithResponses) GetDiscoverabilityAuditWithResponse(ctx context.Context, auditId openapi_types.UUID, reqEditors ...RequestEditorFn) (*GetDiscoverabilityAuditResponse, error) {
+	rsp, err := c.GetDiscoverabilityAudit(ctx, auditId, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetDiscoverabilityAuditResponse(rsp)
+}
+
 // ListDiscoverabilityRedirectsWithResponse List account-scoped redirect rules in stable cursor order.
 //
 // Returns a wrapper object for the known response body format(s).
@@ -12981,6 +13701,161 @@ func ParseGrantRolePermissionResponse(rsp *http.Response) (*GrantRolePermissionR
 			return nil, err
 		}
 		response.JSON409 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseListDiscoverabilityAuditsResponse parses an HTTP response from a ListDiscoverabilityAuditsWithResponse call
+func ParseListDiscoverabilityAuditsResponse(rsp *http.Response) (*ListDiscoverabilityAuditsResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ListDiscoverabilityAuditsResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest ContentAuditListResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest BadRequest
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest Unauthorized
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest Forbidden
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseRunDiscoverabilityAuditResponse parses an HTTP response from a RunDiscoverabilityAuditWithResponse call
+func ParseRunDiscoverabilityAuditResponse(rsp *http.Response) (*RunDiscoverabilityAuditResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &RunDiscoverabilityAuditResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 201:
+		var dest ContentAudit
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON201 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest BadRequest
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest Unauthorized
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest Forbidden
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest BadRequest
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON422 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetDiscoverabilityAuditResponse parses an HTTP response from a GetDiscoverabilityAuditWithResponse call
+func ParseGetDiscoverabilityAuditResponse(rsp *http.Response) (*GetDiscoverabilityAuditResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetDiscoverabilityAuditResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest ContentAudit
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest Unauthorized
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest Forbidden
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
 
 	}
 

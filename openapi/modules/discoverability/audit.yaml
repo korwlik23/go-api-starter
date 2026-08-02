@@ -1,0 +1,144 @@
+paths:
+  /discoverability/audits:
+    get:
+      tags: [Discoverability]
+      summary: List stored deterministic GEO/AEO content audit results.
+      operationId: listDiscoverabilityAudits
+      x-surfaces: [admin]
+      x-required-permission: discoverability.audit.read.own
+      security:
+        - SessionCookie: []
+      parameters:
+        - name: content_id
+          in: query
+          schema: {type: string, format: uuid}
+        - name: translation_id
+          in: query
+          schema: {type: string, format: uuid}
+        - name: locale_id
+          in: query
+          schema: {type: string, format: uuid}
+        - name: status
+          in: query
+          schema: {type: string, enum: [pass, warning, error]}
+        - name: limit
+          in: query
+          schema: {type: integer, minimum: 1, maximum: 100, default: 25}
+        - name: after_updated_at
+          in: query
+          schema: {type: string, format: date-time}
+        - name: after_id
+          in: query
+          schema: {type: string, format: uuid}
+      responses:
+        '200':
+          description: Account-scoped audit results ordered by update time and ID.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ContentAuditListResponse'}
+        '400': {$ref: ../../common/errors.yaml#/components/responses/BadRequest}
+        '401': {$ref: ../../common/errors.yaml#/components/responses/Unauthorized}
+        '403': {$ref: ../../common/errors.yaml#/components/responses/Forbidden}
+    post:
+      tags: [Discoverability]
+      summary: Run and store a deterministic audit for one content translation.
+      operationId: runDiscoverabilityAudit
+      x-surfaces: [admin]
+      x-required-permission: discoverability.audit.run.own
+      security:
+        - SessionCookie: []
+          CSRFToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/RunContentAuditRequest'}
+      responses:
+        '201':
+          description: The audit result was stored with the observed content and translation versions.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ContentAudit'}
+        '400': {$ref: ../../common/errors.yaml#/components/responses/BadRequest}
+        '401': {$ref: ../../common/errors.yaml#/components/responses/Unauthorized}
+        '403': {$ref: ../../common/errors.yaml#/components/responses/Forbidden}
+        '404': {$ref: ../../common/errors.yaml#/components/responses/NotFound}
+        '422': {$ref: ../../common/errors.yaml#/components/responses/BadRequest}
+  /discoverability/audits/{audit_id}:
+    parameters:
+      - name: audit_id
+        in: path
+        required: true
+        schema: {type: string, format: uuid}
+    get:
+      tags: [Discoverability]
+      summary: Read one stored deterministic content audit result.
+      operationId: getDiscoverabilityAudit
+      x-surfaces: [admin]
+      x-required-permission: discoverability.audit.read.own
+      security:
+        - SessionCookie: []
+      responses:
+        '200':
+          description: The stored audit result.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ContentAudit'}
+        '401': {$ref: ../../common/errors.yaml#/components/responses/Unauthorized}
+        '403': {$ref: ../../common/errors.yaml#/components/responses/Forbidden}
+        '404': {$ref: ../../common/errors.yaml#/components/responses/NotFound}
+components:
+  schemas:
+    AuditCheck:
+      type: object
+      additionalProperties: false
+      required: [rule_key, status, severity, observed_value, message]
+      properties:
+        rule_key: {type: string, minLength: 1, maxLength: 128}
+        status: {type: string, enum: [pass, warning, error]}
+        severity: {type: string, enum: [info, warning, error]}
+        observed_value: {type: string, maxLength: 512}
+        message: {type: string, maxLength: 1024}
+    ContentAudit:
+      type: object
+      additionalProperties: false
+      required: [id, account_id, content_id, translation_id, locale_id, content_version, translation_version, status, checks, created_at, updated_at]
+      properties:
+        id: {type: string, format: uuid}
+        account_id: {type: string, format: uuid}
+        content_id: {type: string, format: uuid}
+        translation_id: {type: string, format: uuid}
+        locale_id: {type: string, format: uuid}
+        content_version: {type: integer, minimum: 1}
+        translation_version: {type: integer, minimum: 1}
+        status: {type: string, enum: [pass, warning, error]}
+        checks:
+          type: array
+          maxItems: 64
+          items: {$ref: '#/components/schemas/AuditCheck'}
+        created_at: {type: string, format: date-time}
+        updated_at: {type: string, format: date-time}
+    ContentAuditCursor:
+      type: object
+      additionalProperties: false
+      required: [updated_at, id]
+      properties:
+        updated_at: {type: string, format: date-time}
+        id: {type: string, format: uuid}
+    ContentAuditListResponse:
+      type: object
+      additionalProperties: false
+      required: [items]
+      properties:
+        items:
+          type: array
+          items: {$ref: '#/components/schemas/ContentAudit'}
+        next:
+          $ref: '#/components/schemas/ContentAuditCursor'
+    RunContentAuditRequest:
+      type: object
+      additionalProperties: false
+      required: [content_id, locale_id]
+      properties:
+        content_id: {type: string, format: uuid}
+        locale_id: {type: string, format: uuid}

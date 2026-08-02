@@ -31,3 +31,20 @@ func RegisterDiscoverabilityRoutes(
 		protected.PATCH("/discoverability/seo", settings.Update)
 	}
 }
+
+// RegisterDiscoverabilityAuditRoutes exposes the deterministic content audit
+// refresh/read surface. A nil handler represents a disabled audit capability.
+func RegisterDiscoverabilityAuditRoutes(
+	router *gin.RouterGroup,
+	handler *discoverabilityhttp.AuditHandler,
+	identity identityRuntime,
+) {
+	if router == nil || handler == nil {
+		return
+	}
+	protected := router.Group("")
+	protected.Use(identity.authenticate, identity.csrf)
+	protected.GET("/discoverability/audits", handler.List)
+	protected.POST("/discoverability/audits", handler.Run)
+	protected.GET("/discoverability/audits/:audit_id", handler.Get)
+}

@@ -96,6 +96,10 @@ paths:
     $ref: ./modules/discoverability/redirects.yaml#/paths/~1discoverability~1redirects~1{redirect_id}
   /discoverability/seo:
     $ref: ./modules/discoverability/settings.yaml#/paths/~1discoverability~1seo
+  /discoverability/audits:
+    $ref: ./modules/discoverability/audit.yaml#/paths/~1discoverability~1audits
+  /discoverability/audits/{audit_id}:
+    $ref: ./modules/discoverability/audit.yaml#/paths/~1discoverability~1audits~1{audit_id}
   /livez:
     $ref: ./modules/system/health.yaml#/paths/~1livez
   /readyz:

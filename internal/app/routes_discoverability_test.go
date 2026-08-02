@@ -25,3 +25,11 @@ func TestM3B5DisabledDiscoverabilityRoutesAreNotRegistered(t *testing.T) {
 	RegisterDiscoverabilityRoutes(router.Group("/api/v1"), nil, nil, identityRuntime{})
 	require.Empty(t, router.Routes())
 }
+
+func TestM3B6DiscoverabilityAuditRoutesExposeProtectedContract(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	router := gin.New()
+	noOp := func(ctx *gin.Context) { ctx.Next() }
+	RegisterDiscoverabilityAuditRoutes(router.Group("/api/v1"), &discoverabilityhttp.AuditHandler{}, identityRuntime{authenticate: noOp, csrf: noOp})
+	require.ElementsMatch(t, []string{"GET /api/v1/discoverability/audits", "POST /api/v1/discoverability/audits", "GET /api/v1/discoverability/audits/:audit_id"}, routeKeys(router))
+}

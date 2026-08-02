@@ -11,7 +11,7 @@ import (
 var migrationFiles embed.FS
 
 func MigrationModule() database.MigrationModule {
-	return database.MigrationModule{ID: "discoverability", Dependencies: []string{"accounts", "localization"}, Bundles: migrationBundles(migrationFiles)}
+	return database.MigrationModule{ID: "discoverability", Dependencies: []string{"accounts", "localization", "publishing"}, Bundles: migrationBundles(migrationFiles)}
 }
 
 func migrationBundles(files embed.FS) map[database.MigrationDialect]fs.FS {

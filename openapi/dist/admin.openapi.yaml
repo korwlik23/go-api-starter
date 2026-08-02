@@ -842,6 +842,130 @@ paths:
       summary: Grant a permission key to a role using optimistic concurrency.
       tags:
         - Authorization
+  /discoverability/audits:
+    get:
+      operationId: listDiscoverabilityAudits
+      parameters:
+        - in: query
+          name: content_id
+          schema:
+            format: uuid
+            type: string
+        - in: query
+          name: translation_id
+          schema:
+            format: uuid
+            type: string
+        - in: query
+          name: locale_id
+          schema:
+            format: uuid
+            type: string
+        - in: query
+          name: status
+          schema:
+            enum:
+              - pass
+              - warning
+              - error
+            type: string
+        - in: query
+          name: limit
+          schema:
+            default: 25
+            maximum: 100
+            minimum: 1
+            type: integer
+        - in: query
+          name: after_updated_at
+          schema:
+            format: date-time
+            type: string
+        - in: query
+          name: after_id
+          schema:
+            format: uuid
+            type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContentAuditListResponse'
+          description: Account-scoped audit results ordered by update time and ID.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+      security:
+        - SessionCookie: []
+      summary: List stored deterministic GEO/AEO content audit results.
+      tags:
+        - Discoverability
+      x-required-permission: discoverability.audit.read.own
+    post:
+      operationId: runDiscoverabilityAudit
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RunContentAuditRequest'
+        required: true
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContentAudit'
+          description: The audit result was stored with the observed content and translation versions.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/BadRequest'
+      security:
+        - CSRFToken: []
+          SessionCookie: []
+      summary: Run and store a deterministic audit for one content translation.
+      tags:
+        - Discoverability
+      x-required-permission: discoverability.audit.run.own
+  /discoverability/audits/{audit_id}:
+    get:
+      operationId: getDiscoverabilityAudit
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContentAudit'
+          description: The stored audit result.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+      security:
+        - SessionCookie: []
+      summary: Read one stored deterministic content audit result.
+      tags:
+        - Discoverability
+      x-required-permission: discoverability.audit.read.own
+    parameters:
+      - in: path
+        name: audit_id
+        required: true
+        schema:
+          format: uuid
+          type: string
   /discoverability/redirects:
     get:
       operationId: listDiscoverabilityRedirects
@@ -2156,6 +2280,38 @@ components:
       required:
         - items
       type: object
+    AuditCheck:
+      additionalProperties: false
+      properties:
+        message:
+          maxLength: 1024
+          type: string
+        observed_value:
+          maxLength: 512
+          type: string
+        rule_key:
+          maxLength: 128
+          minLength: 1
+          type: string
+        severity:
+          enum:
+            - info
+            - warning
+            - error
+          type: string
+        status:
+          enum:
+            - pass
+            - warning
+            - error
+          type: string
+      required:
+        - rule_key
+        - status
+        - severity
+        - observed_value
+        - message
+      type: object
     AuditEvent:
       additionalProperties: false
       properties:
@@ -2225,6 +2381,85 @@ components:
           type: string
       required:
         - csrf_token
+      type: object
+    ContentAudit:
+      additionalProperties: false
+      properties:
+        account_id:
+          format: uuid
+          type: string
+        checks:
+          items:
+            $ref: '#/components/schemas/AuditCheck'
+          maxItems: 64
+          type: array
+        content_id:
+          format: uuid
+          type: string
+        content_version:
+          minimum: 1
+          type: integer
+        created_at:
+          format: date-time
+          type: string
+        id:
+          format: uuid
+          type: string
+        locale_id:
+          format: uuid
+          type: string
+        status:
+          enum:
+            - pass
+            - warning
+            - error
+          type: string
+        translation_id:
+          format: uuid
+          type: string
+        translation_version:
+          minimum: 1
+          type: integer
+        updated_at:
+          format: date-time
+          type: string
+      required:
+        - id
+        - account_id
+        - content_id
+        - translation_id
+        - locale_id
+        - content_version
+        - translation_version
+        - status
+        - checks
+        - created_at
+        - updated_at
+      type: object
+    ContentAuditCursor:
+      additionalProperties: false
+      properties:
+        id:
+          format: uuid
+          type: string
+        updated_at:
+          format: date-time
+          type: string
+      required:
+        - updated_at
+        - id
+      type: object
+    ContentAuditListResponse:
+      additionalProperties: false
+      properties:
+        items:
+          items:
+            $ref: '#/components/schemas/ContentAudit'
+          type: array
+        next:
+          $ref: '#/components/schemas/ContentAuditCursor'
+      required:
+        - items
       type: object
     CreateRoleRequest:
       additionalProperties: false
@@ -3444,6 +3679,19 @@ components:
         - version
         - affected_principals
         - session_outcome
+      type: object
+    RunContentAuditRequest:
+      additionalProperties: false
+      properties:
+        content_id:
+          format: uuid
+          type: string
+        locale_id:
+          format: uuid
+          type: string
+      required:
+        - content_id
+        - locale_id
       type: object
     SEODefaults:
       additionalProperties: false

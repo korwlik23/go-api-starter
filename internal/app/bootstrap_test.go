@@ -30,7 +30,7 @@ func TestBootstrapCreatesDynamicPermissionDrivenFoundationOnce(t *testing.T) {
 	require.NoError(t, err)
 	require.True(t, result.Created)
 	require.True(t, store.created)
-	require.Len(t, store.record.Permissions, 33)
+	require.Len(t, store.record.Permissions, 35)
 	require.NotEmpty(t, store.record.AccountRoleID)
 	require.NotEmpty(t, store.record.SystemRoleID)
 	require.NotEmpty(t, store.record.MembershipRoleAssignmentID)

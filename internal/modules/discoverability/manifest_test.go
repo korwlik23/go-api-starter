@@ -14,8 +14,10 @@ func TestM3B5DiscoverabilityManifestIsDisableableAndPermissionScoped(t *testing.
 	require.Equal(t, "discoverability", manifest.ID)
 	require.Equal(t, modular.TierDefault, manifest.Tier)
 	require.True(t, manifest.Disableable)
-	require.ElementsMatch(t, []string{"accounts", "authorization", "localization", "audit"}, manifest.Dependencies)
+	require.ElementsMatch(t, []string{"accounts", "authorization", "localization", "audit", "publishing"}, manifest.Dependencies)
 	require.Contains(t, manifest.ProvidedCapabilities, "discoverability.redirects")
+	require.Contains(t, manifest.ProvidedCapabilities, "discoverability.audit")
 	require.Contains(t, manifest.Routes, modular.Route{Method: "POST", Path: "/api/v1/discoverability/redirects", Permission: PermissionRedirectsWriteOwn})
 	require.Contains(t, manifest.Routes, modular.Route{Method: "PATCH", Path: "/api/v1/discoverability/seo", Permission: PermissionSEOWriteOwn})
+	require.Contains(t, manifest.Routes, modular.Route{Method: "POST", Path: "/api/v1/discoverability/audits", Permission: PermissionAuditRunOwn})
 }

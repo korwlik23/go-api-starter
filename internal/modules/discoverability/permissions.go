@@ -7,6 +7,8 @@ const (
 	PermissionRedirectsWriteOwn = "discoverability.redirects.write.own"
 	PermissionSEOReadOwn        = "discoverability.seo.read.own"
 	PermissionSEOWriteOwn       = "discoverability.seo.write.own"
+	PermissionAuditReadOwn      = "discoverability.audit.read.own"
+	PermissionAuditRunOwn       = "discoverability.audit.run.own"
 )
 
 func Permissions() []modular.Permission {
@@ -15,5 +17,7 @@ func Permissions() []modular.Permission {
 		{Key: PermissionRedirectsWriteOwn, Scope: modular.ScopeOwn, Tier: modular.TierDefault, Delegable: false},
 		{Key: PermissionSEOReadOwn, Scope: modular.ScopeOwn, Tier: modular.TierDefault, Delegable: false},
 		{Key: PermissionSEOWriteOwn, Scope: modular.ScopeOwn, Tier: modular.TierDefault, Delegable: false},
+		{Key: PermissionAuditReadOwn, Scope: modular.ScopeOwn, Tier: modular.TierDefault, Delegable: false},
+		{Key: PermissionAuditRunOwn, Scope: modular.ScopeOwn, Tier: modular.TierDefault, Delegable: false},
 	}
 }

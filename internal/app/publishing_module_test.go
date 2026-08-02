@@ -106,7 +106,7 @@ func TestM3A1PublishingModuleCanBeDisabledWithoutRuntimeSurface(t *testing.T) {
 	require.NoError(t, err)
 	enabled := make(map[string]bool)
 	for _, manifest := range registry.Ordered() {
-		enabled[manifest.ID] = manifest.ID != "publishing"
+		enabled[manifest.ID] = manifest.ID != "publishing" && manifest.ID != "discoverability"
 	}
 
 	projection, err := modular.ProjectState(registry, enabled)
@@ -121,4 +121,8 @@ func TestM3A1PublishingModuleCanBeDisabledWithoutRuntimeSurface(t *testing.T) {
 	for _, permission := range publishing.Permissions {
 		require.False(t, permission.Active, permission.Key)
 	}
+	discoverability, exists := projection.Module("discoverability")
+	require.True(t, exists)
+	require.False(t, discoverability.Enabled)
+	require.Empty(t, discoverability.Routes)
 }
