@@ -1096,6 +1096,205 @@ paths:
       tags:
         - Localization
       x-required-permission: localization.translations.update.system
+  /media/assets:
+    get:
+      operationId: listMediaAssets
+      parameters:
+        - in: query
+          name: limit
+          schema:
+            default: 25
+            maximum: 100
+            minimum: 1
+            type: integer
+        - in: query
+          name: after_updated_at
+          schema:
+            format: date-time
+            type: string
+        - in: query
+          name: after_id
+          schema:
+            format: uuid
+            type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AssetListResponse'
+          description: A bounded account-scoped asset projection.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+      security:
+        - CSRFToken: []
+          SessionCookie: []
+      summary: List account-scoped private asset metadata.
+      tags:
+        - Media
+      x-required-permission: media.assets.read.own
+  /media/assets/{asset_id}:
+    delete:
+      operationId: deleteMediaAsset
+      parameters:
+        - in: path
+          name: asset_id
+          required: true
+          schema:
+            format: uuid
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeleteAssetRequest'
+        required: true
+      responses:
+        '204':
+          description: The asset was soft-deleted.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+      security:
+        - CSRFToken: []
+          SessionCookie: []
+      summary: Soft-delete an account-scoped asset and compensate storage cleanup.
+      tags:
+        - Media
+      x-required-permission: media.assets.write.own
+  /media/uploads:
+    post:
+      operationId: startMediaUpload
+      parameters:
+        - in: header
+          name: X-File-Name
+          required: true
+          schema:
+            maxLength: 255
+            minLength: 1
+            type: string
+        - in: header
+          name: X-Content-SHA256
+          required: true
+          schema:
+            pattern: ^[0-9a-f]{64}$
+            type: string
+        - in: header
+          name: Content-Length
+          required: true
+          schema:
+            format: int64
+            maximum: 52428800
+            minimum: 1
+            type: integer
+      requestBody:
+        content:
+          application/pdf:
+            schema:
+              format: binary
+              type: string
+          image/gif:
+            schema:
+              format: binary
+              type: string
+          image/jpeg:
+            schema:
+              format: binary
+              type: string
+          image/png:
+            schema:
+              format: binary
+              type: string
+          image/webp:
+            schema:
+              format: binary
+              type: string
+        required: true
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Upload'
+          description: The private upload session was created.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '413':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+          description: The upload exceeds the configured size limit.
+        '415':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+          description: The MIME type is not allowed.
+        '422':
+          $ref: '#/components/responses/BadRequest'
+      security:
+        - CSRFToken: []
+          SessionCookie: []
+      summary: Upload a private media object and create a pending upload session.
+      tags:
+        - Media
+      x-required-permission: media.uploads.write.own
+  /media/uploads/{upload_id}/finalize:
+    post:
+      operationId: finalizeMediaUpload
+      parameters:
+        - in: path
+          name: upload_id
+          required: true
+          schema:
+            format: uuid
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FinalizeUploadRequest'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Asset'
+          description: The upload was finalized and the asset metadata is returned.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/BadRequest'
+      security:
+        - CSRFToken: []
+          SessionCookie: []
+      summary: Validate and finalize a private upload into an asset.
+      tags:
+        - Media
+      x-required-permission: media.uploads.write.own
   /operations/modules:
     get:
       operationId: listEnabledModules
@@ -1426,6 +1625,80 @@ components:
         - status
         - expected_version
       type: object
+    Asset:
+      additionalProperties: false
+      properties:
+        account_id:
+          format: uuid
+          type: string
+        byte_size:
+          format: int64
+          maximum: 52428800
+          minimum: 0
+          type: integer
+        created_at:
+          format: date-time
+          type: string
+        height:
+          minimum: 1
+          type: integer
+        id:
+          format: uuid
+          type: string
+        mime_type:
+          type: string
+        original_name:
+          maxLength: 255
+          minLength: 1
+          type: string
+        sha256:
+          pattern: ^[0-9a-f]{64}$
+          type: string
+        updated_at:
+          format: date-time
+          type: string
+        version:
+          minimum: 1
+          type: integer
+        width:
+          minimum: 1
+          type: integer
+      required:
+        - id
+        - account_id
+        - original_name
+        - mime_type
+        - byte_size
+        - sha256
+        - version
+        - created_at
+        - updated_at
+      type: object
+    AssetCursor:
+      additionalProperties: false
+      properties:
+        id:
+          format: uuid
+          type: string
+        updated_at:
+          format: date-time
+          type: string
+      required:
+        - updated_at
+        - id
+      type: object
+    AssetListResponse:
+      additionalProperties: false
+      properties:
+        items:
+          items:
+            $ref: '#/components/schemas/Asset'
+          type: array
+        next:
+          $ref: '#/components/schemas/AssetCursor'
+      required:
+        - items
+      type: object
     AuditEvent:
       additionalProperties: false
       properties:
@@ -1577,6 +1850,15 @@ components:
         - previous_default_locale_id
         - version
       type: object
+    DeleteAssetRequest:
+      additionalProperties: false
+      properties:
+        expected_version:
+          minimum: 1
+          type: integer
+      required:
+        - expected_version
+      type: object
     EffectivePermissionsResponse:
       additionalProperties: false
       properties:
@@ -1606,6 +1888,15 @@ components:
         items:
           type: string
         type: array
+      type: object
+    FinalizeUploadRequest:
+      additionalProperties: false
+      properties:
+        expected_version:
+          minimum: 1
+          type: integer
+      required:
+        - expected_version
       type: object
     Locale:
       additionalProperties: false
@@ -2519,6 +2810,56 @@ components:
       required:
         - name
         - expected_version
+      type: object
+    Upload:
+      additionalProperties: false
+      properties:
+        account_id:
+          format: uuid
+          type: string
+        asset_id:
+          format: uuid
+          type: string
+        declared_size:
+          format: int64
+          maximum: 52428800
+          minimum: 0
+          type: integer
+        expected_sha256:
+          pattern: ^[0-9a-f]{64}$
+          type: string
+        expires_at:
+          format: date-time
+          type: string
+        id:
+          format: uuid
+          type: string
+        mime_type:
+          type: string
+        original_name:
+          maxLength: 255
+          minLength: 1
+          type: string
+        state:
+          enum:
+            - pending
+            - finalized
+            - failed
+            - expired
+          type: string
+        version:
+          minimum: 1
+          type: integer
+      required:
+        - id
+        - account_id
+        - original_name
+        - mime_type
+        - declared_size
+        - expected_sha256
+        - state
+        - version
+        - expires_at
       type: object
   securitySchemes:
     CSRFToken:

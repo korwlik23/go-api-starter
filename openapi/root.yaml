@@ -76,6 +76,14 @@ paths:
     $ref: ./modules/operations/modules.yaml#/paths/~1operations~1modules
   /audit/events:
     $ref: ./modules/audit/events.yaml#/paths/~1audit~1events
+  /media/uploads:
+    $ref: ./modules/media/uploads.yaml#/paths/~1media~1uploads
+  /media/uploads/{upload_id}/finalize:
+    $ref: ./modules/media/uploads.yaml#/paths/~1media~1uploads~1{upload_id}~1finalize
+  /media/assets:
+    $ref: ./modules/media/assets.yaml#/paths/~1media~1assets
+  /media/assets/{asset_id}:
+    $ref: ./modules/media/assets.yaml#/paths/~1media~1assets~1{asset_id}
   /livez:
     $ref: ./modules/system/health.yaml#/paths/~1livez
   /readyz:

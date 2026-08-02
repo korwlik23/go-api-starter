@@ -1,0 +1,107 @@
+paths:
+  /media/assets:
+    get:
+      tags: [Media]
+      summary: List account-scoped private asset metadata.
+      operationId: listMediaAssets
+      x-surfaces: [admin]
+      x-required-permission: media.assets.read.own
+      security:
+        - SessionCookie: []
+          CSRFToken: []
+      parameters:
+        - name: limit
+          in: query
+          schema: {type: integer, minimum: 1, maximum: 100, default: 25}
+        - name: after_updated_at
+          in: query
+          schema: {type: string, format: date-time}
+        - name: after_id
+          in: query
+          schema: {type: string, format: uuid}
+      responses:
+        '200':
+          description: A bounded account-scoped asset projection.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AssetListResponse'
+        '401':
+          $ref: ../../common/errors.yaml#/components/responses/Unauthorized
+        '403':
+          $ref: ../../common/errors.yaml#/components/responses/Forbidden
+  /media/assets/{asset_id}:
+    delete:
+      tags: [Media]
+      summary: Soft-delete an account-scoped asset and compensate storage cleanup.
+      operationId: deleteMediaAsset
+      x-surfaces: [admin]
+      x-required-permission: media.assets.write.own
+      security:
+        - SessionCookie: []
+          CSRFToken: []
+      parameters:
+        - name: asset_id
+          in: path
+          required: true
+          schema: {type: string, format: uuid}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeleteAssetRequest'
+      responses:
+        '204':
+          description: The asset was soft-deleted.
+        '400':
+          $ref: ../../common/errors.yaml#/components/responses/BadRequest
+        '401':
+          $ref: ../../common/errors.yaml#/components/responses/Unauthorized
+        '403':
+          $ref: ../../common/errors.yaml#/components/responses/Forbidden
+        '404':
+          $ref: ../../common/errors.yaml#/components/responses/NotFound
+        '409':
+          $ref: ../../common/errors.yaml#/components/responses/Conflict
+components:
+  schemas:
+    Asset:
+      type: object
+      additionalProperties: false
+      required: [id, account_id, original_name, mime_type, byte_size, sha256, version, created_at, updated_at]
+      properties:
+        id: {type: string, format: uuid}
+        account_id: {type: string, format: uuid}
+        original_name: {type: string, minLength: 1, maxLength: 255}
+        mime_type: {type: string}
+        byte_size: {type: integer, format: int64, minimum: 0, maximum: 52428800}
+        sha256: {type: string, pattern: '^[0-9a-f]{64}$'}
+        width: {type: integer, minimum: 1}
+        height: {type: integer, minimum: 1}
+        version: {type: integer, minimum: 1}
+        created_at: {type: string, format: date-time}
+        updated_at: {type: string, format: date-time}
+    AssetCursor:
+      type: object
+      additionalProperties: false
+      required: [updated_at, id]
+      properties:
+        updated_at: {type: string, format: date-time}
+        id: {type: string, format: uuid}
+    AssetListResponse:
+      type: object
+      additionalProperties: false
+      required: [items]
+      properties:
+        items:
+          type: array
+          items: {$ref: '#/components/schemas/Asset'}
+        next:
+          $ref: '#/components/schemas/AssetCursor'
+    DeleteAssetRequest:
+      type: object
+      additionalProperties: false
+      required: [expected_version]
+      properties:
+        expected_version: {type: integer, minimum: 1}

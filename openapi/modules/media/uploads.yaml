@@ -1,0 +1,138 @@
+paths:
+  /media/uploads:
+    post:
+      tags: [Media]
+      summary: Upload a private media object and create a pending upload session.
+      operationId: startMediaUpload
+      x-surfaces: [admin]
+      x-required-permission: media.uploads.write.own
+      security:
+        - SessionCookie: []
+          CSRFToken: []
+      parameters:
+        - name: X-File-Name
+          in: header
+          required: true
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 255
+        - name: X-Content-SHA256
+          in: header
+          required: true
+          schema:
+            type: string
+            pattern: '^[0-9a-f]{64}$'
+        - name: Content-Length
+          in: header
+          required: true
+          schema:
+            type: integer
+            format: int64
+            minimum: 1
+            maximum: 52428800
+      requestBody:
+        required: true
+        content:
+          image/jpeg:
+            schema: {type: string, format: binary}
+          image/png:
+            schema: {type: string, format: binary}
+          image/gif:
+            schema: {type: string, format: binary}
+          image/webp:
+            schema: {type: string, format: binary}
+          application/pdf:
+            schema: {type: string, format: binary}
+      responses:
+        '201':
+          description: The private upload session was created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Upload'
+        '400':
+          $ref: ../../common/errors.yaml#/components/responses/BadRequest
+        '401':
+          $ref: ../../common/errors.yaml#/components/responses/Unauthorized
+        '403':
+          $ref: ../../common/errors.yaml#/components/responses/Forbidden
+        '413':
+          description: The upload exceeds the configured size limit.
+          content:
+            application/json:
+              schema:
+                $ref: ../../common/errors.yaml#/components/schemas/ErrorEnvelope
+        '415':
+          description: The MIME type is not allowed.
+          content:
+            application/json:
+              schema:
+                $ref: ../../common/errors.yaml#/components/schemas/ErrorEnvelope
+        '422':
+          $ref: ../../common/errors.yaml#/components/responses/BadRequest
+  /media/uploads/{upload_id}/finalize:
+    post:
+      tags: [Media]
+      summary: Validate and finalize a private upload into an asset.
+      operationId: finalizeMediaUpload
+      x-surfaces: [admin]
+      x-required-permission: media.uploads.write.own
+      security:
+        - SessionCookie: []
+          CSRFToken: []
+      parameters:
+        - name: upload_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FinalizeUploadRequest'
+      responses:
+        '200':
+          description: The upload was finalized and the asset metadata is returned.
+          content:
+            application/json:
+              schema:
+                $ref: './assets.yaml#/components/schemas/Asset'
+        '400':
+          $ref: ../../common/errors.yaml#/components/responses/BadRequest
+        '401':
+          $ref: ../../common/errors.yaml#/components/responses/Unauthorized
+        '403':
+          $ref: ../../common/errors.yaml#/components/responses/Forbidden
+        '404':
+          $ref: ../../common/errors.yaml#/components/responses/NotFound
+        '409':
+          $ref: ../../common/errors.yaml#/components/responses/Conflict
+        '422':
+          $ref: ../../common/errors.yaml#/components/responses/BadRequest
+components:
+  schemas:
+    Upload:
+      type: object
+      additionalProperties: false
+      required: [id, account_id, original_name, mime_type, declared_size, expected_sha256, state, version, expires_at]
+      properties:
+        id: {type: string, format: uuid}
+        account_id: {type: string, format: uuid}
+        original_name: {type: string, minLength: 1, maxLength: 255}
+        mime_type: {type: string}
+        declared_size: {type: integer, format: int64, minimum: 0, maximum: 52428800}
+        expected_sha256: {type: string, pattern: '^[0-9a-f]{64}$'}
+        state: {type: string, enum: [pending, finalized, failed, expired]}
+        asset_id: {type: string, format: uuid}
+        version: {type: integer, minimum: 1}
+        expires_at: {type: string, format: date-time}
+    FinalizeUploadRequest:
+      type: object
+      additionalProperties: false
+      required: [expected_version]
+      properties:
+        expected_version: {type: integer, minimum: 1}

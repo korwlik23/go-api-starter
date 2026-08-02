@@ -559,6 +559,30 @@ func (e SystemRoleAssignmentRequestScope) Valid() bool {
 	}
 }
 
+// Defines values for UploadState.
+const (
+	Expired   UploadState = "expired"
+	Failed    UploadState = "failed"
+	Finalized UploadState = "finalized"
+	Pending   UploadState = "pending"
+)
+
+// Valid indicates whether the value is a known member of the UploadState enum.
+func (e UploadState) Valid() bool {
+	switch e {
+	case Expired:
+		return true
+	case Failed:
+		return true
+	case Finalized:
+		return true
+	case Pending:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for ListAccountMembershipsParamsStatus.
 const (
 	ListAccountMembershipsParamsStatusActive   ListAccountMembershipsParamsStatus = "active"
@@ -687,6 +711,33 @@ type AdminUserStatusRequest struct {
 // AdminUserStatusRequestStatus defines model for AdminUserStatusRequest.Status.
 type AdminUserStatusRequestStatus string
 
+// Asset defines model for Asset.
+type Asset struct {
+	AccountId    openapi_types.UUID `json:"account_id"`
+	ByteSize     int64              `json:"byte_size"`
+	CreatedAt    time.Time          `json:"created_at"`
+	Height       *int               `json:"height,omitempty"`
+	Id           openapi_types.UUID `json:"id"`
+	MimeType     string             `json:"mime_type"`
+	OriginalName string             `json:"original_name"`
+	Sha256       string             `json:"sha256"`
+	UpdatedAt    time.Time          `json:"updated_at"`
+	Version      int                `json:"version"`
+	Width        *int               `json:"width,omitempty"`
+}
+
+// AssetCursor defines model for AssetCursor.
+type AssetCursor struct {
+	Id        openapi_types.UUID `json:"id"`
+	UpdatedAt time.Time          `json:"updated_at"`
+}
+
+// AssetListResponse defines model for AssetListResponse.
+type AssetListResponse struct {
+	Items []Asset      `json:"items"`
+	Next  *AssetCursor `json:"next,omitempty"`
+}
+
 // AuditEvent defines model for AuditEvent.
 type AuditEvent struct {
 	Action      string                 `json:"action"`
@@ -756,6 +807,11 @@ type DefaultLocaleUpdateResult struct {
 	Version                 int    `json:"version"`
 }
 
+// DeleteAssetRequest defines model for DeleteAssetRequest.
+type DeleteAssetRequest struct {
+	ExpectedVersion int `json:"expected_version"`
+}
+
 // EffectivePermissionsResponse defines model for EffectivePermissionsResponse.
 type EffectivePermissionsResponse struct {
 	AccountId   string   `json:"account_id"`
@@ -769,6 +825,11 @@ type ErrorEnvelope struct {
 
 // FieldErrors defines model for FieldErrors.
 type FieldErrors map[string][]string
+
+// FinalizeUploadRequest defines model for FinalizeUploadRequest.
+type FinalizeUploadRequest struct {
+	ExpectedVersion int `json:"expected_version"`
+}
 
 // Locale defines model for Locale.
 type Locale struct {
@@ -1203,6 +1264,23 @@ type UpdateRoleRequest struct {
 	Name            string `json:"name"`
 }
 
+// Upload defines model for Upload.
+type Upload struct {
+	AccountId      openapi_types.UUID  `json:"account_id"`
+	AssetId        *openapi_types.UUID `json:"asset_id,omitempty"`
+	DeclaredSize   int64               `json:"declared_size"`
+	ExpectedSha256 string              `json:"expected_sha256"`
+	ExpiresAt      time.Time           `json:"expires_at"`
+	Id             openapi_types.UUID  `json:"id"`
+	MimeType       string              `json:"mime_type"`
+	OriginalName   string              `json:"original_name"`
+	State          UploadState         `json:"state"`
+	Version        int                 `json:"version"`
+}
+
+// UploadState defines model for Upload.State.
+type UploadState string
+
 // Page defines model for Page.
 type Page = int
 
@@ -1279,6 +1357,20 @@ type GetTranslationCatalogParams struct {
 	Category string `form:"category" json:"category"`
 }
 
+// ListMediaAssetsParams defines parameters for ListMediaAssets.
+type ListMediaAssetsParams struct {
+	Limit          *int                `form:"limit,omitempty" json:"limit,omitempty"`
+	AfterUpdatedAt *time.Time          `form:"after_updated_at,omitempty" json:"after_updated_at,omitempty"`
+	AfterId        *openapi_types.UUID `form:"after_id,omitempty" json:"after_id,omitempty"`
+}
+
+// StartMediaUploadParams defines parameters for StartMediaUpload.
+type StartMediaUploadParams struct {
+	XFileName      string `json:"X-File-Name"`
+	XContentSHA256 string `json:"X-Content-SHA256"`
+	ContentLength  int64  `json:"Content-Length"`
+}
+
 // ListAdminUsersParams defines parameters for ListAdminUsers.
 type ListAdminUsersParams struct {
 	Status *ListAdminUsersParamsStatus `form:"status,omitempty" json:"status,omitempty"`
@@ -1344,6 +1436,12 @@ type UpdateLocaleStatusJSONRequestBody = LocaleStatusRequest
 
 // UpdateTranslationCatalogJSONRequestBody defines body for UpdateTranslationCatalog for application/json ContentType.
 type UpdateTranslationCatalogJSONRequestBody = TranslationCatalogUpdateRequest
+
+// DeleteMediaAssetJSONRequestBody defines body for DeleteMediaAsset for application/json ContentType.
+type DeleteMediaAssetJSONRequestBody = DeleteAssetRequest
+
+// FinalizeMediaUploadJSONRequestBody defines body for FinalizeMediaUpload for application/json ContentType.
+type FinalizeMediaUploadJSONRequestBody = FinalizeUploadRequest
 
 // UpdateAdminUserStatusJSONRequestBody defines body for UpdateAdminUserStatus for application/json ContentType.
 type UpdateAdminUserStatusJSONRequestBody = AdminUserStatusRequest
@@ -1845,6 +1943,46 @@ type ClientInterface interface {
 	//
 	// Corresponds with PUT /localization/catalog (the `UpdateTranslationCatalog` operationId).
 	UpdateTranslationCatalog(ctx context.Context, body UpdateTranslationCatalogJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ListMediaAssets List account-scoped private asset metadata.
+	//
+	// Corresponds with GET /media/assets (the `ListMediaAssets` operationId).
+	ListMediaAssets(ctx context.Context, params *ListMediaAssetsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// DeleteMediaAssetWithBody Soft-delete an account-scoped asset and compensate storage cleanup.
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with DELETE /media/assets/{asset_id} (the `DeleteMediaAsset` operationId).
+	DeleteMediaAssetWithBody(ctx context.Context, assetId openapi_types.UUID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// DeleteMediaAsset Soft-delete an account-scoped asset and compensate storage cleanup.
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with DELETE /media/assets/{asset_id} (the `DeleteMediaAsset` operationId).
+	DeleteMediaAsset(ctx context.Context, assetId openapi_types.UUID, body DeleteMediaAssetJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// StartMediaUploadWithBody Upload a private media object and create a pending upload session.
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with POST /media/uploads (the `StartMediaUpload` operationId).
+	StartMediaUploadWithBody(ctx context.Context, params *StartMediaUploadParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// FinalizeMediaUploadWithBody Validate and finalize a private upload into an asset.
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with POST /media/uploads/{upload_id}/finalize (the `FinalizeMediaUpload` operationId).
+	FinalizeMediaUploadWithBody(ctx context.Context, uploadId openapi_types.UUID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// FinalizeMediaUpload Validate and finalize a private upload into an asset.
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with POST /media/uploads/{upload_id}/finalize (the `FinalizeMediaUpload` operationId).
+	FinalizeMediaUpload(ctx context.Context, uploadId openapi_types.UUID, body FinalizeMediaUploadJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// ListEnabledModules List the runtime module activation projection.
 	//
@@ -2699,6 +2837,106 @@ func (c *Client) UpdateTranslationCatalogWithBody(ctx context.Context, contentTy
 // Corresponds with PUT /localization/catalog (the `UpdateTranslationCatalog` operationId).
 func (c *Client) UpdateTranslationCatalog(ctx context.Context, body UpdateTranslationCatalogJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewUpdateTranslationCatalogRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// ListMediaAssets List account-scoped private asset metadata.
+//
+// Corresponds with GET /media/assets (the `ListMediaAssets` operationId).
+func (c *Client) ListMediaAssets(ctx context.Context, params *ListMediaAssetsParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewListMediaAssetsRequest(c.Server, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// DeleteMediaAssetWithBody Soft-delete an account-scoped asset and compensate storage cleanup.
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with DELETE /media/assets/{asset_id} (the `DeleteMediaAsset` operationId).
+func (c *Client) DeleteMediaAssetWithBody(ctx context.Context, assetId openapi_types.UUID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDeleteMediaAssetRequestWithBody(c.Server, assetId, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// DeleteMediaAsset Soft-delete an account-scoped asset and compensate storage cleanup.
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with DELETE /media/assets/{asset_id} (the `DeleteMediaAsset` operationId).
+func (c *Client) DeleteMediaAsset(ctx context.Context, assetId openapi_types.UUID, body DeleteMediaAssetJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDeleteMediaAssetRequest(c.Server, assetId, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// StartMediaUploadWithBody Upload a private media object and create a pending upload session.
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with POST /media/uploads (the `StartMediaUpload` operationId).
+func (c *Client) StartMediaUploadWithBody(ctx context.Context, params *StartMediaUploadParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewStartMediaUploadRequestWithBody(c.Server, params, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// FinalizeMediaUploadWithBody Validate and finalize a private upload into an asset.
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with POST /media/uploads/{upload_id}/finalize (the `FinalizeMediaUpload` operationId).
+func (c *Client) FinalizeMediaUploadWithBody(ctx context.Context, uploadId openapi_types.UUID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewFinalizeMediaUploadRequestWithBody(c.Server, uploadId, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// FinalizeMediaUpload Validate and finalize a private upload into an asset.
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with POST /media/uploads/{upload_id}/finalize (the `FinalizeMediaUpload` operationId).
+func (c *Client) FinalizeMediaUpload(ctx context.Context, uploadId openapi_types.UUID, body FinalizeMediaUploadJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewFinalizeMediaUploadRequest(c.Server, uploadId, body)
 	if err != nil {
 		return nil, err
 	}
@@ -4272,6 +4510,238 @@ func NewUpdateTranslationCatalogRequestWithBody(server string, contentType strin
 	return req, nil
 }
 
+// NewListMediaAssetsRequest constructs an http.Request for the ListMediaAssets method
+func NewListMediaAssetsRequest(server string, params *ListMediaAssetsParams) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/media/assets")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		// queryValues collects non-styled parameters (passthrough, JSON)
+		// that are safe to round-trip through url.Values.Encode().
+		queryValues := queryURL.Query()
+		// rawQueryFragments collects pre-encoded query fragments from
+		// styled parameters, preserving literal commas as delimiters
+		// per the OpenAPI spec (e.g. "color=blue,black,brown").
+		var rawQueryFragments []string
+
+		if params.Limit != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "limit", *params.Limit, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "integer", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.AfterUpdatedAt != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "after_updated_at", *params.AfterUpdatedAt, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: "date-time"}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.AfterId != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "after_id", *params.AfterId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: "uuid"}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if encoded := queryValues.Encode(); encoded != "" {
+			rawQueryFragments = append(rawQueryFragments, encoded)
+		}
+		queryURL.RawQuery = strings.Join(rawQueryFragments, "&")
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewDeleteMediaAssetRequest calls the generic DeleteMediaAsset builder with application/json body
+func NewDeleteMediaAssetRequest(server string, assetId openapi_types.UUID, body DeleteMediaAssetJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewDeleteMediaAssetRequestWithBody(server, assetId, "application/json", bodyReader)
+}
+
+// NewDeleteMediaAssetRequestWithBody constructs an http.Request for the DeleteMediaAsset method, with any body, and a specified content type
+func NewDeleteMediaAssetRequestWithBody(server string, assetId openapi_types.UUID, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "asset_id", assetId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: "uuid"})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/media/assets/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodDelete, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewStartMediaUploadRequestWithBody constructs an http.Request for the StartMediaUpload method, with any body, and a specified content type
+func NewStartMediaUploadRequestWithBody(server string, params *StartMediaUploadParams, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/media/uploads")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPost, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	if params != nil {
+
+		var headerParam0 string
+
+		headerParam0, err = runtime.StyleParamWithOptions("simple", false, "X-File-Name", params.XFileName, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationHeader, Type: "string", Format: ""})
+		if err != nil {
+			return nil, err
+		}
+
+		req.Header.Set("X-File-Name", headerParam0)
+
+		var headerParam1 string
+
+		headerParam1, err = runtime.StyleParamWithOptions("simple", false, "X-Content-SHA256", params.XContentSHA256, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationHeader, Type: "string", Format: ""})
+		if err != nil {
+			return nil, err
+		}
+
+		req.Header.Set("X-Content-SHA256", headerParam1)
+
+		var headerParam2 string
+
+		headerParam2, err = runtime.StyleParamWithOptions("simple", false, "Content-Length", params.ContentLength, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationHeader, Type: "integer", Format: "int64"})
+		if err != nil {
+			return nil, err
+		}
+
+		req.Header.Set("Content-Length", headerParam2)
+
+	}
+
+	return req, nil
+}
+
+// NewFinalizeMediaUploadRequest calls the generic FinalizeMediaUpload builder with application/json body
+func NewFinalizeMediaUploadRequest(server string, uploadId openapi_types.UUID, body FinalizeMediaUploadJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewFinalizeMediaUploadRequestWithBody(server, uploadId, "application/json", bodyReader)
+}
+
+// NewFinalizeMediaUploadRequestWithBody constructs an http.Request for the FinalizeMediaUpload method, with any body, and a specified content type
+func NewFinalizeMediaUploadRequestWithBody(server string, uploadId openapi_types.UUID, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "upload_id", uploadId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: "uuid"})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/media/uploads/%s/finalize", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPost, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
 // NewListEnabledModulesRequest constructs an http.Request for the ListEnabledModules method
 func NewListEnabledModulesRequest(server string) (*http.Request, error) {
 	var err error
@@ -4870,6 +5340,48 @@ type ClientWithResponsesInterface interface {
 	//
 	// Corresponds with PUT /localization/catalog (the `UpdateTranslationCatalog` operationId).
 	UpdateTranslationCatalogWithResponse(ctx context.Context, body UpdateTranslationCatalogJSONRequestBody, reqEditors ...RequestEditorFn) (*UpdateTranslationCatalogResponse, error)
+
+	// ListMediaAssetsWithResponse List account-scoped private asset metadata.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /media/assets (the `ListMediaAssets` operationId).
+	ListMediaAssetsWithResponse(ctx context.Context, params *ListMediaAssetsParams, reqEditors ...RequestEditorFn) (*ListMediaAssetsResponse, error)
+
+	// DeleteMediaAssetWithBodyWithResponse Soft-delete an account-scoped asset and compensate storage cleanup.
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with DELETE /media/assets/{asset_id} (the `DeleteMediaAsset` operationId).
+	DeleteMediaAssetWithBodyWithResponse(ctx context.Context, assetId openapi_types.UUID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*DeleteMediaAssetResponse, error)
+
+	// DeleteMediaAssetWithResponse Soft-delete an account-scoped asset and compensate storage cleanup.
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with DELETE /media/assets/{asset_id} (the `DeleteMediaAsset` operationId).
+	DeleteMediaAssetWithResponse(ctx context.Context, assetId openapi_types.UUID, body DeleteMediaAssetJSONRequestBody, reqEditors ...RequestEditorFn) (*DeleteMediaAssetResponse, error)
+
+	// StartMediaUploadWithBodyWithResponse Upload a private media object and create a pending upload session.
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /media/uploads (the `StartMediaUpload` operationId).
+	StartMediaUploadWithBodyWithResponse(ctx context.Context, params *StartMediaUploadParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*StartMediaUploadResponse, error)
+
+	// FinalizeMediaUploadWithBodyWithResponse Validate and finalize a private upload into an asset.
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /media/uploads/{upload_id}/finalize (the `FinalizeMediaUpload` operationId).
+	FinalizeMediaUploadWithBodyWithResponse(ctx context.Context, uploadId openapi_types.UUID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*FinalizeMediaUploadResponse, error)
+
+	// FinalizeMediaUploadWithResponse Validate and finalize a private upload into an asset.
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /media/uploads/{upload_id}/finalize (the `FinalizeMediaUpload` operationId).
+	FinalizeMediaUploadWithResponse(ctx context.Context, uploadId openapi_types.UUID, body FinalizeMediaUploadJSONRequestBody, reqEditors ...RequestEditorFn) (*FinalizeMediaUploadResponse, error)
 
 	// ListEnabledModulesWithResponse List the runtime module activation projection.
 	//
@@ -6959,6 +7471,296 @@ func (r UpdateTranslationCatalogResponse) ContentType() string {
 	return ""
 }
 
+type ListMediaAssetsResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *AssetListResponse
+	// JSON401 the response for an HTTP 401 `application/json` response
+	JSON401 *Unauthorized
+	// JSON403 the response for an HTTP 403 `application/json` response
+	JSON403 *Forbidden
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r ListMediaAssetsResponse) GetJSON200() *AssetListResponse {
+	return r.JSON200
+}
+
+// GetJSON401 returns the response for an HTTP 401 `application/json` response
+func (r ListMediaAssetsResponse) GetJSON401() *Unauthorized {
+	return r.JSON401
+}
+
+// GetJSON403 returns the response for an HTTP 403 `application/json` response
+func (r ListMediaAssetsResponse) GetJSON403() *Forbidden {
+	return r.JSON403
+}
+
+// GetBody returns the raw response body bytes
+func (r ListMediaAssetsResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r ListMediaAssetsResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ListMediaAssetsResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r ListMediaAssetsResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type DeleteMediaAssetResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON400 the response for an HTTP 400 `application/json` response
+	JSON400 *BadRequest
+	// JSON401 the response for an HTTP 401 `application/json` response
+	JSON401 *Unauthorized
+	// JSON403 the response for an HTTP 403 `application/json` response
+	JSON403 *Forbidden
+	// JSON404 the response for an HTTP 404 `application/json` response
+	JSON404 *NotFound
+	// JSON409 the response for an HTTP 409 `application/json` response
+	JSON409 *Conflict
+}
+
+// GetJSON400 returns the response for an HTTP 400 `application/json` response
+func (r DeleteMediaAssetResponse) GetJSON400() *BadRequest {
+	return r.JSON400
+}
+
+// GetJSON401 returns the response for an HTTP 401 `application/json` response
+func (r DeleteMediaAssetResponse) GetJSON401() *Unauthorized {
+	return r.JSON401
+}
+
+// GetJSON403 returns the response for an HTTP 403 `application/json` response
+func (r DeleteMediaAssetResponse) GetJSON403() *Forbidden {
+	return r.JSON403
+}
+
+// GetJSON404 returns the response for an HTTP 404 `application/json` response
+func (r DeleteMediaAssetResponse) GetJSON404() *NotFound {
+	return r.JSON404
+}
+
+// GetJSON409 returns the response for an HTTP 409 `application/json` response
+func (r DeleteMediaAssetResponse) GetJSON409() *Conflict {
+	return r.JSON409
+}
+
+// GetBody returns the raw response body bytes
+func (r DeleteMediaAssetResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r DeleteMediaAssetResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r DeleteMediaAssetResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r DeleteMediaAssetResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type StartMediaUploadResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON201 the response for an HTTP 201 `application/json` response
+	JSON201 *Upload
+	// JSON400 the response for an HTTP 400 `application/json` response
+	JSON400 *BadRequest
+	// JSON401 the response for an HTTP 401 `application/json` response
+	JSON401 *Unauthorized
+	// JSON403 the response for an HTTP 403 `application/json` response
+	JSON403 *Forbidden
+	// JSON413 the response for an HTTP 413 `application/json` response
+	JSON413 *ErrorEnvelope
+	// JSON415 the response for an HTTP 415 `application/json` response
+	JSON415 *ErrorEnvelope
+	// JSON422 the response for an HTTP 422 `application/json` response
+	JSON422 *BadRequest
+}
+
+// GetJSON201 returns the response for an HTTP 201 `application/json` response
+func (r StartMediaUploadResponse) GetJSON201() *Upload {
+	return r.JSON201
+}
+
+// GetJSON400 returns the response for an HTTP 400 `application/json` response
+func (r StartMediaUploadResponse) GetJSON400() *BadRequest {
+	return r.JSON400
+}
+
+// GetJSON401 returns the response for an HTTP 401 `application/json` response
+func (r StartMediaUploadResponse) GetJSON401() *Unauthorized {
+	return r.JSON401
+}
+
+// GetJSON403 returns the response for an HTTP 403 `application/json` response
+func (r StartMediaUploadResponse) GetJSON403() *Forbidden {
+	return r.JSON403
+}
+
+// GetJSON413 returns the response for an HTTP 413 `application/json` response
+func (r StartMediaUploadResponse) GetJSON413() *ErrorEnvelope {
+	return r.JSON413
+}
+
+// GetJSON415 returns the response for an HTTP 415 `application/json` response
+func (r StartMediaUploadResponse) GetJSON415() *ErrorEnvelope {
+	return r.JSON415
+}
+
+// GetJSON422 returns the response for an HTTP 422 `application/json` response
+func (r StartMediaUploadResponse) GetJSON422() *BadRequest {
+	return r.JSON422
+}
+
+// GetBody returns the raw response body bytes
+func (r StartMediaUploadResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r StartMediaUploadResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r StartMediaUploadResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r StartMediaUploadResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type FinalizeMediaUploadResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *Asset
+	// JSON400 the response for an HTTP 400 `application/json` response
+	JSON400 *BadRequest
+	// JSON401 the response for an HTTP 401 `application/json` response
+	JSON401 *Unauthorized
+	// JSON403 the response for an HTTP 403 `application/json` response
+	JSON403 *Forbidden
+	// JSON404 the response for an HTTP 404 `application/json` response
+	JSON404 *NotFound
+	// JSON409 the response for an HTTP 409 `application/json` response
+	JSON409 *Conflict
+	// JSON422 the response for an HTTP 422 `application/json` response
+	JSON422 *BadRequest
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r FinalizeMediaUploadResponse) GetJSON200() *Asset {
+	return r.JSON200
+}
+
+// GetJSON400 returns the response for an HTTP 400 `application/json` response
+func (r FinalizeMediaUploadResponse) GetJSON400() *BadRequest {
+	return r.JSON400
+}
+
+// GetJSON401 returns the response for an HTTP 401 `application/json` response
+func (r FinalizeMediaUploadResponse) GetJSON401() *Unauthorized {
+	return r.JSON401
+}
+
+// GetJSON403 returns the response for an HTTP 403 `application/json` response
+func (r FinalizeMediaUploadResponse) GetJSON403() *Forbidden {
+	return r.JSON403
+}
+
+// GetJSON404 returns the response for an HTTP 404 `application/json` response
+func (r FinalizeMediaUploadResponse) GetJSON404() *NotFound {
+	return r.JSON404
+}
+
+// GetJSON409 returns the response for an HTTP 409 `application/json` response
+func (r FinalizeMediaUploadResponse) GetJSON409() *Conflict {
+	return r.JSON409
+}
+
+// GetJSON422 returns the response for an HTTP 422 `application/json` response
+func (r FinalizeMediaUploadResponse) GetJSON422() *BadRequest {
+	return r.JSON422
+}
+
+// GetBody returns the raw response body bytes
+func (r FinalizeMediaUploadResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r FinalizeMediaUploadResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r FinalizeMediaUploadResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r FinalizeMediaUploadResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
 // ListEnabledModulesResponse200Headers the declared response headers of an HTTP 200 response for ListEnabledModules
 type ListEnabledModulesResponse200Headers struct {
 	CacheControl *string
@@ -7861,6 +8663,84 @@ func (c *ClientWithResponses) UpdateTranslationCatalogWithResponse(ctx context.C
 		return nil, err
 	}
 	return ParseUpdateTranslationCatalogResponse(rsp)
+}
+
+// ListMediaAssetsWithResponse List account-scoped private asset metadata.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /media/assets (the `ListMediaAssets` operationId).
+func (c *ClientWithResponses) ListMediaAssetsWithResponse(ctx context.Context, params *ListMediaAssetsParams, reqEditors ...RequestEditorFn) (*ListMediaAssetsResponse, error) {
+	rsp, err := c.ListMediaAssets(ctx, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseListMediaAssetsResponse(rsp)
+}
+
+// DeleteMediaAssetWithBodyWithResponse Soft-delete an account-scoped asset and compensate storage cleanup.
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with DELETE /media/assets/{asset_id} (the `DeleteMediaAsset` operationId).
+func (c *ClientWithResponses) DeleteMediaAssetWithBodyWithResponse(ctx context.Context, assetId openapi_types.UUID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*DeleteMediaAssetResponse, error) {
+	rsp, err := c.DeleteMediaAssetWithBody(ctx, assetId, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseDeleteMediaAssetResponse(rsp)
+}
+
+// DeleteMediaAssetWithResponse Soft-delete an account-scoped asset and compensate storage cleanup.
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with DELETE /media/assets/{asset_id} (the `DeleteMediaAsset` operationId).
+func (c *ClientWithResponses) DeleteMediaAssetWithResponse(ctx context.Context, assetId openapi_types.UUID, body DeleteMediaAssetJSONRequestBody, reqEditors ...RequestEditorFn) (*DeleteMediaAssetResponse, error) {
+	rsp, err := c.DeleteMediaAsset(ctx, assetId, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseDeleteMediaAssetResponse(rsp)
+}
+
+// StartMediaUploadWithBodyWithResponse Upload a private media object and create a pending upload session.
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /media/uploads (the `StartMediaUpload` operationId).
+func (c *ClientWithResponses) StartMediaUploadWithBodyWithResponse(ctx context.Context, params *StartMediaUploadParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*StartMediaUploadResponse, error) {
+	rsp, err := c.StartMediaUploadWithBody(ctx, params, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseStartMediaUploadResponse(rsp)
+}
+
+// FinalizeMediaUploadWithBodyWithResponse Validate and finalize a private upload into an asset.
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /media/uploads/{upload_id}/finalize (the `FinalizeMediaUpload` operationId).
+func (c *ClientWithResponses) FinalizeMediaUploadWithBodyWithResponse(ctx context.Context, uploadId openapi_types.UUID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*FinalizeMediaUploadResponse, error) {
+	rsp, err := c.FinalizeMediaUploadWithBody(ctx, uploadId, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseFinalizeMediaUploadResponse(rsp)
+}
+
+// FinalizeMediaUploadWithResponse Validate and finalize a private upload into an asset.
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /media/uploads/{upload_id}/finalize (the `FinalizeMediaUpload` operationId).
+func (c *ClientWithResponses) FinalizeMediaUploadWithResponse(ctx context.Context, uploadId openapi_types.UUID, body FinalizeMediaUploadJSONRequestBody, reqEditors ...RequestEditorFn) (*FinalizeMediaUploadResponse, error) {
+	rsp, err := c.FinalizeMediaUpload(ctx, uploadId, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseFinalizeMediaUploadResponse(rsp)
 }
 
 // ListEnabledModulesWithResponse List the runtime module activation projection.
@@ -9590,6 +10470,239 @@ func ParseUpdateTranslationCatalogResponse(rsp *http.Response) (*UpdateTranslati
 			return nil, err
 		}
 		response.JSON409 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseListMediaAssetsResponse parses an HTTP response from a ListMediaAssetsWithResponse call
+func ParseListMediaAssetsResponse(rsp *http.Response) (*ListMediaAssetsResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ListMediaAssetsResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest AssetListResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest Unauthorized
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest Forbidden
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseDeleteMediaAssetResponse parses an HTTP response from a DeleteMediaAssetWithResponse call
+func ParseDeleteMediaAssetResponse(rsp *http.Response) (*DeleteMediaAssetResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &DeleteMediaAssetResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case rsp.StatusCode == 204:
+		break // No content-type
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest BadRequest
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest Unauthorized
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest Forbidden
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest Conflict
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON409 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseStartMediaUploadResponse parses an HTTP response from a StartMediaUploadWithResponse call
+func ParseStartMediaUploadResponse(rsp *http.Response) (*StartMediaUploadResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &StartMediaUploadResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 201:
+		var dest Upload
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON201 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest BadRequest
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest Unauthorized
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest Forbidden
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 413:
+		var dest ErrorEnvelope
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON413 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 415:
+		var dest ErrorEnvelope
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON415 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest BadRequest
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON422 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseFinalizeMediaUploadResponse parses an HTTP response from a FinalizeMediaUploadWithResponse call
+func ParseFinalizeMediaUploadResponse(rsp *http.Response) (*FinalizeMediaUploadResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &FinalizeMediaUploadResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest Asset
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest BadRequest
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest Unauthorized
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest Forbidden
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest Conflict
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON409 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest BadRequest
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON422 = &dest
 
 	}
 
