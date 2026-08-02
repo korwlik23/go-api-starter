@@ -6,6 +6,7 @@ import (
 
 	authdomain "github.com/korwlik23/go-api-starter/internal/modules/authorization/domain"
 	"github.com/korwlik23/go-api-starter/internal/modules/publishing"
+	publishingapplication "github.com/korwlik23/go-api-starter/internal/modules/publishing/application"
 	publishingdomain "github.com/korwlik23/go-api-starter/internal/modules/publishing/domain"
 	"github.com/korwlik23/go-api-starter/internal/modules/publishing/ports"
 )
@@ -91,7 +92,13 @@ func (service *Service) Transition(
 			},
 		)
 	}
-	resultErr = service.runMutation(ctx, operation)
+	resultErr = publishingapplication.RunMutationWithInvalidation(
+		ctx, service.dependencies.Transactions, service.dependencies.CacheInvalidator,
+		publishingapplication.CacheInvalidationEvent{
+			Namespace: "publishing.content", AccountID: input.AccountID,
+			ContentID: input.ContentID, LocaleID: input.LocaleID,
+		}, operation,
+	)
 	return result, resultErr
 }
 

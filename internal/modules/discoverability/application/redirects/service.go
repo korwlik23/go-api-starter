@@ -7,6 +7,7 @@ import (
 
 	discoverabilitydomain "github.com/korwlik23/go-api-starter/internal/modules/discoverability/domain"
 	"github.com/korwlik23/go-api-starter/internal/modules/discoverability/ports"
+	publishingapplication "github.com/korwlik23/go-api-starter/internal/modules/publishing/application"
 	"github.com/korwlik23/go-api-starter/internal/platform/database"
 )
 
@@ -27,11 +28,12 @@ type RedirectAuditor interface {
 }
 
 type Dependencies struct {
-	Repository   ports.RedirectRepository
-	Transactions database.Transactor
-	Auditor      RedirectAuditor
-	NewID        func() (string, error)
-	Now          func() time.Time
+	Repository       ports.RedirectRepository
+	Transactions     database.Transactor
+	Auditor          RedirectAuditor
+	CacheInvalidator publishingapplication.CacheInvalidator
+	NewID            func() (string, error)
+	Now              func() time.Time
 }
 
 type Service struct{ dependencies Dependencies }
@@ -63,11 +65,4 @@ type ListInput struct {
 	Enabled             *bool
 	After               *ports.RedirectCursor
 	Limit               int
-}
-
-func (service *Service) runMutation(ctx context.Context, operation func(context.Context) error) error {
-	if service.dependencies.Transactions == nil {
-		return operation(ctx)
-	}
-	return service.dependencies.Transactions.WithinTransaction(ctx, operation)
 }

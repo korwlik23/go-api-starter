@@ -6,6 +6,7 @@ import (
 	"time"
 
 	authdomain "github.com/korwlik23/go-api-starter/internal/modules/authorization/domain"
+	publishingapplication "github.com/korwlik23/go-api-starter/internal/modules/publishing/application"
 	"github.com/korwlik23/go-api-starter/internal/modules/publishing/ports"
 	"github.com/korwlik23/go-api-starter/internal/platform/database"
 )
@@ -37,12 +38,13 @@ type WorkflowAuditor interface {
 }
 
 type Dependencies struct {
-	Repository   ports.WorkflowRepository
-	Authorizer   WorkflowAuthorizer
-	Transactions database.Transactor
-	Auditor      WorkflowAuditor
-	NewID        func() (string, error)
-	Now          func() time.Time
+	Repository       ports.WorkflowRepository
+	Authorizer       WorkflowAuthorizer
+	Transactions     database.Transactor
+	Auditor          WorkflowAuditor
+	CacheInvalidator publishingapplication.CacheInvalidator
+	NewID            func() (string, error)
+	Now              func() time.Time
 }
 
 type Service struct {
@@ -66,14 +68,4 @@ type TransitionInput struct {
 	LocaleID        string
 	ExpectedVersion int64
 	Action          string
-}
-
-func (service *Service) runMutation(
-	ctx context.Context,
-	operation func(context.Context) error,
-) error {
-	if service.dependencies.Transactions == nil {
-		return operation(ctx)
-	}
-	return service.dependencies.Transactions.WithinTransaction(ctx, operation)
 }

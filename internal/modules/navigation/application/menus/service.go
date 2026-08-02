@@ -8,6 +8,7 @@ import (
 
 	navigationdomain "github.com/korwlik23/go-api-starter/internal/modules/navigation/domain"
 	"github.com/korwlik23/go-api-starter/internal/modules/navigation/ports"
+	publishingapplication "github.com/korwlik23/go-api-starter/internal/modules/publishing/application"
 	"github.com/korwlik23/go-api-starter/internal/platform/database"
 )
 
@@ -31,11 +32,12 @@ type MenuAuditor interface {
 }
 
 type Dependencies struct {
-	Repository   ports.MenuRepository
-	Transactions database.Transactor
-	Auditor      MenuAuditor
-	NewID        func() (string, error)
-	Now          func() time.Time
+	Repository       ports.MenuRepository
+	Transactions     database.Transactor
+	Auditor          MenuAuditor
+	CacheInvalidator publishingapplication.CacheInvalidator
+	NewID            func() (string, error)
+	Now              func() time.Time
 }
 
 type Service struct {
@@ -113,13 +115,6 @@ type ReorderInput struct {
 	MenuID          string
 	ExpectedVersion int64
 	Items           []ReorderItem
-}
-
-func (service *Service) runMutation(ctx context.Context, operation func(context.Context) error) error {
-	if service.dependencies.Transactions == nil {
-		return operation(ctx)
-	}
-	return service.dependencies.Transactions.WithinTransaction(ctx, operation)
 }
 
 func (service *Service) materializeItems(

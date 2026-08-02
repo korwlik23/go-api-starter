@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/korwlik23/go-api-starter/internal/modules/navigation/ports"
+	publishingapplication "github.com/korwlik23/go-api-starter/internal/modules/publishing/application"
 )
 
 func (service *Service) Delete(ctx context.Context, input DeleteInput) (resultErr error) {
@@ -21,5 +22,10 @@ func (service *Service) Delete(ctx context.Context, input DeleteInput) (resultEr
 		}
 		return service.dependencies.Auditor.RecordMenuChange(operationContext, MenuAuditEvent{ActorUserID: input.ActorUserID, AccountID: input.AccountID, RequestID: input.RequestID, Action: "navigation.menu.deleted", MenuID: input.MenuID, Version: input.ExpectedVersion + 1, Data: map[string]any{"deleted": true}})
 	}
-	return service.runMutation(ctx, operation)
+	return publishingapplication.RunMutationWithInvalidation(
+		ctx, service.dependencies.Transactions, service.dependencies.CacheInvalidator,
+		publishingapplication.CacheInvalidationEvent{
+			Namespace: "navigation.menu", AccountID: input.AccountID,
+		}, operation,
+	)
 }

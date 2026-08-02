@@ -6,6 +6,7 @@ import (
 
 	navigationdomain "github.com/korwlik23/go-api-starter/internal/modules/navigation/domain"
 	"github.com/korwlik23/go-api-starter/internal/modules/navigation/ports"
+	publishingapplication "github.com/korwlik23/go-api-starter/internal/modules/publishing/application"
 )
 
 func (service *Service) Reorder(ctx context.Context, input ReorderInput) (result navigationdomain.Menu, resultErr error) {
@@ -52,6 +53,11 @@ func (service *Service) Reorder(ctx context.Context, input ReorderInput) (result
 		}
 		return service.dependencies.Auditor.RecordMenuChange(operationContext, MenuAuditEvent{ActorUserID: input.ActorUserID, AccountID: input.AccountID, RequestID: input.RequestID, Action: "navigation.menu.reordered", MenuID: input.MenuID, Version: input.ExpectedVersion + 1, Data: map[string]any{"item_count": len(updated)}})
 	}
-	resultErr = service.runMutation(ctx, operation)
+	resultErr = publishingapplication.RunMutationWithInvalidation(
+		ctx, service.dependencies.Transactions, service.dependencies.CacheInvalidator,
+		publishingapplication.CacheInvalidationEvent{
+			Namespace: "navigation.menu", AccountID: input.AccountID, LocaleID: current.LocaleID,
+		}, operation,
+	)
 	return result, resultErr
 }

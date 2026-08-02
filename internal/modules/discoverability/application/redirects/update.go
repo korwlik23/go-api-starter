@@ -6,6 +6,7 @@ import (
 
 	discoverabilitydomain "github.com/korwlik23/go-api-starter/internal/modules/discoverability/domain"
 	"github.com/korwlik23/go-api-starter/internal/modules/discoverability/ports"
+	publishingapplication "github.com/korwlik23/go-api-starter/internal/modules/publishing/application"
 )
 
 func (service *Service) Update(ctx context.Context, input UpdateInput) (result discoverabilitydomain.Redirect, resultErr error) {
@@ -27,6 +28,12 @@ func (service *Service) Update(ctx context.Context, input UpdateInput) (result d
 		}
 		return service.dependencies.Auditor.RecordRedirectChange(operationContext, RedirectAuditEvent{ActorUserID: input.ActorUserID, AccountID: input.AccountID, RequestID: input.RequestID, Action: "discoverability.redirect.updated", RedirectID: input.RedirectID, Version: redirect.Version, Data: map[string]any{"source_path": redirect.SourcePath, "status_code": int(redirect.StatusCode)}})
 	}
-	resultErr = service.runMutation(ctx, operation)
+	resultErr = publishingapplication.RunMutationWithInvalidation(
+		ctx, service.dependencies.Transactions, service.dependencies.CacheInvalidator,
+		publishingapplication.CacheInvalidationEvent{
+			Namespace: "discoverability.redirect", AccountID: input.AccountID,
+			LocaleID: input.LocaleID, Path: input.SourcePath,
+		}, operation,
+	)
 	return result, resultErr
 }

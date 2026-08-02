@@ -6,6 +6,7 @@ import (
 
 	navigationdomain "github.com/korwlik23/go-api-starter/internal/modules/navigation/domain"
 	"github.com/korwlik23/go-api-starter/internal/modules/navigation/ports"
+	publishingapplication "github.com/korwlik23/go-api-starter/internal/modules/publishing/application"
 )
 
 func (service *Service) Create(ctx context.Context, input CreateInput) (result navigationdomain.Menu, resultErr error) {
@@ -35,6 +36,11 @@ func (service *Service) Create(ctx context.Context, input CreateInput) (result n
 			Data: map[string]any{"key": menu.Key, "item_count": len(items)},
 		})
 	}
-	resultErr = service.runMutation(ctx, operation)
+	resultErr = publishingapplication.RunMutationWithInvalidation(
+		ctx, service.dependencies.Transactions, service.dependencies.CacheInvalidator,
+		publishingapplication.CacheInvalidationEvent{
+			Namespace: "navigation.menu", AccountID: input.AccountID, LocaleID: input.LocaleID,
+		}, operation,
+	)
 	return result, resultErr
 }

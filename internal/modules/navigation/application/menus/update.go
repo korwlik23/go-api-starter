@@ -6,6 +6,7 @@ import (
 
 	navigationdomain "github.com/korwlik23/go-api-starter/internal/modules/navigation/domain"
 	"github.com/korwlik23/go-api-starter/internal/modules/navigation/ports"
+	publishingapplication "github.com/korwlik23/go-api-starter/internal/modules/publishing/application"
 )
 
 func (service *Service) Update(ctx context.Context, input UpdateInput) (result navigationdomain.Menu, resultErr error) {
@@ -27,6 +28,11 @@ func (service *Service) Update(ctx context.Context, input UpdateInput) (result n
 		}
 		return service.dependencies.Auditor.RecordMenuChange(operationContext, MenuAuditEvent{ActorUserID: input.ActorUserID, AccountID: input.AccountID, RequestID: input.RequestID, Action: "navigation.menu.updated", MenuID: input.MenuID, Version: menu.Version, Data: map[string]any{"key": menu.Key, "item_count": len(items)}})
 	}
-	resultErr = service.runMutation(ctx, operation)
+	resultErr = publishingapplication.RunMutationWithInvalidation(
+		ctx, service.dependencies.Transactions, service.dependencies.CacheInvalidator,
+		publishingapplication.CacheInvalidationEvent{
+			Namespace: "navigation.menu", AccountID: input.AccountID, LocaleID: input.LocaleID,
+		}, operation,
+	)
 	return result, resultErr
 }
