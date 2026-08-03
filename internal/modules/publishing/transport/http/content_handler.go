@@ -28,12 +28,18 @@ type contentManager interface {
 	Delete(context.Context, contentapp.DeleteInput) error
 }
 
+type contentReader interface {
+	List(context.Context, contentapp.ListInput) (ports.ContentListPage, error)
+	Get(context.Context, contentapp.GetInput) (ports.ContentDetail, error)
+}
+
 type accountResolver interface {
 	Execute(context.Context, string) (accountports.ResolvedAccount, error)
 }
 
 type ContentHandler struct {
 	manager  contentManager
+	queries  contentReader
 	accounts accountResolver
 }
 
@@ -41,10 +47,18 @@ func NewContentHandler(
 	manager contentManager,
 	accounts accountResolver,
 ) (*ContentHandler, error) {
+	return NewContentHandlerWithQueries(manager, nil, accounts)
+}
+
+func NewContentHandlerWithQueries(
+	manager contentManager,
+	queries contentReader,
+	accounts accountResolver,
+) (*ContentHandler, error) {
 	if manager == nil || accounts == nil {
 		return nil, ErrInvalidContentHandler
 	}
-	return &ContentHandler{manager: manager, accounts: accounts}, nil
+	return &ContentHandler{manager: manager, queries: queries, accounts: accounts}, nil
 }
 
 type contentMetadataRequest struct {

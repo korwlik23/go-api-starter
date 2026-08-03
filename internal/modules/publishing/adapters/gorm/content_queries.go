@@ -22,7 +22,7 @@ func (repository *ContentRepository) List(ctx context.Context, query ports.Conte
 	if err != nil {
 		return ports.ContentListPage{}, ports.ErrInvalidContentQuery
 	}
-	localeID, err := databaseid.Encode(repository.db.Dialector.Name(), query.LocaleID)
+	localeID, _, err := repository.resolveLocaleID(ctx, query.LocaleID)
 	if err != nil {
 		return ports.ContentListPage{}, ports.ErrInvalidContentQuery
 	}

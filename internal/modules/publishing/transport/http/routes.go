@@ -14,10 +14,14 @@ type RouteHandlers struct {
 // CSRF, account resolution and permission guards are composed by the parent
 // application route group so a disabled module can omit this registration.
 func RegisterRoutes(router *gin.RouterGroup, handlers RouteHandlers) {
+	router.GET("/publishing/pages", handlers.Content.ListPages)
 	router.POST("/publishing/pages", handlers.Content.CreatePage)
+	router.GET("/publishing/pages/:page_id", handlers.Content.GetPage)
 	router.PATCH("/publishing/pages/:page_id", handlers.Content.Update)
 	router.DELETE("/publishing/pages/:page_id", handlers.Content.Delete)
+	router.GET("/publishing/posts", handlers.Content.ListPosts)
 	router.POST("/publishing/posts", handlers.Content.CreatePost)
+	router.GET("/publishing/posts/:post_id", handlers.Content.GetPost)
 	router.PATCH("/publishing/posts/:post_id", handlers.Content.Update)
 	router.DELETE("/publishing/posts/:post_id", handlers.Content.Delete)
 	if handlers.Revisions != nil {

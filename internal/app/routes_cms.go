@@ -66,10 +66,14 @@ func registerPublishingRoutes(
 	guards cmsRouteGuards,
 ) {
 	if handlers.Content != nil {
+		router.GET("/publishing/pages", guards.pagesRead, handlers.Content.ListPages)
 		router.POST("/publishing/pages", guards.pagesWrite, handlers.Content.CreatePage)
+		router.GET("/publishing/pages/:page_id", guards.pagesRead, handlers.Content.GetPage)
 		router.PATCH("/publishing/pages/:page_id", guards.pagesWrite, handlers.Content.Update)
 		router.DELETE("/publishing/pages/:page_id", guards.pagesWrite, handlers.Content.Delete)
+		router.GET("/publishing/posts", guards.pagesRead, handlers.Content.ListPosts)
 		router.POST("/publishing/posts", guards.pagesWrite, handlers.Content.CreatePost)
+		router.GET("/publishing/posts/:post_id", guards.pagesRead, handlers.Content.GetPost)
 		router.PATCH("/publishing/posts/:post_id", guards.pagesWrite, handlers.Content.Update)
 		router.DELETE("/publishing/posts/:post_id", guards.pagesWrite, handlers.Content.Delete)
 	}

@@ -41,8 +41,10 @@ func TestM3F6CMSRoutesComposeProtectedAdminAndPublicSurfaces(t *testing.T) {
 	}, identityRuntime{authenticate: noOp, csrf: noOp})
 
 	require.ElementsMatch(t, []string{
-		"POST /api/v1/publishing/pages", "PATCH /api/v1/publishing/pages/:page_id",
+		"GET /api/v1/publishing/pages", "POST /api/v1/publishing/pages",
+		"GET /api/v1/publishing/pages/:page_id", "PATCH /api/v1/publishing/pages/:page_id",
 		"DELETE /api/v1/publishing/pages/:page_id", "POST /api/v1/publishing/posts",
+		"GET /api/v1/publishing/posts", "GET /api/v1/publishing/posts/:post_id",
 		"PATCH /api/v1/publishing/posts/:post_id", "DELETE /api/v1/publishing/posts/:post_id",
 		"GET /api/v1/publishing/content/:content_id/revisions",
 		"POST /api/v1/publishing/content/:content_id/revisions/:revision_id/rollback",

@@ -235,6 +235,78 @@ func (e ContentAuditStatus) Valid() bool {
 	}
 }
 
+// Defines values for ContentListItemContentStatus.
+const (
+	ContentListItemContentStatusArchived  ContentListItemContentStatus = "archived"
+	ContentListItemContentStatusDraft     ContentListItemContentStatus = "draft"
+	ContentListItemContentStatusPublished ContentListItemContentStatus = "published"
+	ContentListItemContentStatusReview    ContentListItemContentStatus = "review"
+	ContentListItemContentStatusScheduled ContentListItemContentStatus = "scheduled"
+)
+
+// Valid indicates whether the value is a known member of the ContentListItemContentStatus enum.
+func (e ContentListItemContentStatus) Valid() bool {
+	switch e {
+	case ContentListItemContentStatusArchived:
+		return true
+	case ContentListItemContentStatusDraft:
+		return true
+	case ContentListItemContentStatusPublished:
+		return true
+	case ContentListItemContentStatusReview:
+		return true
+	case ContentListItemContentStatusScheduled:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for ContentListItemKind.
+const (
+	ContentListItemKindPage ContentListItemKind = "page"
+	ContentListItemKindPost ContentListItemKind = "post"
+)
+
+// Valid indicates whether the value is a known member of the ContentListItemKind enum.
+func (e ContentListItemKind) Valid() bool {
+	switch e {
+	case ContentListItemKindPage:
+		return true
+	case ContentListItemKindPost:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for ContentListItemTranslationStatus.
+const (
+	ContentListItemTranslationStatusArchived  ContentListItemTranslationStatus = "archived"
+	ContentListItemTranslationStatusDraft     ContentListItemTranslationStatus = "draft"
+	ContentListItemTranslationStatusPublished ContentListItemTranslationStatus = "published"
+	ContentListItemTranslationStatusReview    ContentListItemTranslationStatus = "review"
+	ContentListItemTranslationStatusScheduled ContentListItemTranslationStatus = "scheduled"
+)
+
+// Valid indicates whether the value is a known member of the ContentListItemTranslationStatus enum.
+func (e ContentListItemTranslationStatus) Valid() bool {
+	switch e {
+	case ContentListItemTranslationStatusArchived:
+		return true
+	case ContentListItemTranslationStatusDraft:
+		return true
+	case ContentListItemTranslationStatusPublished:
+		return true
+	case ContentListItemTranslationStatusReview:
+		return true
+	case ContentListItemTranslationStatusScheduled:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for ContentMutationRequestKind.
 const (
 	ContentMutationRequestKindPage ContentMutationRequestKind = "page"
@@ -1379,11 +1451,50 @@ type ContentAuditListResponse struct {
 	Next  *ContentAuditCursor `json:"next,omitempty"`
 }
 
+// ContentCursor defines model for ContentCursor.
+type ContentCursor struct {
+	Id        openapi_types.UUID `json:"id"`
+	UpdatedAt time.Time          `json:"updated_at"`
+}
+
 // ContentDeleteRequest defines model for ContentDeleteRequest.
 type ContentDeleteRequest struct {
 	ExpectedVersion int                `json:"expected_version"`
 	LocaleId        openapi_types.UUID `json:"locale_id"`
 	TranslationId   openapi_types.UUID `json:"translation_id"`
+}
+
+// ContentListItem defines model for ContentListItem.
+type ContentListItem struct {
+	AccountId          openapi_types.UUID               `json:"account_id"`
+	ContentId          openapi_types.UUID               `json:"content_id"`
+	ContentKey         string                           `json:"content_key"`
+	ContentStatus      ContentListItemContentStatus     `json:"content_status"`
+	ContentVersion     int                              `json:"content_version"`
+	Kind               ContentListItemKind              `json:"kind"`
+	LocaleId           openapi_types.UUID               `json:"locale_id"`
+	Path               string                           `json:"path"`
+	Slug               string                           `json:"slug"`
+	Title              string                           `json:"title"`
+	TranslationId      openapi_types.UUID               `json:"translation_id"`
+	TranslationStatus  ContentListItemTranslationStatus `json:"translation_status"`
+	TranslationVersion int                              `json:"translation_version"`
+	UpdatedAt          time.Time                        `json:"updated_at"`
+}
+
+// ContentListItemContentStatus defines model for ContentListItem.ContentStatus.
+type ContentListItemContentStatus string
+
+// ContentListItemKind defines model for ContentListItem.Kind.
+type ContentListItemKind string
+
+// ContentListItemTranslationStatus defines model for ContentListItem.TranslationStatus.
+type ContentListItemTranslationStatus string
+
+// ContentListResponse defines model for ContentListResponse.
+type ContentListResponse struct {
+	Items []ContentListItem `json:"items"`
+	Next  *ContentCursor    `json:"next,omitempty"`
 }
 
 // ContentMutationRequest defines model for ContentMutationRequest.
@@ -2274,6 +2385,18 @@ type WorkflowResponseContentStatus string
 // WorkflowResponseTranslationStatus defines model for WorkflowResponse.TranslationStatus.
 type WorkflowResponseTranslationStatus string
 
+// ContentAfterID defines model for ContentAfterID.
+type ContentAfterID = openapi_types.UUID
+
+// ContentAfterUpdatedAt defines model for ContentAfterUpdatedAt.
+type ContentAfterUpdatedAt = time.Time
+
+// ContentLimit defines model for ContentLimit.
+type ContentLimit = int
+
+// ContentLocale defines model for ContentLocale.
+type ContentLocale = string
+
 // Page defines model for Page.
 type Page = int
 
@@ -2422,6 +2545,14 @@ type ListPublishingRevisionsParams struct {
 	AfterId        *openapi_types.UUID `form:"after_id,omitempty" json:"after_id,omitempty"`
 }
 
+// ListPublishingPagesParams defines parameters for ListPublishingPages.
+type ListPublishingPagesParams struct {
+	Locale         ContentLocale          `form:"locale" json:"locale"`
+	Limit          *ContentLimit          `form:"limit,omitempty" json:"limit,omitempty"`
+	AfterUpdatedAt *ContentAfterUpdatedAt `form:"after_updated_at,omitempty" json:"after_updated_at,omitempty"`
+	AfterId        *ContentAfterID        `form:"after_id,omitempty" json:"after_id,omitempty"`
+}
+
 // CreatePublishingPageJSONBody defines parameters for CreatePublishingPage.
 type CreatePublishingPageJSONBody struct {
 	Aeo             AEOFields                        `json:"aeo"`
@@ -2442,6 +2573,19 @@ type CreatePublishingPageJSONBody struct {
 // CreatePublishingPageJSONBodyKind defines parameters for CreatePublishingPage.
 type CreatePublishingPageJSONBodyKind string
 
+// GetPublishingPageParams defines parameters for GetPublishingPage.
+type GetPublishingPageParams struct {
+	Locale ContentLocale `form:"locale" json:"locale"`
+}
+
+// ListPublishingPostsParams defines parameters for ListPublishingPosts.
+type ListPublishingPostsParams struct {
+	Locale         ContentLocale          `form:"locale" json:"locale"`
+	Limit          *ContentLimit          `form:"limit,omitempty" json:"limit,omitempty"`
+	AfterUpdatedAt *ContentAfterUpdatedAt `form:"after_updated_at,omitempty" json:"after_updated_at,omitempty"`
+	AfterId        *ContentAfterID        `form:"after_id,omitempty" json:"after_id,omitempty"`
+}
+
 // CreatePublishingPostJSONBody defines parameters for CreatePublishingPost.
 type CreatePublishingPostJSONBody struct {
 	Aeo             AEOFields                        `json:"aeo"`
@@ -2461,6 +2605,11 @@ type CreatePublishingPostJSONBody struct {
 
 // CreatePublishingPostJSONBodyKind defines parameters for CreatePublishingPost.
 type CreatePublishingPostJSONBodyKind string
+
+// GetPublishingPostParams defines parameters for GetPublishingPost.
+type GetPublishingPostParams struct {
+	Locale ContentLocale `form:"locale" json:"locale"`
+}
 
 // ListPublishingSchedulesParams defines parameters for ListPublishingSchedules.
 type ListPublishingSchedulesParams struct {
@@ -3350,6 +3499,11 @@ type ClientInterface interface {
 	// Corresponds with POST /publishing/content/{content_id}/workflow (the `TransitionPublishingWorkflow` operationId).
 	TransitionPublishingWorkflow(ctx context.Context, contentId openapi_types.UUID, body TransitionPublishingWorkflowJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// ListPublishingPages List page translations in the current account.
+	//
+	// Corresponds with GET /publishing/pages (the `ListPublishingPages` operationId).
+	ListPublishingPages(ctx context.Context, params *ListPublishingPagesParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// CreatePublishingPageWithBody Create a page translation in the current account.
 	//
 	// Takes any type of body and a specified content type.
@@ -3378,6 +3532,11 @@ type ClientInterface interface {
 	// Corresponds with DELETE /publishing/pages/{page_id} (the `DeletePublishingPage` operationId).
 	DeletePublishingPage(ctx context.Context, pageId openapi_types.UUID, body DeletePublishingPageJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// GetPublishingPage Get a page translation in the current account.
+	//
+	// Corresponds with GET /publishing/pages/{page_id} (the `GetPublishingPage` operationId).
+	GetPublishingPage(ctx context.Context, pageId openapi_types.UUID, params *GetPublishingPageParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// UpdatePublishingPageWithBody Update a page translation using optimistic concurrency.
 	//
 	// Takes any type of body and a specified content type.
@@ -3391,6 +3550,11 @@ type ClientInterface interface {
 	//
 	// Corresponds with PATCH /publishing/pages/{page_id} (the `UpdatePublishingPage` operationId).
 	UpdatePublishingPage(ctx context.Context, pageId openapi_types.UUID, body UpdatePublishingPageJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ListPublishingPosts List post translations in the current account.
+	//
+	// Corresponds with GET /publishing/posts (the `ListPublishingPosts` operationId).
+	ListPublishingPosts(ctx context.Context, params *ListPublishingPostsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// CreatePublishingPostWithBody Create a post translation in the current account.
 	//
@@ -3419,6 +3583,11 @@ type ClientInterface interface {
 	//
 	// Corresponds with DELETE /publishing/posts/{post_id} (the `DeletePublishingPost` operationId).
 	DeletePublishingPost(ctx context.Context, postId openapi_types.UUID, body DeletePublishingPostJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetPublishingPost Get a post translation in the current account.
+	//
+	// Corresponds with GET /publishing/posts/{post_id} (the `GetPublishingPost` operationId).
+	GetPublishingPost(ctx context.Context, postId openapi_types.UUID, params *GetPublishingPostParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// UpdatePublishingPostWithBody Update a post translation using optimistic concurrency.
 	//
@@ -4959,6 +5128,21 @@ func (c *Client) TransitionPublishingWorkflow(ctx context.Context, contentId ope
 	return c.Client.Do(req)
 }
 
+// ListPublishingPages List page translations in the current account.
+//
+// Corresponds with GET /publishing/pages (the `ListPublishingPages` operationId).
+func (c *Client) ListPublishingPages(ctx context.Context, params *ListPublishingPagesParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewListPublishingPagesRequest(c.Server, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
 // CreatePublishingPageWithBody Create a page translation in the current account.
 //
 // Takes any type of body and a specified content type.
@@ -5027,6 +5211,21 @@ func (c *Client) DeletePublishingPage(ctx context.Context, pageId openapi_types.
 	return c.Client.Do(req)
 }
 
+// GetPublishingPage Get a page translation in the current account.
+//
+// Corresponds with GET /publishing/pages/{page_id} (the `GetPublishingPage` operationId).
+func (c *Client) GetPublishingPage(ctx context.Context, pageId openapi_types.UUID, params *GetPublishingPageParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetPublishingPageRequest(c.Server, pageId, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
 // UpdatePublishingPageWithBody Update a page translation using optimistic concurrency.
 //
 // Takes any type of body and a specified content type.
@@ -5051,6 +5250,21 @@ func (c *Client) UpdatePublishingPageWithBody(ctx context.Context, pageId openap
 // Corresponds with PATCH /publishing/pages/{page_id} (the `UpdatePublishingPage` operationId).
 func (c *Client) UpdatePublishingPage(ctx context.Context, pageId openapi_types.UUID, body UpdatePublishingPageJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewUpdatePublishingPageRequest(c.Server, pageId, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// ListPublishingPosts List post translations in the current account.
+//
+// Corresponds with GET /publishing/posts (the `ListPublishingPosts` operationId).
+func (c *Client) ListPublishingPosts(ctx context.Context, params *ListPublishingPostsParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewListPublishingPostsRequest(c.Server, params)
 	if err != nil {
 		return nil, err
 	}
@@ -5119,6 +5333,21 @@ func (c *Client) DeletePublishingPostWithBody(ctx context.Context, postId openap
 // Corresponds with DELETE /publishing/posts/{post_id} (the `DeletePublishingPost` operationId).
 func (c *Client) DeletePublishingPost(ctx context.Context, postId openapi_types.UUID, body DeletePublishingPostJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewDeletePublishingPostRequest(c.Server, postId, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// GetPublishingPost Get a post translation in the current account.
+//
+// Corresponds with GET /publishing/posts/{post_id} (the `GetPublishingPost` operationId).
+func (c *Client) GetPublishingPost(ctx context.Context, postId openapi_types.UUID, params *GetPublishingPostParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetPublishingPostRequest(c.Server, postId, params)
 	if err != nil {
 		return nil, err
 	}
@@ -8152,6 +8381,92 @@ func NewTransitionPublishingWorkflowRequestWithBody(server string, contentId ope
 	return req, nil
 }
 
+// NewListPublishingPagesRequest constructs an http.Request for the ListPublishingPages method
+func NewListPublishingPagesRequest(server string, params *ListPublishingPagesParams) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/publishing/pages")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		// queryValues collects non-styled parameters (passthrough, JSON)
+		// that are safe to round-trip through url.Values.Encode().
+		queryValues := queryURL.Query()
+		// rawQueryFragments collects pre-encoded query fragments from
+		// styled parameters, preserving literal commas as delimiters
+		// per the OpenAPI spec (e.g. "color=blue,black,brown").
+		var rawQueryFragments []string
+
+		if queryFrag, err := runtime.StyleParamWithOptions("form", true, "locale", params.Locale, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+			return nil, err
+		} else {
+			for _, qp := range strings.Split(queryFrag, "&") {
+				rawQueryFragments = append(rawQueryFragments, qp)
+			}
+		}
+
+		if params.Limit != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "limit", *params.Limit, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "integer", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.AfterUpdatedAt != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "after_updated_at", *params.AfterUpdatedAt, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: "date-time"}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.AfterId != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "after_id", *params.AfterId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: "uuid"}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if encoded := queryValues.Encode(); encoded != "" {
+			rawQueryFragments = append(rawQueryFragments, encoded)
+		}
+		queryURL.RawQuery = strings.Join(rawQueryFragments, "&")
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
 // NewCreatePublishingPageRequest calls the generic CreatePublishingPage builder with application/json body
 func NewCreatePublishingPageRequest(server string, body CreatePublishingPageJSONRequestBody) (*http.Request, error) {
 	var bodyReader io.Reader
@@ -8239,6 +8554,63 @@ func NewDeletePublishingPageRequestWithBody(server string, pageId openapi_types.
 	return req, nil
 }
 
+// NewGetPublishingPageRequest constructs an http.Request for the GetPublishingPage method
+func NewGetPublishingPageRequest(server string, pageId openapi_types.UUID, params *GetPublishingPageParams) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "page_id", pageId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: "uuid"})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/publishing/pages/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		// queryValues collects non-styled parameters (passthrough, JSON)
+		// that are safe to round-trip through url.Values.Encode().
+		queryValues := queryURL.Query()
+		// rawQueryFragments collects pre-encoded query fragments from
+		// styled parameters, preserving literal commas as delimiters
+		// per the OpenAPI spec (e.g. "color=blue,black,brown").
+		var rawQueryFragments []string
+
+		if queryFrag, err := runtime.StyleParamWithOptions("form", true, "locale", params.Locale, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+			return nil, err
+		} else {
+			for _, qp := range strings.Split(queryFrag, "&") {
+				rawQueryFragments = append(rawQueryFragments, qp)
+			}
+		}
+
+		if encoded := queryValues.Encode(); encoded != "" {
+			rawQueryFragments = append(rawQueryFragments, encoded)
+		}
+		queryURL.RawQuery = strings.Join(rawQueryFragments, "&")
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
 // NewUpdatePublishingPageRequest calls the generic UpdatePublishingPage builder with application/json body
 func NewUpdatePublishingPageRequest(server string, pageId openapi_types.UUID, body UpdatePublishingPageJSONRequestBody) (*http.Request, error) {
 	var bodyReader io.Reader
@@ -8282,6 +8654,92 @@ func NewUpdatePublishingPageRequestWithBody(server string, pageId openapi_types.
 	}
 
 	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewListPublishingPostsRequest constructs an http.Request for the ListPublishingPosts method
+func NewListPublishingPostsRequest(server string, params *ListPublishingPostsParams) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/publishing/posts")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		// queryValues collects non-styled parameters (passthrough, JSON)
+		// that are safe to round-trip through url.Values.Encode().
+		queryValues := queryURL.Query()
+		// rawQueryFragments collects pre-encoded query fragments from
+		// styled parameters, preserving literal commas as delimiters
+		// per the OpenAPI spec (e.g. "color=blue,black,brown").
+		var rawQueryFragments []string
+
+		if queryFrag, err := runtime.StyleParamWithOptions("form", true, "locale", params.Locale, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+			return nil, err
+		} else {
+			for _, qp := range strings.Split(queryFrag, "&") {
+				rawQueryFragments = append(rawQueryFragments, qp)
+			}
+		}
+
+		if params.Limit != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "limit", *params.Limit, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "integer", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.AfterUpdatedAt != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "after_updated_at", *params.AfterUpdatedAt, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: "date-time"}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.AfterId != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "after_id", *params.AfterId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: "uuid"}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if encoded := queryValues.Encode(); encoded != "" {
+			rawQueryFragments = append(rawQueryFragments, encoded)
+		}
+		queryURL.RawQuery = strings.Join(rawQueryFragments, "&")
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
 
 	return req, nil
 }
@@ -8369,6 +8827,63 @@ func NewDeletePublishingPostRequestWithBody(server string, postId openapi_types.
 	}
 
 	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewGetPublishingPostRequest constructs an http.Request for the GetPublishingPost method
+func NewGetPublishingPostRequest(server string, postId openapi_types.UUID, params *GetPublishingPostParams) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "post_id", postId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: "uuid"})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/publishing/posts/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		// queryValues collects non-styled parameters (passthrough, JSON)
+		// that are safe to round-trip through url.Values.Encode().
+		queryValues := queryURL.Query()
+		// rawQueryFragments collects pre-encoded query fragments from
+		// styled parameters, preserving literal commas as delimiters
+		// per the OpenAPI spec (e.g. "color=blue,black,brown").
+		var rawQueryFragments []string
+
+		if queryFrag, err := runtime.StyleParamWithOptions("form", true, "locale", params.Locale, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+			return nil, err
+		} else {
+			for _, qp := range strings.Split(queryFrag, "&") {
+				rawQueryFragments = append(rawQueryFragments, qp)
+			}
+		}
+
+		if encoded := queryValues.Encode(); encoded != "" {
+			rawQueryFragments = append(rawQueryFragments, encoded)
+		}
+		queryURL.RawQuery = strings.Join(rawQueryFragments, "&")
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
 
 	return req, nil
 }
@@ -9393,6 +9908,13 @@ type ClientWithResponsesInterface interface {
 	// Corresponds with POST /publishing/content/{content_id}/workflow (the `TransitionPublishingWorkflow` operationId).
 	TransitionPublishingWorkflowWithResponse(ctx context.Context, contentId openapi_types.UUID, body TransitionPublishingWorkflowJSONRequestBody, reqEditors ...RequestEditorFn) (*TransitionPublishingWorkflowResponse, error)
 
+	// ListPublishingPagesWithResponse List page translations in the current account.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /publishing/pages (the `ListPublishingPages` operationId).
+	ListPublishingPagesWithResponse(ctx context.Context, params *ListPublishingPagesParams, reqEditors ...RequestEditorFn) (*ListPublishingPagesResponse, error)
+
 	// CreatePublishingPageWithBodyWithResponse Create a page translation in the current account.
 	//
 	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
@@ -9421,6 +9943,13 @@ type ClientWithResponsesInterface interface {
 	// Corresponds with DELETE /publishing/pages/{page_id} (the `DeletePublishingPage` operationId).
 	DeletePublishingPageWithResponse(ctx context.Context, pageId openapi_types.UUID, body DeletePublishingPageJSONRequestBody, reqEditors ...RequestEditorFn) (*DeletePublishingPageResponse, error)
 
+	// GetPublishingPageWithResponse Get a page translation in the current account.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /publishing/pages/{page_id} (the `GetPublishingPage` operationId).
+	GetPublishingPageWithResponse(ctx context.Context, pageId openapi_types.UUID, params *GetPublishingPageParams, reqEditors ...RequestEditorFn) (*GetPublishingPageResponse, error)
+
 	// UpdatePublishingPageWithBodyWithResponse Update a page translation using optimistic concurrency.
 	//
 	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
@@ -9434,6 +9963,13 @@ type ClientWithResponsesInterface interface {
 	//
 	// Corresponds with PATCH /publishing/pages/{page_id} (the `UpdatePublishingPage` operationId).
 	UpdatePublishingPageWithResponse(ctx context.Context, pageId openapi_types.UUID, body UpdatePublishingPageJSONRequestBody, reqEditors ...RequestEditorFn) (*UpdatePublishingPageResponse, error)
+
+	// ListPublishingPostsWithResponse List post translations in the current account.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /publishing/posts (the `ListPublishingPosts` operationId).
+	ListPublishingPostsWithResponse(ctx context.Context, params *ListPublishingPostsParams, reqEditors ...RequestEditorFn) (*ListPublishingPostsResponse, error)
 
 	// CreatePublishingPostWithBodyWithResponse Create a post translation in the current account.
 	//
@@ -9462,6 +9998,13 @@ type ClientWithResponsesInterface interface {
 	//
 	// Corresponds with DELETE /publishing/posts/{post_id} (the `DeletePublishingPost` operationId).
 	DeletePublishingPostWithResponse(ctx context.Context, postId openapi_types.UUID, body DeletePublishingPostJSONRequestBody, reqEditors ...RequestEditorFn) (*DeletePublishingPostResponse, error)
+
+	// GetPublishingPostWithResponse Get a post translation in the current account.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /publishing/posts/{post_id} (the `GetPublishingPost` operationId).
+	GetPublishingPostWithResponse(ctx context.Context, postId openapi_types.UUID, params *GetPublishingPostParams, reqEditors ...RequestEditorFn) (*GetPublishingPostResponse, error)
 
 	// UpdatePublishingPostWithBodyWithResponse Update a post translation using optimistic concurrency.
 	//
@@ -13403,6 +13946,68 @@ func (r TransitionPublishingWorkflowResponse) ContentType() string {
 	return ""
 }
 
+type ListPublishingPagesResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *ContentListResponse
+	// JSON400 the response for an HTTP 400 `application/json` response
+	JSON400 *BadRequest
+	// JSON401 the response for an HTTP 401 `application/json` response
+	JSON401 *Unauthorized
+	// JSON403 the response for an HTTP 403 `application/json` response
+	JSON403 *Forbidden
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r ListPublishingPagesResponse) GetJSON200() *ContentListResponse {
+	return r.JSON200
+}
+
+// GetJSON400 returns the response for an HTTP 400 `application/json` response
+func (r ListPublishingPagesResponse) GetJSON400() *BadRequest {
+	return r.JSON400
+}
+
+// GetJSON401 returns the response for an HTTP 401 `application/json` response
+func (r ListPublishingPagesResponse) GetJSON401() *Unauthorized {
+	return r.JSON401
+}
+
+// GetJSON403 returns the response for an HTTP 403 `application/json` response
+func (r ListPublishingPagesResponse) GetJSON403() *Forbidden {
+	return r.JSON403
+}
+
+// GetBody returns the raw response body bytes
+func (r ListPublishingPagesResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r ListPublishingPagesResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ListPublishingPagesResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r ListPublishingPagesResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
 type CreatePublishingPageResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -13562,6 +14167,75 @@ func (r DeletePublishingPageResponse) ContentType() string {
 	return ""
 }
 
+type GetPublishingPageResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *ContentResponse
+	// JSON400 the response for an HTTP 400 `application/json` response
+	JSON400 *BadRequest
+	// JSON401 the response for an HTTP 401 `application/json` response
+	JSON401 *Unauthorized
+	// JSON403 the response for an HTTP 403 `application/json` response
+	JSON403 *Forbidden
+	// JSON404 the response for an HTTP 404 `application/json` response
+	JSON404 *NotFound
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r GetPublishingPageResponse) GetJSON200() *ContentResponse {
+	return r.JSON200
+}
+
+// GetJSON400 returns the response for an HTTP 400 `application/json` response
+func (r GetPublishingPageResponse) GetJSON400() *BadRequest {
+	return r.JSON400
+}
+
+// GetJSON401 returns the response for an HTTP 401 `application/json` response
+func (r GetPublishingPageResponse) GetJSON401() *Unauthorized {
+	return r.JSON401
+}
+
+// GetJSON403 returns the response for an HTTP 403 `application/json` response
+func (r GetPublishingPageResponse) GetJSON403() *Forbidden {
+	return r.JSON403
+}
+
+// GetJSON404 returns the response for an HTTP 404 `application/json` response
+func (r GetPublishingPageResponse) GetJSON404() *NotFound {
+	return r.JSON404
+}
+
+// GetBody returns the raw response body bytes
+func (r GetPublishingPageResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r GetPublishingPageResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetPublishingPageResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r GetPublishingPageResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
 type UpdatePublishingPageResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -13646,6 +14320,68 @@ func (r UpdatePublishingPageResponse) StatusCode() int {
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
 func (r UpdatePublishingPageResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type ListPublishingPostsResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *ContentListResponse
+	// JSON400 the response for an HTTP 400 `application/json` response
+	JSON400 *BadRequest
+	// JSON401 the response for an HTTP 401 `application/json` response
+	JSON401 *Unauthorized
+	// JSON403 the response for an HTTP 403 `application/json` response
+	JSON403 *Forbidden
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r ListPublishingPostsResponse) GetJSON200() *ContentListResponse {
+	return r.JSON200
+}
+
+// GetJSON400 returns the response for an HTTP 400 `application/json` response
+func (r ListPublishingPostsResponse) GetJSON400() *BadRequest {
+	return r.JSON400
+}
+
+// GetJSON401 returns the response for an HTTP 401 `application/json` response
+func (r ListPublishingPostsResponse) GetJSON401() *Unauthorized {
+	return r.JSON401
+}
+
+// GetJSON403 returns the response for an HTTP 403 `application/json` response
+func (r ListPublishingPostsResponse) GetJSON403() *Forbidden {
+	return r.JSON403
+}
+
+// GetBody returns the raw response body bytes
+func (r ListPublishingPostsResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r ListPublishingPostsResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ListPublishingPostsResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r ListPublishingPostsResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
@@ -13805,6 +14541,75 @@ func (r DeletePublishingPostResponse) StatusCode() int {
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
 func (r DeletePublishingPostResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type GetPublishingPostResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *ContentResponse
+	// JSON400 the response for an HTTP 400 `application/json` response
+	JSON400 *BadRequest
+	// JSON401 the response for an HTTP 401 `application/json` response
+	JSON401 *Unauthorized
+	// JSON403 the response for an HTTP 403 `application/json` response
+	JSON403 *Forbidden
+	// JSON404 the response for an HTTP 404 `application/json` response
+	JSON404 *NotFound
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r GetPublishingPostResponse) GetJSON200() *ContentResponse {
+	return r.JSON200
+}
+
+// GetJSON400 returns the response for an HTTP 400 `application/json` response
+func (r GetPublishingPostResponse) GetJSON400() *BadRequest {
+	return r.JSON400
+}
+
+// GetJSON401 returns the response for an HTTP 401 `application/json` response
+func (r GetPublishingPostResponse) GetJSON401() *Unauthorized {
+	return r.JSON401
+}
+
+// GetJSON403 returns the response for an HTTP 403 `application/json` response
+func (r GetPublishingPostResponse) GetJSON403() *Forbidden {
+	return r.JSON403
+}
+
+// GetJSON404 returns the response for an HTTP 404 `application/json` response
+func (r GetPublishingPostResponse) GetJSON404() *NotFound {
+	return r.JSON404
+}
+
+// GetBody returns the raw response body bytes
+func (r GetPublishingPostResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r GetPublishingPostResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetPublishingPostResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r GetPublishingPostResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
@@ -15492,6 +16297,19 @@ func (c *ClientWithResponses) TransitionPublishingWorkflowWithResponse(ctx conte
 	return ParseTransitionPublishingWorkflowResponse(rsp)
 }
 
+// ListPublishingPagesWithResponse List page translations in the current account.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /publishing/pages (the `ListPublishingPages` operationId).
+func (c *ClientWithResponses) ListPublishingPagesWithResponse(ctx context.Context, params *ListPublishingPagesParams, reqEditors ...RequestEditorFn) (*ListPublishingPagesResponse, error) {
+	rsp, err := c.ListPublishingPages(ctx, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseListPublishingPagesResponse(rsp)
+}
+
 // CreatePublishingPageWithBodyWithResponse Create a page translation in the current account.
 //
 // Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
@@ -15544,6 +16362,19 @@ func (c *ClientWithResponses) DeletePublishingPageWithResponse(ctx context.Conte
 	return ParseDeletePublishingPageResponse(rsp)
 }
 
+// GetPublishingPageWithResponse Get a page translation in the current account.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /publishing/pages/{page_id} (the `GetPublishingPage` operationId).
+func (c *ClientWithResponses) GetPublishingPageWithResponse(ctx context.Context, pageId openapi_types.UUID, params *GetPublishingPageParams, reqEditors ...RequestEditorFn) (*GetPublishingPageResponse, error) {
+	rsp, err := c.GetPublishingPage(ctx, pageId, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetPublishingPageResponse(rsp)
+}
+
 // UpdatePublishingPageWithBodyWithResponse Update a page translation using optimistic concurrency.
 //
 // Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
@@ -15568,6 +16399,19 @@ func (c *ClientWithResponses) UpdatePublishingPageWithResponse(ctx context.Conte
 		return nil, err
 	}
 	return ParseUpdatePublishingPageResponse(rsp)
+}
+
+// ListPublishingPostsWithResponse List post translations in the current account.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /publishing/posts (the `ListPublishingPosts` operationId).
+func (c *ClientWithResponses) ListPublishingPostsWithResponse(ctx context.Context, params *ListPublishingPostsParams, reqEditors ...RequestEditorFn) (*ListPublishingPostsResponse, error) {
+	rsp, err := c.ListPublishingPosts(ctx, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseListPublishingPostsResponse(rsp)
 }
 
 // CreatePublishingPostWithBodyWithResponse Create a post translation in the current account.
@@ -15620,6 +16464,19 @@ func (c *ClientWithResponses) DeletePublishingPostWithResponse(ctx context.Conte
 		return nil, err
 	}
 	return ParseDeletePublishingPostResponse(rsp)
+}
+
+// GetPublishingPostWithResponse Get a post translation in the current account.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /publishing/posts/{post_id} (the `GetPublishingPost` operationId).
+func (c *ClientWithResponses) GetPublishingPostWithResponse(ctx context.Context, postId openapi_types.UUID, params *GetPublishingPostParams, reqEditors ...RequestEditorFn) (*GetPublishingPostResponse, error) {
+	rsp, err := c.GetPublishingPost(ctx, postId, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetPublishingPostResponse(rsp)
 }
 
 // UpdatePublishingPostWithBodyWithResponse Update a post translation using optimistic concurrency.
@@ -18907,6 +19764,53 @@ func ParseTransitionPublishingWorkflowResponse(rsp *http.Response) (*TransitionP
 	return response, nil
 }
 
+// ParseListPublishingPagesResponse parses an HTTP response from a ListPublishingPagesWithResponse call
+func ParseListPublishingPagesResponse(rsp *http.Response) (*ListPublishingPagesResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ListPublishingPagesResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest ContentListResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest BadRequest
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest Unauthorized
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest Forbidden
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	}
+
+	return response, nil
+}
+
 // ParseCreatePublishingPageResponse parses an HTTP response from a CreatePublishingPageWithResponse call
 func ParseCreatePublishingPageResponse(rsp *http.Response) (*CreatePublishingPageResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
@@ -19039,6 +19943,60 @@ func ParseDeletePublishingPageResponse(rsp *http.Response) (*DeletePublishingPag
 	return response, nil
 }
 
+// ParseGetPublishingPageResponse parses an HTTP response from a GetPublishingPageWithResponse call
+func ParseGetPublishingPageResponse(rsp *http.Response) (*GetPublishingPageResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetPublishingPageResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest ContentResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest BadRequest
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest Unauthorized
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest Forbidden
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	}
+
+	return response, nil
+}
+
 // ParseUpdatePublishingPageResponse parses an HTTP response from a UpdatePublishingPageWithResponse call
 func ParseUpdatePublishingPageResponse(rsp *http.Response) (*UpdatePublishingPageResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
@@ -19108,6 +20066,53 @@ func ParseUpdatePublishingPageResponse(rsp *http.Response) (*UpdatePublishingPag
 			return nil, err
 		}
 		response.JSON422 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseListPublishingPostsResponse parses an HTTP response from a ListPublishingPostsWithResponse call
+func ParseListPublishingPostsResponse(rsp *http.Response) (*ListPublishingPostsResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ListPublishingPostsResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest ContentListResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest BadRequest
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest Unauthorized
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest Forbidden
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
 
 	}
 
@@ -19240,6 +20245,60 @@ func ParseDeletePublishingPostResponse(rsp *http.Response) (*DeletePublishingPos
 			return nil, err
 		}
 		response.JSON415 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetPublishingPostResponse parses an HTTP response from a GetPublishingPostWithResponse call
+func ParseGetPublishingPostResponse(rsp *http.Response) (*GetPublishingPostResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetPublishingPostResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest ContentResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest BadRequest
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest Unauthorized
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest Forbidden
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
 
 	}
 

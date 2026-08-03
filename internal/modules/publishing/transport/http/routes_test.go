@@ -17,10 +17,14 @@ func TestM3A5RegisterRoutesExposesDraftMutationContract(t *testing.T) {
 		routes[route.Method+" "+route.Path] = struct{}{}
 	}
 	for _, expected := range []string{
+		"GET /api/v1/publishing/pages",
 		"POST /api/v1/publishing/pages",
+		"GET /api/v1/publishing/pages/:page_id",
 		"PATCH /api/v1/publishing/pages/:page_id",
 		"DELETE /api/v1/publishing/pages/:page_id",
+		"GET /api/v1/publishing/posts",
 		"POST /api/v1/publishing/posts",
+		"GET /api/v1/publishing/posts/:post_id",
 		"PATCH /api/v1/publishing/posts/:post_id",
 		"DELETE /api/v1/publishing/posts/:post_id",
 		"GET /api/v1/publishing/content/:content_id/revisions",

@@ -116,7 +116,7 @@ type ContentCommandRepository interface {
 
 func ValidateContentListQuery(query ContentListQuery) error {
 	if !contentIDPattern.MatchString(query.AccountID) ||
-		!contentIDPattern.MatchString(query.LocaleID) ||
+		(!contentIDPattern.MatchString(query.LocaleID) && !validLocaleTag(query.LocaleID)) ||
 		query.Limit < 1 || query.Limit > 100 {
 		return ErrInvalidContentQuery
 	}
@@ -134,4 +134,9 @@ func ValidateContentListQuery(query ContentListQuery) error {
 		return ErrInvalidContentQuery
 	}
 	return nil
+}
+
+func validLocaleTag(value string) bool {
+	_, err := publishingdomain.NormalizeLocale(value)
+	return err == nil
 }

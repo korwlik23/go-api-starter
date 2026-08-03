@@ -2115,6 +2115,32 @@ paths:
         - Publishing
       x-required-permission: publishing.pages.review.any
   /publishing/pages:
+    get:
+      operationId: listPublishingPages
+      parameters:
+        - $ref: '#/components/parameters/ContentLocale'
+        - $ref: '#/components/parameters/ContentLimit'
+        - $ref: '#/components/parameters/ContentAfterUpdatedAt'
+        - $ref: '#/components/parameters/ContentAfterID'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContentListResponse'
+          description: Page translations.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+      security:
+        - SessionCookie: []
+      summary: List page translations in the current account.
+      tags:
+        - Publishing
+      x-required-permission: publishing.pages.read.own
     post:
       operationId: createPublishingPage
       requestBody:
@@ -2194,6 +2220,31 @@ paths:
       tags:
         - Publishing
       x-required-permission: publishing.pages.write.own
+    get:
+      operationId: getPublishingPage
+      parameters:
+        - $ref: '#/components/parameters/ContentLocale'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContentResponse'
+          description: Page translation.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+      security:
+        - SessionCookie: []
+      summary: Get a page translation in the current account.
+      tags:
+        - Publishing
+      x-required-permission: publishing.pages.read.own
     parameters:
       - in: path
         name: page_id
@@ -2238,6 +2289,32 @@ paths:
         - Publishing
       x-required-permission: publishing.pages.write.own
   /publishing/posts:
+    get:
+      operationId: listPublishingPosts
+      parameters:
+        - $ref: '#/components/parameters/ContentLocale'
+        - $ref: '#/components/parameters/ContentLimit'
+        - $ref: '#/components/parameters/ContentAfterUpdatedAt'
+        - $ref: '#/components/parameters/ContentAfterID'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContentListResponse'
+          description: Post translations.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+      security:
+        - SessionCookie: []
+      summary: List post translations in the current account.
+      tags:
+        - Publishing
+      x-required-permission: publishing.pages.read.own
     post:
       operationId: createPublishingPost
       requestBody:
@@ -2317,6 +2394,31 @@ paths:
       tags:
         - Publishing
       x-required-permission: publishing.pages.write.own
+    get:
+      operationId: getPublishingPost
+      parameters:
+        - $ref: '#/components/parameters/ContentLocale'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContentResponse'
+          description: Post translation.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+      security:
+        - SessionCookie: []
+      summary: Get a post translation in the current account.
+      tags:
+        - Publishing
+      x-required-permission: publishing.pages.read.own
     parameters:
       - in: path
         name: post_id
@@ -2575,6 +2677,34 @@ paths:
       x-required-permission: identity.users.manage.system
 components:
   parameters:
+    ContentAfterID:
+      in: query
+      name: after_id
+      schema:
+        format: uuid
+        type: string
+    ContentAfterUpdatedAt:
+      in: query
+      name: after_updated_at
+      schema:
+        format: date-time
+        type: string
+    ContentLimit:
+      in: query
+      name: limit
+      schema:
+        default: 50
+        maximum: 100
+        minimum: 1
+        type: integer
+    ContentLocale:
+      in: query
+      name: locale
+      required: true
+      schema:
+        maxLength: 255
+        minLength: 2
+        type: string
     Page:
       description: One-based page number.
       in: query
@@ -3068,6 +3198,19 @@ components:
       required:
         - items
       type: object
+    ContentCursor:
+      additionalProperties: false
+      properties:
+        id:
+          format: uuid
+          type: string
+        updated_at:
+          format: date-time
+          type: string
+      required:
+        - updated_at
+        - id
+      type: object
     ContentDeleteRequest:
       additionalProperties: false
       properties:
@@ -3084,6 +3227,87 @@ components:
         - translation_id
         - locale_id
         - expected_version
+      type: object
+    ContentListItem:
+      additionalProperties: false
+      properties:
+        account_id:
+          format: uuid
+          type: string
+        content_id:
+          format: uuid
+          type: string
+        content_key:
+          type: string
+        content_status:
+          enum:
+            - draft
+            - review
+            - published
+            - scheduled
+            - archived
+          type: string
+        content_version:
+          minimum: 1
+          type: integer
+        kind:
+          enum:
+            - page
+            - post
+          type: string
+        locale_id:
+          format: uuid
+          type: string
+        path:
+          type: string
+        slug:
+          type: string
+        title:
+          type: string
+        translation_id:
+          format: uuid
+          type: string
+        translation_status:
+          enum:
+            - draft
+            - review
+            - published
+            - scheduled
+            - archived
+          type: string
+        translation_version:
+          minimum: 1
+          type: integer
+        updated_at:
+          format: date-time
+          type: string
+      required:
+        - content_id
+        - account_id
+        - locale_id
+        - kind
+        - content_key
+        - content_status
+        - content_version
+        - translation_id
+        - translation_status
+        - translation_version
+        - slug
+        - path
+        - title
+        - updated_at
+      type: object
+    ContentListResponse:
+      additionalProperties: false
+      properties:
+        items:
+          items:
+            $ref: '#/components/schemas/ContentListItem'
+          type: array
+        next:
+          $ref: '#/components/schemas/ContentCursor'
+      required:
+        - items
       type: object
     ContentMutationRequest:
       additionalProperties: false

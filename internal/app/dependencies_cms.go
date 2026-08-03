@@ -110,7 +110,11 @@ func buildCMSRuntime(
 	if err != nil {
 		return cmsRouteRegistration{}, err
 	}
-	contentHandler, err := publishinghttp.NewContentHandler(contentMutations, authorization.accounts)
+	contentQueries, err := contentapp.NewContentQueries(contentapp.ContentQueryDependencies{Repository: contentRepository})
+	if err != nil {
+		return cmsRouteRegistration{}, err
+	}
+	contentHandler, err := publishinghttp.NewContentHandlerWithQueries(contentMutations, contentQueries, authorization.accounts)
 	if err != nil {
 		return cmsRouteRegistration{}, err
 	}
