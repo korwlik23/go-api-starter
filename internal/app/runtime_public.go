@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
+	"strings"
 	"time"
 
 	operationsgorm "github.com/korwlik23/go-api-starter/internal/modules/operations/adapters/gorm"
@@ -142,12 +143,21 @@ func buildPublicRuntime(
 		return fail(err)
 	}
 
+	readinessProbes := []httpserver.Probe{
+		{Name: "database", Critical: true, Check: sqlDB.PingContext},
+		{Name: "module_projection", Critical: true, Check: moduleProbe},
+	}
+	if storageRoot := strings.TrimSpace(cfg.Media.StorageRoot); storageRoot != "" {
+		readinessProbes = append(readinessProbes, httpserver.Probe{
+			Name: "media_storage", Critical: true,
+			Check: func(probeContext context.Context) error {
+				return checkStorageRoot(probeContext, storageRoot)
+			},
+		})
+	}
 	readiness := httpserver.NewReadinessGate(httpserver.Readiness{
 		Timeout: cfg.Database.ConnectTimeout,
-		Probes: []httpserver.Probe{
-			{Name: "database", Critical: true, Check: sqlDB.PingContext},
-			{Name: "module_projection", Critical: true, Check: moduleProbe},
-		},
+		Probes:  readinessProbes,
 	})
 	router := httpserver.NewRouter(readiness)
 	if trustedProxies.Enabled() {
