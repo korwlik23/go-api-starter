@@ -50,8 +50,8 @@ func TestAuthorizationCompositionRegistersProtectedReadRoutes(t *testing.T) {
 
 	require.ElementsMatch(t, []string{
 		"GET /api/v1/account",
-		"GET /api/v1/authorization/permissions",
-		"GET /api/v1/system/modules",
+		"GET /api/v1/authorization/effective-permissions",
+		"GET /api/v1/operations/modules",
 		"GET /api/v1/authorization/roles",
 		"POST /api/v1/authorization/roles",
 		"PATCH /api/v1/authorization/roles/:role_id",

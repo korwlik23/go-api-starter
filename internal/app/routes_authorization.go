@@ -15,11 +15,11 @@ func RegisterAuthorizationRoutes(
 		runtime.currentAccount.Get,
 	)
 	protected.GET(
-		"/authorization/permissions",
+		"/authorization/effective-permissions",
 		runtime.effectiveGuard,
 		runtime.effectivePermissions.GetEffective,
 	)
-	protected.GET("/system/modules", runtime.modulesGuard, runtime.modules.List)
+	protected.GET("/operations/modules", runtime.modulesGuard, runtime.modules.List)
 	protected.GET(
 		"/authorization/roles",
 		runtime.rolesReadGuard,
