@@ -155,7 +155,12 @@ func buildPublicRuntime(
 			return fail(fmt.Errorf("app: invalid trusted proxy configuration"))
 		}
 	}
-	router.Use(platformmiddleware.RequestID(nil), cors, identity.rateLimits.Baseline)
+	router.Use(
+		platformmiddleware.SecurityHeaders(),
+		platformmiddleware.RequestID(nil),
+		cors,
+		identity.rateLimits.Baseline,
+	)
 	RegisterPublicSystemRoutes(
 		router.Group("/api/v1"),
 		localization.locales,
