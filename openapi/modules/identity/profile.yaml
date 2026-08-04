@@ -31,6 +31,24 @@ paths:
         '401': {$ref: ../../common/errors.yaml#/components/responses/Unauthorized}
         '403': {$ref: ../../common/errors.yaml#/components/responses/Forbidden}
         '409': {$ref: ../../common/errors.yaml#/components/responses/Conflict}
+  /me/password:
+    patch:
+      tags: [Identity]
+      summary: Change the authenticated user's password and invalidate existing sessions.
+      operationId: changeMyPassword
+      x-surfaces: [admin]
+      x-required-permission: identity.password.manage.own
+      security: [{SessionCookie: [], CSRFToken: []}]
+      requestBody:
+        required: true
+        content: {application/json: {schema: {$ref: '#/components/schemas/MyPasswordChangeRequest'}}}
+      responses:
+        '204':
+          description: Password changed and the current session cookie cleared.
+        '400': {$ref: ../../common/errors.yaml#/components/responses/BadRequest}
+        '401': {$ref: ../../common/errors.yaml#/components/responses/Unauthorized}
+        '403': {$ref: ../../common/errors.yaml#/components/responses/Forbidden}
+        '422': {$ref: ../../common/errors.yaml#/components/responses/BadRequest}
 components:
   schemas:
     UserProfile:
@@ -53,3 +71,10 @@ components:
         timezone: {type: string, maxLength: 64}
         preferred_locale: {type: string, maxLength: 32}
         expected_version: {type: integer, minimum: 1}
+    MyPasswordChangeRequest:
+      type: object
+      additionalProperties: false
+      required: [current_password, new_password]
+      properties:
+        current_password: {type: string, minLength: 1, writeOnly: true}
+        new_password: {type: string, minLength: 12, maxLength: 128, writeOnly: true}

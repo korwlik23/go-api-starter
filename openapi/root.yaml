@@ -38,6 +38,8 @@ paths:
     $ref: ./modules/identity/recovery.yaml#/paths/~1auth~1password~1reset
   /me/profile:
     $ref: ./modules/identity/profile.yaml#/paths/~1me~1profile
+  /me/password:
+    $ref: ./modules/identity/profile.yaml#/paths/~1me~1password
   /accounts/current:
     $ref: ./modules/accounts/accounts.yaml#/paths/~1accounts~1current
   /accounts/{account_id}/memberships:

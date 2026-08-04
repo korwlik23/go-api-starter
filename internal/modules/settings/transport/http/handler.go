@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"net/http"
-	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
@@ -93,5 +92,3 @@ func writeServiceError(ctx *gin.Context, err error) {
 func writeProblem(ctx *gin.Context, status int, cause error) {
 	response.WriteProblem(ctx, status, middleware.RequestIDFromContext(ctx.Request.Context()), response.NewProblem("settings_request_failed", "The settings request could not be completed.", nil, cause))
 }
-
-var _ = strconv.IntSize

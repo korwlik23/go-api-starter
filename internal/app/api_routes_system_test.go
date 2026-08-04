@@ -45,12 +45,15 @@ func TestW2CPublicLocalizationRoutes(t *testing.T) {
 func TestW2CProtectedLocalizationRoutes(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	router := gin.New()
+	transfer, err := localizationhttp.NewImportExportHandler(stubCatalogImporterExporter{})
+	require.NoError(t, err)
 
 	RegisterProtectedSystemRoutes(
 		router.Group("/api/v1"),
 		&localizationhttp.LocaleManagementHandler{},
 		&localizationhttp.CatalogHandler{},
 		&localizationhttp.PreferenceHandler{},
+		transfer,
 	)
 
 	require.ElementsMatch(t, []string{
@@ -59,9 +62,21 @@ func TestW2CProtectedLocalizationRoutes(t *testing.T) {
 		"PATCH /api/v1/locales/:locale_id/status",
 		"PUT /api/v1/locales/:locale_id/default",
 		"PUT /api/v1/localization/catalog",
+		"GET /api/v1/localization/catalog/export",
+		"POST /api/v1/localization/catalog/import",
 		"GET /api/v1/locales/preferences",
 		"PUT /api/v1/locales/preferences",
 	}, routeKeys(router))
+}
+
+type stubCatalogImporterExporter struct{}
+
+func (stubCatalogImporterExporter) Export(context.Context, string, string, string) (catalogapp.ExportResult, error) {
+	return catalogapp.ExportResult{Locale: "en", Category: "common", Version: 1, Entries: map[string]string{}}, nil
+}
+
+func (stubCatalogImporterExporter) Import(context.Context, string, string, string, map[string]string, int64, string) (int64, error) {
+	return 1, nil
 }
 
 type stubLocaleLister struct{}

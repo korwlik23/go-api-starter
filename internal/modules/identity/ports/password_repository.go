@@ -20,6 +20,7 @@ type PasswordWriter interface {
 		changedAt time.Time,
 	) error
 	RehashPassword(ctx context.Context, userID string, passwordHash string) error
+	ChangePasswordAndInvalidate(ctx context.Context, userID, passwordHash string, changedAt time.Time) error
 }
 
 type PasswordVerifier interface {

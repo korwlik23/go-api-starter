@@ -10,4 +10,7 @@ func RegisterIdentityProfileRoutes(router *gin.RouterGroup, identity identityRun
 	protected.Use(identity.authenticate, identity.csrf)
 	protected.GET("/me/profile", authorization.profileReadGuard, identity.profile.Get)
 	protected.PATCH("/me/profile", authorization.profileManageGuard, identity.profile.Update)
+	if identity.password != nil && authorization.passwordManageGuard != nil {
+		protected.PATCH("/me/password", authorization.passwordManageGuard, identity.password.Change)
+	}
 }

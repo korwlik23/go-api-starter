@@ -2,8 +2,9 @@
 
 Go + Gin API starter และ OpenAPI source of truth สำหรับ `go-lang-starter` suite
 
-> สถานะปัจจุบัน: มี API process/config/HTTP/database foundation แล้ว แต่ dependency
-> composition, migrations และ feature modules ยังอยู่ระหว่างพัฒนา
+> สถานะปัจจุบัน: มี API process/config/HTTP/database foundation และ personal
+> Back Office baseline พร้อมต่อยอดเป็น project ใหม่ได้ โดย SaaS tenancy/billing
+> ยังแยกไว้สำหรับ `go-lang-starter-saas`
 
 ## Stack
 
@@ -27,6 +28,13 @@ Repository นี้เป็นเจ้าของ:
 - authentication, opaque server-side sessions, CSRF/CORS และ rate limiting
 - permission-based authorization แบบ default deny โดยไม่ hardcode role name
 - locale registry และ translation catalog ที่ system permission จัดการได้
+- system settings, in-app notifications และ durable operations jobs
+- profile/password self-service พร้อม session invalidation และ permission guards
+- catalog import/export, backup manifest verification และ local mail provider boundary
+
+ฟีเจอร์ที่ตั้งใจให้เป็น provider/module ต่อเติมภายหลัง ได้แก่ registration/email
+verification delivery, SMTP, S3/MinIO และ legal/demo content seed; ไม่ฝัง SaaS
+tenancy, billing, subscription หรือ Stripe ไว้ใน starter ส่วนตัว
 
 Admin และ Site ต้องใช้ generated clients จาก immutable OpenAPI artifacts ห้าม import
 runtime source จาก repository นี้โดยตรง
@@ -52,8 +60,9 @@ go build ./cmd/api
 go run ./cmd/api
 ```
 
-ขณะนี้ `cmd/api` เป็น process-lifecycle entry point และยังไม่ได้เชื่อม HTTP/database
-dependencies เข้ากับ application composition
+`cmd/api` เป็น process-lifecycle entry point ของ runtime composition ส่วน `cmd/migrate`,
+`cmd/bootstrap` และ `cmd/backup` ใช้สำหรับ schema, local foundation และ backup manifest
+ตามลำดับ
 
 ## Database profiles
 

@@ -58,6 +58,11 @@ func TestOpenAPISurfaceIsolation(t *testing.T) {
 		"issuePublishingPreview", "listPublishingRevisions", "rollbackPublishingRevision",
 		"transitionPublishingWorkflow", "listPublishingSchedules", "createPublishingSchedule", "cancelPublishingSchedule",
 		"updateTranslationCatalog", "updateAdminUserStatus", "updateMembershipStatus", "verifyMFA",
+		"changeMyPassword", "getMyProfile", "updateMyProfile",
+		"listGlobalSettings", "updateGlobalSetting",
+		"listNotifications", "markNotificationRead", "markAllNotificationsRead",
+		"listOperationJobs", "enqueueOperationJob", "retryOperationJob",
+		"exportTranslationCatalog", "importTranslationCatalog",
 	}, surfaces["admin"])
 	require.ElementsMatch(t, []string{
 		"exchangePublicPreview", "getPublicContent", "getPublicMenu", "getPublicPost",
@@ -89,6 +94,11 @@ func TestGeneratedSurfaceBundlesContainOnlyTheirOperations(t *testing.T) {
 			"issuePublishingPreview", "listPublishingRevisions", "rollbackPublishingRevision",
 			"transitionPublishingWorkflow", "listPublishingSchedules", "createPublishingSchedule", "cancelPublishingSchedule",
 			"updateTranslationCatalog", "updateAdminUserStatus", "updateMembershipStatus", "verifyMFA",
+			"changeMyPassword", "getMyProfile", "updateMyProfile",
+			"listGlobalSettings", "updateGlobalSetting",
+			"listNotifications", "markNotificationRead", "markAllNotificationsRead",
+			"listOperationJobs", "enqueueOperationJob", "retryOperationJob",
+			"exportTranslationCatalog", "importTranslationCatalog",
 		},
 		"public": {
 			"exchangePublicPreview", "getPublicContent", "getPublicMenu", "getPublicPost",

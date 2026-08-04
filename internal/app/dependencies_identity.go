@@ -32,6 +32,7 @@ const (
 type identityRuntime struct {
 	handlers     identityhttp.RouteHandlers
 	profile      *identityhttp.ProfileHandler
+	password     *identityhttp.PasswordHandler
 	rateLimits   identityhttp.RateLimits
 	authenticate gin.HandlerFunc
 	csrf         gin.HandlerFunc
@@ -82,6 +83,20 @@ func buildIdentityRuntime(
 	if err != nil {
 		return identityRuntime{}, err
 	}
+	passwordService, err := identityapp.NewChangePasswordService(identityapp.ChangePasswordDependencies{
+		Passwords: repositories.passwords,
+		Writer:    repositories.passwords,
+		Verifier:  security.passwords,
+		Hasher:    security.passwords,
+		Now:       time.Now,
+	})
+	if err != nil {
+		return identityRuntime{}, err
+	}
+	passwordHandler, err := identityhttp.NewPasswordHandler(passwordService, cookie.Clear)
+	if err != nil {
+		return identityRuntime{}, err
+	}
 	authenticate, err := platformmiddleware.NewSessionAuthentication(
 		platformmiddleware.SessionAuthenticationConfig{
 			CookieName:            cookie.Name(),
@@ -113,7 +128,7 @@ func buildIdentityRuntime(
 		return identityRuntime{}, err
 	}
 	return identityRuntime{
-		handlers: handlers, profile: profileHandler, rateLimits: rateLimits,
+		handlers: handlers, profile: profileHandler, password: passwordHandler, rateLimits: rateLimits,
 		authenticate: authenticate, csrf: csrf,
 	}, nil
 }

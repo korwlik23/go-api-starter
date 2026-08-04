@@ -2,7 +2,6 @@ package app
 
 import (
 	"github.com/gin-gonic/gin"
-	settingshttp "github.com/korwlik23/go-api-starter/internal/modules/settings/transport/http"
 )
 
 func RegisterSettingsRoutes(router *gin.RouterGroup, runtime settingsRuntime, identity identityRuntime) {
@@ -14,5 +13,3 @@ func RegisterSettingsRoutes(router *gin.RouterGroup, runtime settingsRuntime, id
 	protected.GET("/settings", runtime.readGuard, runtime.handler.List)
 	protected.PUT("/settings/:key", runtime.manageGuard, runtime.handler.Update)
 }
-
-var _ = settingshttp.RegisterRoutes

@@ -1519,6 +1519,33 @@ paths:
       tags:
         - Localization
       x-required-permission: localization.translations.update.system
+  /me/password:
+    patch:
+      operationId: changeMyPassword
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MyPasswordChangeRequest'
+        required: true
+      responses:
+        '204':
+          description: Password changed and the current session cookie cleared.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/BadRequest'
+      security:
+        - CSRFToken: []
+          SessionCookie: []
+      summary: Change the authenticated user's password and invalidate existing sessions.
+      tags:
+        - Identity
+      x-required-permission: identity.password.manage.own
   /me/profile:
     get:
       operationId: getMyProfile
@@ -4688,6 +4715,22 @@ components:
         - id
         - enabled
         - reconcile_revision
+      type: object
+    MyPasswordChangeRequest:
+      additionalProperties: false
+      properties:
+        current_password:
+          minLength: 1
+          type: string
+          writeOnly: true
+        new_password:
+          maxLength: 128
+          minLength: 12
+          type: string
+          writeOnly: true
+      required:
+        - current_password
+        - new_password
       type: object
     Notification:
       properties:

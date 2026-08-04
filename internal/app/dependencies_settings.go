@@ -1,16 +1,12 @@
 package app
 
 import (
-	"errors"
-
 	"github.com/gin-gonic/gin"
 	settingsmodule "github.com/korwlik23/go-api-starter/internal/modules/settings"
 	settingsgorm "github.com/korwlik23/go-api-starter/internal/modules/settings/adapters/gorm"
 	settingsapp "github.com/korwlik23/go-api-starter/internal/modules/settings/application"
 	settingshttp "github.com/korwlik23/go-api-starter/internal/modules/settings/transport/http"
 )
-
-var errSettingsComposition = errors.New("app: settings composition failed")
 
 type settingsRuntime struct {
 	handler     *settingshttp.Handler
@@ -41,5 +37,3 @@ func buildSettingsRuntime(authorization authorizationRuntime) (settingsRuntime, 
 	}
 	return settingsRuntime{handler: handler, readGuard: readGuard, manageGuard: manageGuard}, nil
 }
-
-var _ = errSettingsComposition

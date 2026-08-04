@@ -2,7 +2,6 @@ package app
 
 import (
 	"github.com/gin-gonic/gin"
-	notificationshttp "github.com/korwlik23/go-api-starter/internal/modules/notifications/transport/http"
 )
 
 func RegisterNotificationsRoutes(router *gin.RouterGroup, runtime notificationsRuntime, identity identityRuntime) {
@@ -15,5 +14,3 @@ func RegisterNotificationsRoutes(router *gin.RouterGroup, runtime notificationsR
 	protected.PATCH("/notifications/:notification_id/read", runtime.manageGuard, runtime.handler.MarkRead)
 	protected.POST("/notifications/read-all", runtime.manageGuard, runtime.handler.MarkAllRead)
 }
-
-var _ = notificationshttp.RegisterRoutes
