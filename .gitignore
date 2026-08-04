@@ -36,6 +36,14 @@ openapi/dist/*
 
 # Logs, editors, and operating systems
 *.log
+
+# Local Windows build outputs
+/api
+/api.exe
+/bootstrap
+/bootstrap.exe
+/healthcheck
+/healthcheck.exe
 .idea/
 .vscode/*
 !.vscode/extensions.json
