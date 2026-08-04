@@ -1455,6 +1455,120 @@ paths:
       tags:
         - Localization
       x-required-permission: localization.translations.update.system
+  /localization/catalog/export:
+    get:
+      operationId: exportTranslationCatalog
+      parameters:
+        - in: query
+          name: locale
+          required: true
+          schema:
+            type: string
+        - in: query
+          name: category
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CatalogExport'
+          description: Translation export.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+      security:
+        - SessionCookie: []
+      summary: Export editable translation overrides as JSON.
+      tags:
+        - Localization
+      x-required-permission: localization.translations.read.system
+  /localization/catalog/import:
+    post:
+      operationId: importTranslationCatalog
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CatalogImportRequest'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CatalogImportResponse'
+          description: Imported catalog version.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+      security:
+        - CSRFToken: []
+          SessionCookie: []
+      summary: Import editable translation overrides from JSON.
+      tags:
+        - Localization
+      x-required-permission: localization.translations.update.system
+  /me/profile:
+    get:
+      operationId: getMyProfile
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfile'
+          description: Profile.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+      security:
+        - SessionCookie: []
+      summary: Read the authenticated user's profile.
+      tags:
+        - Identity
+      x-required-permission: identity.profile.read.own
+    patch:
+      operationId: updateMyProfile
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserProfileUpdateRequest'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfile'
+          description: Updated profile.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+      security:
+        - CSRFToken: []
+          SessionCookie: []
+      summary: Update the authenticated user's profile.
+      tags:
+        - Identity
+      x-required-permission: identity.profile.manage.own
   /media/assets:
     get:
       operationId: listMediaAssets
@@ -1876,6 +1990,145 @@ paths:
       tags:
         - Navigation
       x-required-permission: navigation.menus.write.own
+  /notifications:
+    get:
+      operationId: listNotifications
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificationListResponse'
+          description: Notifications ordered newest first.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+      security:
+        - SessionCookie: []
+      summary: List the authenticated user's notifications.
+      tags:
+        - Notifications
+      x-required-permission: notifications.inbox.read.own
+  /notifications/read-all:
+    post:
+      operationId: markAllNotificationsRead
+      responses:
+        '204':
+          description: Notifications marked read.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+      security:
+        - CSRFToken: []
+          SessionCookie: []
+      summary: Mark all notifications as read.
+      tags:
+        - Notifications
+      x-required-permission: notifications.inbox.manage.own
+  /notifications/{notification_id}/read:
+    patch:
+      operationId: markNotificationRead
+      parameters:
+        - in: path
+          name: notification_id
+          required: true
+          schema:
+            format: uuid
+            type: string
+      responses:
+        '204':
+          description: Notification marked read.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+      security:
+        - CSRFToken: []
+          SessionCookie: []
+      summary: Mark one notification as read.
+      tags:
+        - Notifications
+      x-required-permission: notifications.inbox.manage.own
+  /operations/jobs:
+    get:
+      operationId: listOperationJobs
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobListResponse'
+          description: Durable jobs.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+      security:
+        - SessionCookie: []
+      summary: List durable operation jobs.
+      tags:
+        - Operations
+      x-required-permission: operations.jobs.read.system
+    post:
+      operationId: enqueueOperationJob
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/JobEnqueueRequest'
+        required: true
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OperationJob'
+          description: Queued job.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+      security:
+        - CSRFToken: []
+          SessionCookie: []
+      summary: Enqueue a durable operation job.
+      tags:
+        - Operations
+      x-required-permission: operations.jobs.manage.system
+  /operations/jobs/{job_id}/retry:
+    post:
+      operationId: retryOperationJob
+      parameters:
+        - in: path
+          name: job_id
+          required: true
+          schema:
+            format: uuid
+            type: string
+      responses:
+        '204':
+          description: Job requeued.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+      security:
+        - CSRFToken: []
+          SessionCookie: []
+      summary: Retry a failed operation job.
+      tags:
+        - Operations
+      x-required-permission: operations.jobs.manage.system
   /operations/modules:
     get:
       operationId: listEnabledModules
@@ -2570,6 +2823,65 @@ paths:
       tags:
         - Publishing
       x-required-permission: publishing.pages.publish.any
+  /settings:
+    get:
+      operationId: listGlobalSettings
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SettingListResponse'
+          description: Editable global settings.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+      security:
+        - SessionCookie: []
+      summary: List non-secret global settings.
+      tags:
+        - Settings
+      x-required-permission: settings.global.read.system
+  /settings/{key}:
+    put:
+      operationId: updateGlobalSetting
+      parameters:
+        - in: path
+          name: key
+          required: true
+          schema:
+            maxLength: 128
+            pattern: ^[a-z][a-z0-9]*(?:[._-][a-z0-9]+)*$
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SettingUpdateRequest'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Setting'
+          description: Saved setting.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+      security:
+        - CSRFToken: []
+          SessionCookie: []
+      summary: Create or update a non-secret global setting.
+      tags:
+        - Settings
+      x-required-permission: settings.global.manage.system
   /users:
     get:
       operationId: listAdminUsers
@@ -3119,6 +3431,59 @@ components:
       required:
         - csrf_token
       type: object
+    CatalogExport:
+      properties:
+        category:
+          type: string
+        entries:
+          additionalProperties:
+            type: string
+          type: object
+        locale:
+          type: string
+        version:
+          minimum: 0
+          type: integer
+      required:
+        - locale
+        - category
+        - version
+        - entries
+      type: object
+    CatalogImportRequest:
+      additionalProperties: false
+      properties:
+        category:
+          type: string
+        entries:
+          additionalProperties:
+            type: string
+          type: object
+        expected_version:
+          minimum: 0
+          type: integer
+        locale:
+          type: string
+      required:
+        - locale
+        - category
+        - expected_version
+        - entries
+      type: object
+    CatalogImportResponse:
+      properties:
+        category:
+          type: string
+        locale:
+          type: string
+        version:
+          minimum: 1
+          type: integer
+      required:
+        - locale
+        - category
+        - version
+      type: object
     ContentAudit:
       additionalProperties: false
       properties:
@@ -3663,6 +4028,28 @@ components:
       required:
         - region
         - locality
+      type: object
+    JobEnqueueRequest:
+      additionalProperties: false
+      properties:
+        name:
+          maxLength: 128
+          type: string
+        payload:
+          additionalProperties: true
+          type: object
+      required:
+        - name
+        - payload
+      type: object
+    JobListResponse:
+      properties:
+        items:
+          items:
+            $ref: '#/components/schemas/OperationJob'
+          type: array
+      required:
+        - items
       type: object
     Locale:
       additionalProperties: false
@@ -4301,6 +4688,85 @@ components:
         - id
         - enabled
         - reconcile_revision
+      type: object
+    Notification:
+      properties:
+        body:
+          maxLength: 16384
+          type: string
+        created_at:
+          format: date-time
+          type: string
+        id:
+          format: uuid
+          type: string
+        kind:
+          maxLength: 32
+          type: string
+        read_at:
+          format: date-time
+          nullable: true
+          type: string
+        title:
+          maxLength: 255
+          type: string
+        user_id:
+          format: uuid
+          type: string
+      required:
+        - id
+        - user_id
+        - title
+        - body
+        - kind
+        - created_at
+      type: object
+    NotificationListResponse:
+      properties:
+        items:
+          items:
+            $ref: '#/components/schemas/Notification'
+          type: array
+      required:
+        - items
+      type: object
+    OperationJob:
+      properties:
+        attempts:
+          minimum: 0
+          type: integer
+        created_at:
+          format: date-time
+          type: string
+        id:
+          format: uuid
+          type: string
+        last_error:
+          nullable: true
+          type: string
+        name:
+          type: string
+        payload:
+          additionalProperties: true
+          type: object
+        state:
+          enum:
+            - queued
+            - running
+            - failed
+            - done
+          type: string
+        updated_at:
+          format: date-time
+          type: string
+      required:
+        - id
+        - name
+        - payload
+        - state
+        - attempts
+        - created_at
+        - updated_at
       type: object
     PageInfo:
       additionalProperties: false
@@ -5170,6 +5636,42 @@ components:
       required:
         - expected_version
       type: object
+    Setting:
+      properties:
+        key:
+          type: string
+        value:
+          type: string
+        version:
+          minimum: 1
+          type: integer
+      required:
+        - key
+        - value
+        - version
+      type: object
+    SettingListResponse:
+      properties:
+        items:
+          items:
+            $ref: '#/components/schemas/Setting'
+          type: array
+      required:
+        - items
+      type: object
+    SettingUpdateRequest:
+      additionalProperties: false
+      properties:
+        expected_version:
+          minimum: 0
+          type: integer
+        value:
+          maxLength: 16384
+          type: string
+      required:
+        - value
+        - expected_version
+      type: object
     SystemRoleAssignmentRequest:
       additionalProperties: false
       properties:
@@ -5312,6 +5814,59 @@ components:
         - state
         - version
         - expires_at
+      type: object
+    UserProfile:
+      properties:
+        created_at:
+          format: date-time
+          type: string
+        display_name:
+          maxLength: 128
+          type: string
+        preferred_locale:
+          maxLength: 32
+          type: string
+        timezone:
+          maxLength: 64
+          type: string
+        updated_at:
+          format: date-time
+          type: string
+        user_id:
+          format: uuid
+          type: string
+        version:
+          minimum: 1
+          type: integer
+      required:
+        - user_id
+        - display_name
+        - timezone
+        - preferred_locale
+        - version
+        - created_at
+        - updated_at
+      type: object
+    UserProfileUpdateRequest:
+      additionalProperties: false
+      properties:
+        display_name:
+          maxLength: 128
+          type: string
+        expected_version:
+          minimum: 1
+          type: integer
+        preferred_locale:
+          maxLength: 32
+          type: string
+        timezone:
+          maxLength: 64
+          type: string
+      required:
+        - display_name
+        - timezone
+        - preferred_locale
+        - expected_version
       type: object
     WorkflowRequest:
       additionalProperties: false

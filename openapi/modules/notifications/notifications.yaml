@@ -1,0 +1,60 @@
+paths:
+  /notifications:
+    get:
+      tags: [Notifications]
+      summary: List the authenticated user's notifications.
+      operationId: listNotifications
+      x-surfaces: [admin]
+      x-required-permission: notifications.inbox.read.own
+      security: [{SessionCookie: []}]
+      responses:
+        '200':
+          description: Notifications ordered newest first.
+          content: {application/json: {schema: {$ref: '#/components/schemas/NotificationListResponse'}}}
+        '401': {$ref: ../../common/errors.yaml#/components/responses/Unauthorized}
+        '403': {$ref: ../../common/errors.yaml#/components/responses/Forbidden}
+  /notifications/{notification_id}/read:
+    patch:
+      tags: [Notifications]
+      summary: Mark one notification as read.
+      operationId: markNotificationRead
+      x-surfaces: [admin]
+      x-required-permission: notifications.inbox.manage.own
+      security: [{SessionCookie: [], CSRFToken: []}]
+      parameters:
+        - {name: notification_id, in: path, required: true, schema: {type: string, format: uuid}}
+      responses:
+        '204': {description: Notification marked read.}
+        '401': {$ref: ../../common/errors.yaml#/components/responses/Unauthorized}
+        '403': {$ref: ../../common/errors.yaml#/components/responses/Forbidden}
+        '404': {$ref: ../../common/errors.yaml#/components/responses/NotFound}
+  /notifications/read-all:
+    post:
+      tags: [Notifications]
+      summary: Mark all notifications as read.
+      operationId: markAllNotificationsRead
+      x-surfaces: [admin]
+      x-required-permission: notifications.inbox.manage.own
+      security: [{SessionCookie: [], CSRFToken: []}]
+      responses:
+        '204': {description: Notifications marked read.}
+        '401': {$ref: ../../common/errors.yaml#/components/responses/Unauthorized}
+        '403': {$ref: ../../common/errors.yaml#/components/responses/Forbidden}
+components:
+  schemas:
+    NotificationListResponse:
+      type: object
+      required: [items]
+      properties:
+        items: {type: array, items: {$ref: '#/components/schemas/Notification'}}
+    Notification:
+      type: object
+      required: [id, user_id, title, body, kind, created_at]
+      properties:
+        id: {type: string, format: uuid}
+        user_id: {type: string, format: uuid}
+        title: {type: string, maxLength: 255}
+        body: {type: string, maxLength: 16384}
+        kind: {type: string, maxLength: 32}
+        read_at: {type: string, format: date-time, nullable: true}
+        created_at: {type: string, format: date-time}

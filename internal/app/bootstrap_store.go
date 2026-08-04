@@ -156,6 +156,16 @@ func (session *bootstrapSession) Create(
 			},
 		},
 		{
+			table: "user_profiles",
+			values: map[string]any{
+				"user_id":          ids.user,
+				"display_name":     "",
+				"timezone":         "UTC",
+				"preferred_locale": "",
+				"version":          1,
+			},
+		},
+		{
 			table: "memberships",
 			values: map[string]any{
 				"id":                    ids.membership,

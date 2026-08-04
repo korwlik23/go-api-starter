@@ -36,6 +36,8 @@ paths:
     $ref: ./modules/identity/recovery.yaml#/paths/~1auth~1password~1recovery
   /auth/password/reset:
     $ref: ./modules/identity/recovery.yaml#/paths/~1auth~1password~1reset
+  /me/profile:
+    $ref: ./modules/identity/profile.yaml#/paths/~1me~1profile
   /accounts/current:
     $ref: ./modules/accounts/accounts.yaml#/paths/~1accounts~1current
   /accounts/{account_id}/memberships:
@@ -72,8 +74,26 @@ paths:
     $ref: ./modules/localization/preferences.yaml#/paths/~1locales~1preferences
   /localization/catalog:
     $ref: ./modules/localization/catalog.yaml#/paths/~1localization~1catalog
+  /localization/catalog/export:
+    $ref: ./modules/localization/import-export.yaml#/paths/~1localization~1catalog~1export
+  /localization/catalog/import:
+    $ref: ./modules/localization/import-export.yaml#/paths/~1localization~1catalog~1import
   /operations/modules:
     $ref: ./modules/operations/modules.yaml#/paths/~1operations~1modules
+  /operations/jobs:
+    $ref: ./modules/operations/jobs.yaml#/paths/~1operations~1jobs
+  /operations/jobs/{job_id}/retry:
+    $ref: ./modules/operations/jobs.yaml#/paths/~1operations~1jobs~1{job_id}~1retry
+  /settings:
+    $ref: ./modules/settings/settings.yaml#/paths/~1settings
+  /settings/{key}:
+    $ref: ./modules/settings/settings.yaml#/paths/~1settings~1{key}
+  /notifications:
+    $ref: ./modules/notifications/notifications.yaml#/paths/~1notifications
+  /notifications/{notification_id}/read:
+    $ref: ./modules/notifications/notifications.yaml#/paths/~1notifications~1{notification_id}~1read
+  /notifications/read-all:
+    $ref: ./modules/notifications/notifications.yaml#/paths/~1notifications~1read-all
   /audit/events:
     $ref: ./modules/audit/events.yaml#/paths/~1audit~1events
   /media/uploads:

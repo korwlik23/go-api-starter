@@ -706,6 +706,30 @@ func (e MenuItemInputTargetKind) Valid() bool {
 	}
 }
 
+// Defines values for OperationJobState.
+const (
+	OperationJobStateDone    OperationJobState = "done"
+	OperationJobStateFailed  OperationJobState = "failed"
+	OperationJobStateQueued  OperationJobState = "queued"
+	OperationJobStateRunning OperationJobState = "running"
+)
+
+// Valid indicates whether the value is a known member of the OperationJobState enum.
+func (e OperationJobState) Valid() bool {
+	switch e {
+	case OperationJobStateDone:
+		return true
+	case OperationJobStateFailed:
+		return true
+	case OperationJobStateQueued:
+		return true
+	case OperationJobStateRunning:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for PasswordResetResponseStatus.
 const (
 	PasswordReset PasswordResetResponseStatus = "password_reset"
@@ -1421,6 +1445,29 @@ type CSRFTokenResponse struct {
 	CsrfToken string `json:"csrf_token"`
 }
 
+// CatalogExport defines model for CatalogExport.
+type CatalogExport struct {
+	Category string            `json:"category"`
+	Entries  map[string]string `json:"entries"`
+	Locale   string            `json:"locale"`
+	Version  int               `json:"version"`
+}
+
+// CatalogImportRequest defines model for CatalogImportRequest.
+type CatalogImportRequest struct {
+	Category        string            `json:"category"`
+	Entries         map[string]string `json:"entries"`
+	ExpectedVersion int               `json:"expected_version"`
+	Locale          string            `json:"locale"`
+}
+
+// CatalogImportResponse defines model for CatalogImportResponse.
+type CatalogImportResponse struct {
+	Category string `json:"category"`
+	Locale   string `json:"locale"`
+	Version  int    `json:"version"`
+}
+
 // ContentAudit defines model for ContentAudit.
 type ContentAudit struct {
 	AccountId          openapi_types.UUID `json:"account_id"`
@@ -1638,6 +1685,17 @@ type FinalizeUploadRequest struct {
 type GEOFields struct {
 	Locality string `json:"locality"`
 	Region   string `json:"region"`
+}
+
+// JobEnqueueRequest defines model for JobEnqueueRequest.
+type JobEnqueueRequest struct {
+	Name    string                 `json:"name"`
+	Payload map[string]interface{} `json:"payload"`
+}
+
+// JobListResponse defines model for JobListResponse.
+type JobListResponse struct {
+	Items []OperationJob `json:"items"`
 }
 
 // Locale defines model for Locale.
@@ -1921,6 +1979,37 @@ type ModuleState struct {
 	Id                string `json:"id"`
 	ReconcileRevision int    `json:"reconcile_revision"`
 }
+
+// Notification defines model for Notification.
+type Notification struct {
+	Body      string             `json:"body"`
+	CreatedAt time.Time          `json:"created_at"`
+	Id        openapi_types.UUID `json:"id"`
+	Kind      string             `json:"kind"`
+	ReadAt    *time.Time         `json:"read_at,omitempty"`
+	Title     string             `json:"title"`
+	UserId    openapi_types.UUID `json:"user_id"`
+}
+
+// NotificationListResponse defines model for NotificationListResponse.
+type NotificationListResponse struct {
+	Items []Notification `json:"items"`
+}
+
+// OperationJob defines model for OperationJob.
+type OperationJob struct {
+	Attempts  int                    `json:"attempts"`
+	CreatedAt time.Time              `json:"created_at"`
+	Id        openapi_types.UUID     `json:"id"`
+	LastError *string                `json:"last_error,omitempty"`
+	Name      string                 `json:"name"`
+	Payload   map[string]interface{} `json:"payload"`
+	State     OperationJobState      `json:"state"`
+	UpdatedAt time.Time              `json:"updated_at"`
+}
+
+// OperationJobState defines model for OperationJob.State.
+type OperationJobState string
 
 // PageInfo defines model for PageInfo.
 type PageInfo struct {
@@ -2302,6 +2391,24 @@ type SetDefaultLocaleRequest struct {
 	ExpectedVersion int `json:"expected_version"`
 }
 
+// Setting defines model for Setting.
+type Setting struct {
+	Key     string `json:"key"`
+	Value   string `json:"value"`
+	Version int    `json:"version"`
+}
+
+// SettingListResponse defines model for SettingListResponse.
+type SettingListResponse struct {
+	Items []Setting `json:"items"`
+}
+
+// SettingUpdateRequest defines model for SettingUpdateRequest.
+type SettingUpdateRequest struct {
+	ExpectedVersion int    `json:"expected_version"`
+	Value           string `json:"value"`
+}
+
 // SystemRoleAssignmentRequest defines model for SystemRoleAssignmentRequest.
 type SystemRoleAssignmentRequest struct {
 	ExpectedVersion int                              `json:"expected_version"`
@@ -2357,6 +2464,25 @@ type Upload struct {
 
 // UploadState defines model for Upload.State.
 type UploadState string
+
+// UserProfile defines model for UserProfile.
+type UserProfile struct {
+	CreatedAt       time.Time          `json:"created_at"`
+	DisplayName     string             `json:"display_name"`
+	PreferredLocale string             `json:"preferred_locale"`
+	Timezone        string             `json:"timezone"`
+	UpdatedAt       time.Time          `json:"updated_at"`
+	UserId          openapi_types.UUID `json:"user_id"`
+	Version         int                `json:"version"`
+}
+
+// UserProfileUpdateRequest defines model for UserProfileUpdateRequest.
+type UserProfileUpdateRequest struct {
+	DisplayName     string `json:"display_name"`
+	ExpectedVersion int    `json:"expected_version"`
+	PreferredLocale string `json:"preferred_locale"`
+	Timezone        string `json:"timezone"`
+}
 
 // WorkflowRequest defines model for WorkflowRequest.
 type WorkflowRequest struct {
@@ -2500,6 +2626,12 @@ type GetDiscoverabilitySEOParams struct {
 
 // GetTranslationCatalogParams defines parameters for GetTranslationCatalog.
 type GetTranslationCatalogParams struct {
+	Locale   string `form:"locale" json:"locale"`
+	Category string `form:"category" json:"category"`
+}
+
+// ExportTranslationCatalogParams defines parameters for ExportTranslationCatalog.
+type ExportTranslationCatalogParams struct {
 	Locale   string `form:"locale" json:"locale"`
 	Category string `form:"category" json:"category"`
 }
@@ -2697,6 +2829,12 @@ type UpdateLocaleStatusJSONRequestBody = LocaleStatusRequest
 // UpdateTranslationCatalogJSONRequestBody defines body for UpdateTranslationCatalog for application/json ContentType.
 type UpdateTranslationCatalogJSONRequestBody = TranslationCatalogUpdateRequest
 
+// ImportTranslationCatalogJSONRequestBody defines body for ImportTranslationCatalog for application/json ContentType.
+type ImportTranslationCatalogJSONRequestBody = CatalogImportRequest
+
+// UpdateMyProfileJSONRequestBody defines body for UpdateMyProfile for application/json ContentType.
+type UpdateMyProfileJSONRequestBody = UserProfileUpdateRequest
+
 // DeleteMediaAssetJSONRequestBody defines body for DeleteMediaAsset for application/json ContentType.
 type DeleteMediaAssetJSONRequestBody = DeleteAssetRequest
 
@@ -2714,6 +2852,9 @@ type UpdateNavigationMenuJSONRequestBody UpdateNavigationMenuJSONBody
 
 // ReorderNavigationMenuJSONRequestBody defines body for ReorderNavigationMenu for application/json ContentType.
 type ReorderNavigationMenuJSONRequestBody = MenuReorderRequest
+
+// EnqueueOperationJobJSONRequestBody defines body for EnqueueOperationJob for application/json ContentType.
+type EnqueueOperationJobJSONRequestBody = JobEnqueueRequest
 
 // IssuePublishingPreviewJSONRequestBody defines body for IssuePublishingPreview for application/json ContentType.
 type IssuePublishingPreviewJSONRequestBody = PreviewIssueRequest
@@ -2744,6 +2885,9 @@ type UpdatePublishingPostJSONRequestBody = ContentUpdateRequest
 
 // CreatePublishingScheduleJSONRequestBody defines body for CreatePublishingSchedule for application/json ContentType.
 type CreatePublishingScheduleJSONRequestBody = ScheduleRequest
+
+// UpdateGlobalSettingJSONRequestBody defines body for UpdateGlobalSetting for application/json ContentType.
+type UpdateGlobalSettingJSONRequestBody = SettingUpdateRequest
 
 // UpdateAdminUserStatusJSONRequestBody defines body for UpdateAdminUserStatus for application/json ContentType.
 type UpdateAdminUserStatusJSONRequestBody = AdminUserStatusRequest
@@ -3341,6 +3485,44 @@ type ClientInterface interface {
 	// Corresponds with PUT /localization/catalog (the `UpdateTranslationCatalog` operationId).
 	UpdateTranslationCatalog(ctx context.Context, body UpdateTranslationCatalogJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// ExportTranslationCatalog Export editable translation overrides as JSON.
+	//
+	// Corresponds with GET /localization/catalog/export (the `ExportTranslationCatalog` operationId).
+	ExportTranslationCatalog(ctx context.Context, params *ExportTranslationCatalogParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ImportTranslationCatalogWithBody Import editable translation overrides from JSON.
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with POST /localization/catalog/import (the `ImportTranslationCatalog` operationId).
+	ImportTranslationCatalogWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ImportTranslationCatalog Import editable translation overrides from JSON.
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with POST /localization/catalog/import (the `ImportTranslationCatalog` operationId).
+	ImportTranslationCatalog(ctx context.Context, body ImportTranslationCatalogJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetMyProfile Read the authenticated user's profile.
+	//
+	// Corresponds with GET /me/profile (the `GetMyProfile` operationId).
+	GetMyProfile(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// UpdateMyProfileWithBody Update the authenticated user's profile.
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with PATCH /me/profile (the `UpdateMyProfile` operationId).
+	UpdateMyProfileWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// UpdateMyProfile Update the authenticated user's profile.
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with PATCH /me/profile (the `UpdateMyProfile` operationId).
+	UpdateMyProfile(ctx context.Context, body UpdateMyProfileJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// ListMediaAssets List account-scoped private asset metadata.
 	//
 	// Corresponds with GET /media/assets (the `ListMediaAssets` operationId).
@@ -3446,6 +3628,45 @@ type ClientInterface interface {
 	//
 	// Corresponds with POST /navigation/menus/{menu_id}/reorder (the `ReorderNavigationMenu` operationId).
 	ReorderNavigationMenu(ctx context.Context, menuId openapi_types.UUID, body ReorderNavigationMenuJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ListNotifications List the authenticated user's notifications.
+	//
+	// Corresponds with GET /notifications (the `ListNotifications` operationId).
+	ListNotifications(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// MarkAllNotificationsRead Mark all notifications as read.
+	//
+	// Corresponds with POST /notifications/read-all (the `MarkAllNotificationsRead` operationId).
+	MarkAllNotificationsRead(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// MarkNotificationRead Mark one notification as read.
+	//
+	// Corresponds with PATCH /notifications/{notification_id}/read (the `MarkNotificationRead` operationId).
+	MarkNotificationRead(ctx context.Context, notificationId openapi_types.UUID, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ListOperationJobs List durable operation jobs.
+	//
+	// Corresponds with GET /operations/jobs (the `ListOperationJobs` operationId).
+	ListOperationJobs(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// EnqueueOperationJobWithBody Enqueue a durable operation job.
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with POST /operations/jobs (the `EnqueueOperationJob` operationId).
+	EnqueueOperationJobWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// EnqueueOperationJob Enqueue a durable operation job.
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with POST /operations/jobs (the `EnqueueOperationJob` operationId).
+	EnqueueOperationJob(ctx context.Context, body EnqueueOperationJobJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// RetryOperationJob Retry a failed operation job.
+	//
+	// Corresponds with POST /operations/jobs/{job_id}/retry (the `RetryOperationJob` operationId).
+	RetryOperationJob(ctx context.Context, jobId openapi_types.UUID, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// ListEnabledModules List the runtime module activation projection.
 	//
@@ -3626,6 +3847,25 @@ type ClientInterface interface {
 	//
 	// Corresponds with DELETE /publishing/schedules/{schedule_id} (the `CancelPublishingSchedule` operationId).
 	CancelPublishingSchedule(ctx context.Context, scheduleId openapi_types.UUID, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ListGlobalSettings List non-secret global settings.
+	//
+	// Corresponds with GET /settings (the `ListGlobalSettings` operationId).
+	ListGlobalSettings(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// UpdateGlobalSettingWithBody Create or update a non-secret global setting.
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with PUT /settings/{key} (the `UpdateGlobalSetting` operationId).
+	UpdateGlobalSettingWithBody(ctx context.Context, key string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// UpdateGlobalSetting Create or update a non-secret global setting.
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with PUT /settings/{key} (the `UpdateGlobalSetting` operationId).
+	UpdateGlobalSetting(ctx context.Context, key string, body UpdateGlobalSettingJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// ListAdminUsers List users for system administration.
 	//
@@ -4730,6 +4970,104 @@ func (c *Client) UpdateTranslationCatalog(ctx context.Context, body UpdateTransl
 	return c.Client.Do(req)
 }
 
+// ExportTranslationCatalog Export editable translation overrides as JSON.
+//
+// Corresponds with GET /localization/catalog/export (the `ExportTranslationCatalog` operationId).
+func (c *Client) ExportTranslationCatalog(ctx context.Context, params *ExportTranslationCatalogParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewExportTranslationCatalogRequest(c.Server, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// ImportTranslationCatalogWithBody Import editable translation overrides from JSON.
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with POST /localization/catalog/import (the `ImportTranslationCatalog` operationId).
+func (c *Client) ImportTranslationCatalogWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewImportTranslationCatalogRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// ImportTranslationCatalog Import editable translation overrides from JSON.
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with POST /localization/catalog/import (the `ImportTranslationCatalog` operationId).
+func (c *Client) ImportTranslationCatalog(ctx context.Context, body ImportTranslationCatalogJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewImportTranslationCatalogRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// GetMyProfile Read the authenticated user's profile.
+//
+// Corresponds with GET /me/profile (the `GetMyProfile` operationId).
+func (c *Client) GetMyProfile(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetMyProfileRequest(c.Server)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// UpdateMyProfileWithBody Update the authenticated user's profile.
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with PATCH /me/profile (the `UpdateMyProfile` operationId).
+func (c *Client) UpdateMyProfileWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewUpdateMyProfileRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// UpdateMyProfile Update the authenticated user's profile.
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with PATCH /me/profile (the `UpdateMyProfile` operationId).
+func (c *Client) UpdateMyProfile(ctx context.Context, body UpdateMyProfileJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewUpdateMyProfileRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
 // ListMediaAssets List account-scoped private asset metadata.
 //
 // Corresponds with GET /media/assets (the `ListMediaAssets` operationId).
@@ -4986,6 +5324,115 @@ func (c *Client) ReorderNavigationMenuWithBody(ctx context.Context, menuId opena
 // Corresponds with POST /navigation/menus/{menu_id}/reorder (the `ReorderNavigationMenu` operationId).
 func (c *Client) ReorderNavigationMenu(ctx context.Context, menuId openapi_types.UUID, body ReorderNavigationMenuJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewReorderNavigationMenuRequest(c.Server, menuId, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// ListNotifications List the authenticated user's notifications.
+//
+// Corresponds with GET /notifications (the `ListNotifications` operationId).
+func (c *Client) ListNotifications(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewListNotificationsRequest(c.Server)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// MarkAllNotificationsRead Mark all notifications as read.
+//
+// Corresponds with POST /notifications/read-all (the `MarkAllNotificationsRead` operationId).
+func (c *Client) MarkAllNotificationsRead(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewMarkAllNotificationsReadRequest(c.Server)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// MarkNotificationRead Mark one notification as read.
+//
+// Corresponds with PATCH /notifications/{notification_id}/read (the `MarkNotificationRead` operationId).
+func (c *Client) MarkNotificationRead(ctx context.Context, notificationId openapi_types.UUID, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewMarkNotificationReadRequest(c.Server, notificationId)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// ListOperationJobs List durable operation jobs.
+//
+// Corresponds with GET /operations/jobs (the `ListOperationJobs` operationId).
+func (c *Client) ListOperationJobs(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewListOperationJobsRequest(c.Server)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// EnqueueOperationJobWithBody Enqueue a durable operation job.
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with POST /operations/jobs (the `EnqueueOperationJob` operationId).
+func (c *Client) EnqueueOperationJobWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewEnqueueOperationJobRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// EnqueueOperationJob Enqueue a durable operation job.
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with POST /operations/jobs (the `EnqueueOperationJob` operationId).
+func (c *Client) EnqueueOperationJob(ctx context.Context, body EnqueueOperationJobJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewEnqueueOperationJobRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// RetryOperationJob Retry a failed operation job.
+//
+// Corresponds with POST /operations/jobs/{job_id}/retry (the `RetryOperationJob` operationId).
+func (c *Client) RetryOperationJob(ctx context.Context, jobId openapi_types.UUID, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewRetryOperationJobRequest(c.Server, jobId)
 	if err != nil {
 		return nil, err
 	}
@@ -5446,6 +5893,55 @@ func (c *Client) CreatePublishingSchedule(ctx context.Context, body CreatePublis
 // Corresponds with DELETE /publishing/schedules/{schedule_id} (the `CancelPublishingSchedule` operationId).
 func (c *Client) CancelPublishingSchedule(ctx context.Context, scheduleId openapi_types.UUID, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewCancelPublishingScheduleRequest(c.Server, scheduleId)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// ListGlobalSettings List non-secret global settings.
+//
+// Corresponds with GET /settings (the `ListGlobalSettings` operationId).
+func (c *Client) ListGlobalSettings(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewListGlobalSettingsRequest(c.Server)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// UpdateGlobalSettingWithBody Create or update a non-secret global setting.
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with PUT /settings/{key} (the `UpdateGlobalSetting` operationId).
+func (c *Client) UpdateGlobalSettingWithBody(ctx context.Context, key string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewUpdateGlobalSettingRequestWithBody(c.Server, key, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// UpdateGlobalSetting Create or update a non-secret global setting.
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with PUT /settings/{key} (the `UpdateGlobalSetting` operationId).
+func (c *Client) UpdateGlobalSetting(ctx context.Context, key string, body UpdateGlobalSettingJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewUpdateGlobalSettingRequest(c.Server, key, body)
 	if err != nil {
 		return nil, err
 	}
@@ -7564,6 +8060,171 @@ func NewUpdateTranslationCatalogRequestWithBody(server string, contentType strin
 	return req, nil
 }
 
+// NewExportTranslationCatalogRequest constructs an http.Request for the ExportTranslationCatalog method
+func NewExportTranslationCatalogRequest(server string, params *ExportTranslationCatalogParams) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/localization/catalog/export")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		// queryValues collects non-styled parameters (passthrough, JSON)
+		// that are safe to round-trip through url.Values.Encode().
+		queryValues := queryURL.Query()
+		// rawQueryFragments collects pre-encoded query fragments from
+		// styled parameters, preserving literal commas as delimiters
+		// per the OpenAPI spec (e.g. "color=blue,black,brown").
+		var rawQueryFragments []string
+
+		if queryFrag, err := runtime.StyleParamWithOptions("form", true, "locale", params.Locale, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+			return nil, err
+		} else {
+			for _, qp := range strings.Split(queryFrag, "&") {
+				rawQueryFragments = append(rawQueryFragments, qp)
+			}
+		}
+
+		if queryFrag, err := runtime.StyleParamWithOptions("form", true, "category", params.Category, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+			return nil, err
+		} else {
+			for _, qp := range strings.Split(queryFrag, "&") {
+				rawQueryFragments = append(rawQueryFragments, qp)
+			}
+		}
+
+		if encoded := queryValues.Encode(); encoded != "" {
+			rawQueryFragments = append(rawQueryFragments, encoded)
+		}
+		queryURL.RawQuery = strings.Join(rawQueryFragments, "&")
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewImportTranslationCatalogRequest calls the generic ImportTranslationCatalog builder with application/json body
+func NewImportTranslationCatalogRequest(server string, body ImportTranslationCatalogJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewImportTranslationCatalogRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewImportTranslationCatalogRequestWithBody constructs an http.Request for the ImportTranslationCatalog method, with any body, and a specified content type
+func NewImportTranslationCatalogRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/localization/catalog/import")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPost, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewGetMyProfileRequest constructs an http.Request for the GetMyProfile method
+func NewGetMyProfileRequest(server string) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/me/profile")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewUpdateMyProfileRequest calls the generic UpdateMyProfile builder with application/json body
+func NewUpdateMyProfileRequest(server string, body UpdateMyProfileJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewUpdateMyProfileRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewUpdateMyProfileRequestWithBody constructs an http.Request for the UpdateMyProfile method, with any body, and a specified content type
+func NewUpdateMyProfileRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/me/profile")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPatch, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
 // NewListMediaAssetsRequest constructs an http.Request for the ListMediaAssets method
 func NewListMediaAssetsRequest(server string, params *ListMediaAssetsParams) (*http.Request, error) {
 	var err error
@@ -8109,6 +8770,195 @@ func NewReorderNavigationMenuRequestWithBody(server string, menuId openapi_types
 	}
 
 	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewListNotificationsRequest constructs an http.Request for the ListNotifications method
+func NewListNotificationsRequest(server string) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/notifications")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewMarkAllNotificationsReadRequest constructs an http.Request for the MarkAllNotificationsRead method
+func NewMarkAllNotificationsReadRequest(server string) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/notifications/read-all")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPost, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewMarkNotificationReadRequest constructs an http.Request for the MarkNotificationRead method
+func NewMarkNotificationReadRequest(server string, notificationId openapi_types.UUID) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "notification_id", notificationId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: "uuid"})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/notifications/%s/read", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPatch, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewListOperationJobsRequest constructs an http.Request for the ListOperationJobs method
+func NewListOperationJobsRequest(server string) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/operations/jobs")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewEnqueueOperationJobRequest calls the generic EnqueueOperationJob builder with application/json body
+func NewEnqueueOperationJobRequest(server string, body EnqueueOperationJobJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewEnqueueOperationJobRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewEnqueueOperationJobRequestWithBody constructs an http.Request for the EnqueueOperationJob method, with any body, and a specified content type
+func NewEnqueueOperationJobRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/operations/jobs")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPost, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewRetryOperationJobRequest constructs an http.Request for the RetryOperationJob method
+func NewRetryOperationJobRequest(server string, jobId openapi_types.UUID) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "job_id", jobId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: "uuid"})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/operations/jobs/%s/retry", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPost, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
 
 	return req, nil
 }
@@ -9063,6 +9913,80 @@ func NewCancelPublishingScheduleRequest(server string, scheduleId openapi_types.
 	return req, nil
 }
 
+// NewListGlobalSettingsRequest constructs an http.Request for the ListGlobalSettings method
+func NewListGlobalSettingsRequest(server string) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/settings")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewUpdateGlobalSettingRequest calls the generic UpdateGlobalSetting builder with application/json body
+func NewUpdateGlobalSettingRequest(server string, key string, body UpdateGlobalSettingJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewUpdateGlobalSettingRequestWithBody(server, key, "application/json", bodyReader)
+}
+
+// NewUpdateGlobalSettingRequestWithBody constructs an http.Request for the UpdateGlobalSetting method, with any body, and a specified content type
+func NewUpdateGlobalSettingRequestWithBody(server string, key string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "key", key, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/settings/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPut, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
 // NewListAdminUsersRequest constructs an http.Request for the ListAdminUsers method
 func NewListAdminUsersRequest(server string, params *ListAdminUsersParams) (*http.Request, error) {
 	var err error
@@ -9740,6 +10664,48 @@ type ClientWithResponsesInterface interface {
 	// Corresponds with PUT /localization/catalog (the `UpdateTranslationCatalog` operationId).
 	UpdateTranslationCatalogWithResponse(ctx context.Context, body UpdateTranslationCatalogJSONRequestBody, reqEditors ...RequestEditorFn) (*UpdateTranslationCatalogResponse, error)
 
+	// ExportTranslationCatalogWithResponse Export editable translation overrides as JSON.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /localization/catalog/export (the `ExportTranslationCatalog` operationId).
+	ExportTranslationCatalogWithResponse(ctx context.Context, params *ExportTranslationCatalogParams, reqEditors ...RequestEditorFn) (*ExportTranslationCatalogResponse, error)
+
+	// ImportTranslationCatalogWithBodyWithResponse Import editable translation overrides from JSON.
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /localization/catalog/import (the `ImportTranslationCatalog` operationId).
+	ImportTranslationCatalogWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*ImportTranslationCatalogResponse, error)
+
+	// ImportTranslationCatalogWithResponse Import editable translation overrides from JSON.
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /localization/catalog/import (the `ImportTranslationCatalog` operationId).
+	ImportTranslationCatalogWithResponse(ctx context.Context, body ImportTranslationCatalogJSONRequestBody, reqEditors ...RequestEditorFn) (*ImportTranslationCatalogResponse, error)
+
+	// GetMyProfileWithResponse Read the authenticated user's profile.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /me/profile (the `GetMyProfile` operationId).
+	GetMyProfileWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetMyProfileResponse, error)
+
+	// UpdateMyProfileWithBodyWithResponse Update the authenticated user's profile.
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with PATCH /me/profile (the `UpdateMyProfile` operationId).
+	UpdateMyProfileWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*UpdateMyProfileResponse, error)
+
+	// UpdateMyProfileWithResponse Update the authenticated user's profile.
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with PATCH /me/profile (the `UpdateMyProfile` operationId).
+	UpdateMyProfileWithResponse(ctx context.Context, body UpdateMyProfileJSONRequestBody, reqEditors ...RequestEditorFn) (*UpdateMyProfileResponse, error)
+
 	// ListMediaAssetsWithResponse List account-scoped private asset metadata.
 	//
 	// Returns a wrapper object for the known response body format(s).
@@ -9851,6 +10817,55 @@ type ClientWithResponsesInterface interface {
 	//
 	// Corresponds with POST /navigation/menus/{menu_id}/reorder (the `ReorderNavigationMenu` operationId).
 	ReorderNavigationMenuWithResponse(ctx context.Context, menuId openapi_types.UUID, body ReorderNavigationMenuJSONRequestBody, reqEditors ...RequestEditorFn) (*ReorderNavigationMenuResponse, error)
+
+	// ListNotificationsWithResponse List the authenticated user's notifications.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /notifications (the `ListNotifications` operationId).
+	ListNotificationsWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*ListNotificationsResponse, error)
+
+	// MarkAllNotificationsReadWithResponse Mark all notifications as read.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /notifications/read-all (the `MarkAllNotificationsRead` operationId).
+	MarkAllNotificationsReadWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*MarkAllNotificationsReadResponse, error)
+
+	// MarkNotificationReadWithResponse Mark one notification as read.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with PATCH /notifications/{notification_id}/read (the `MarkNotificationRead` operationId).
+	MarkNotificationReadWithResponse(ctx context.Context, notificationId openapi_types.UUID, reqEditors ...RequestEditorFn) (*MarkNotificationReadResponse, error)
+
+	// ListOperationJobsWithResponse List durable operation jobs.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /operations/jobs (the `ListOperationJobs` operationId).
+	ListOperationJobsWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*ListOperationJobsResponse, error)
+
+	// EnqueueOperationJobWithBodyWithResponse Enqueue a durable operation job.
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /operations/jobs (the `EnqueueOperationJob` operationId).
+	EnqueueOperationJobWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*EnqueueOperationJobResponse, error)
+
+	// EnqueueOperationJobWithResponse Enqueue a durable operation job.
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /operations/jobs (the `EnqueueOperationJob` operationId).
+	EnqueueOperationJobWithResponse(ctx context.Context, body EnqueueOperationJobJSONRequestBody, reqEditors ...RequestEditorFn) (*EnqueueOperationJobResponse, error)
+
+	// RetryOperationJobWithResponse Retry a failed operation job.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /operations/jobs/{job_id}/retry (the `RetryOperationJob` operationId).
+	RetryOperationJobWithResponse(ctx context.Context, jobId openapi_types.UUID, reqEditors ...RequestEditorFn) (*RetryOperationJobResponse, error)
 
 	// ListEnabledModulesWithResponse List the runtime module activation projection.
 	//
@@ -10047,6 +11062,27 @@ type ClientWithResponsesInterface interface {
 	//
 	// Corresponds with DELETE /publishing/schedules/{schedule_id} (the `CancelPublishingSchedule` operationId).
 	CancelPublishingScheduleWithResponse(ctx context.Context, scheduleId openapi_types.UUID, reqEditors ...RequestEditorFn) (*CancelPublishingScheduleResponse, error)
+
+	// ListGlobalSettingsWithResponse List non-secret global settings.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /settings (the `ListGlobalSettings` operationId).
+	ListGlobalSettingsWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*ListGlobalSettingsResponse, error)
+
+	// UpdateGlobalSettingWithBodyWithResponse Create or update a non-secret global setting.
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with PUT /settings/{key} (the `UpdateGlobalSetting` operationId).
+	UpdateGlobalSettingWithBodyWithResponse(ctx context.Context, key string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*UpdateGlobalSettingResponse, error)
+
+	// UpdateGlobalSettingWithResponse Create or update a non-secret global setting.
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with PUT /settings/{key} (the `UpdateGlobalSetting` operationId).
+	UpdateGlobalSettingWithResponse(ctx context.Context, key string, body UpdateGlobalSettingJSONRequestBody, reqEditors ...RequestEditorFn) (*UpdateGlobalSettingResponse, error)
 
 	// ListAdminUsersWithResponse List users for system administration.
 	//
@@ -12826,6 +13862,261 @@ func (r UpdateTranslationCatalogResponse) ContentType() string {
 	return ""
 }
 
+type ExportTranslationCatalogResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *CatalogExport
+	// JSON400 the response for an HTTP 400 `application/json` response
+	JSON400 *BadRequest
+	// JSON401 the response for an HTTP 401 `application/json` response
+	JSON401 *Unauthorized
+	// JSON403 the response for an HTTP 403 `application/json` response
+	JSON403 *Forbidden
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r ExportTranslationCatalogResponse) GetJSON200() *CatalogExport {
+	return r.JSON200
+}
+
+// GetJSON400 returns the response for an HTTP 400 `application/json` response
+func (r ExportTranslationCatalogResponse) GetJSON400() *BadRequest {
+	return r.JSON400
+}
+
+// GetJSON401 returns the response for an HTTP 401 `application/json` response
+func (r ExportTranslationCatalogResponse) GetJSON401() *Unauthorized {
+	return r.JSON401
+}
+
+// GetJSON403 returns the response for an HTTP 403 `application/json` response
+func (r ExportTranslationCatalogResponse) GetJSON403() *Forbidden {
+	return r.JSON403
+}
+
+// GetBody returns the raw response body bytes
+func (r ExportTranslationCatalogResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r ExportTranslationCatalogResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ExportTranslationCatalogResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r ExportTranslationCatalogResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type ImportTranslationCatalogResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *CatalogImportResponse
+	// JSON400 the response for an HTTP 400 `application/json` response
+	JSON400 *BadRequest
+	// JSON401 the response for an HTTP 401 `application/json` response
+	JSON401 *Unauthorized
+	// JSON403 the response for an HTTP 403 `application/json` response
+	JSON403 *Forbidden
+	// JSON409 the response for an HTTP 409 `application/json` response
+	JSON409 *Conflict
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r ImportTranslationCatalogResponse) GetJSON200() *CatalogImportResponse {
+	return r.JSON200
+}
+
+// GetJSON400 returns the response for an HTTP 400 `application/json` response
+func (r ImportTranslationCatalogResponse) GetJSON400() *BadRequest {
+	return r.JSON400
+}
+
+// GetJSON401 returns the response for an HTTP 401 `application/json` response
+func (r ImportTranslationCatalogResponse) GetJSON401() *Unauthorized {
+	return r.JSON401
+}
+
+// GetJSON403 returns the response for an HTTP 403 `application/json` response
+func (r ImportTranslationCatalogResponse) GetJSON403() *Forbidden {
+	return r.JSON403
+}
+
+// GetJSON409 returns the response for an HTTP 409 `application/json` response
+func (r ImportTranslationCatalogResponse) GetJSON409() *Conflict {
+	return r.JSON409
+}
+
+// GetBody returns the raw response body bytes
+func (r ImportTranslationCatalogResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r ImportTranslationCatalogResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ImportTranslationCatalogResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r ImportTranslationCatalogResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type GetMyProfileResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *UserProfile
+	// JSON401 the response for an HTTP 401 `application/json` response
+	JSON401 *Unauthorized
+	// JSON403 the response for an HTTP 403 `application/json` response
+	JSON403 *Forbidden
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r GetMyProfileResponse) GetJSON200() *UserProfile {
+	return r.JSON200
+}
+
+// GetJSON401 returns the response for an HTTP 401 `application/json` response
+func (r GetMyProfileResponse) GetJSON401() *Unauthorized {
+	return r.JSON401
+}
+
+// GetJSON403 returns the response for an HTTP 403 `application/json` response
+func (r GetMyProfileResponse) GetJSON403() *Forbidden {
+	return r.JSON403
+}
+
+// GetBody returns the raw response body bytes
+func (r GetMyProfileResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r GetMyProfileResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetMyProfileResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r GetMyProfileResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type UpdateMyProfileResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *UserProfile
+	// JSON400 the response for an HTTP 400 `application/json` response
+	JSON400 *BadRequest
+	// JSON401 the response for an HTTP 401 `application/json` response
+	JSON401 *Unauthorized
+	// JSON403 the response for an HTTP 403 `application/json` response
+	JSON403 *Forbidden
+	// JSON409 the response for an HTTP 409 `application/json` response
+	JSON409 *Conflict
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r UpdateMyProfileResponse) GetJSON200() *UserProfile {
+	return r.JSON200
+}
+
+// GetJSON400 returns the response for an HTTP 400 `application/json` response
+func (r UpdateMyProfileResponse) GetJSON400() *BadRequest {
+	return r.JSON400
+}
+
+// GetJSON401 returns the response for an HTTP 401 `application/json` response
+func (r UpdateMyProfileResponse) GetJSON401() *Unauthorized {
+	return r.JSON401
+}
+
+// GetJSON403 returns the response for an HTTP 403 `application/json` response
+func (r UpdateMyProfileResponse) GetJSON403() *Forbidden {
+	return r.JSON403
+}
+
+// GetJSON409 returns the response for an HTTP 409 `application/json` response
+func (r UpdateMyProfileResponse) GetJSON409() *Conflict {
+	return r.JSON409
+}
+
+// GetBody returns the raw response body bytes
+func (r UpdateMyProfileResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r UpdateMyProfileResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r UpdateMyProfileResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r UpdateMyProfileResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
 type ListMediaAssetsResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -13538,6 +14829,343 @@ func (r ReorderNavigationMenuResponse) StatusCode() int {
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
 func (r ReorderNavigationMenuResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type ListNotificationsResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *NotificationListResponse
+	// JSON401 the response for an HTTP 401 `application/json` response
+	JSON401 *Unauthorized
+	// JSON403 the response for an HTTP 403 `application/json` response
+	JSON403 *Forbidden
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r ListNotificationsResponse) GetJSON200() *NotificationListResponse {
+	return r.JSON200
+}
+
+// GetJSON401 returns the response for an HTTP 401 `application/json` response
+func (r ListNotificationsResponse) GetJSON401() *Unauthorized {
+	return r.JSON401
+}
+
+// GetJSON403 returns the response for an HTTP 403 `application/json` response
+func (r ListNotificationsResponse) GetJSON403() *Forbidden {
+	return r.JSON403
+}
+
+// GetBody returns the raw response body bytes
+func (r ListNotificationsResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r ListNotificationsResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ListNotificationsResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r ListNotificationsResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type MarkAllNotificationsReadResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON401 the response for an HTTP 401 `application/json` response
+	JSON401 *Unauthorized
+	// JSON403 the response for an HTTP 403 `application/json` response
+	JSON403 *Forbidden
+}
+
+// GetJSON401 returns the response for an HTTP 401 `application/json` response
+func (r MarkAllNotificationsReadResponse) GetJSON401() *Unauthorized {
+	return r.JSON401
+}
+
+// GetJSON403 returns the response for an HTTP 403 `application/json` response
+func (r MarkAllNotificationsReadResponse) GetJSON403() *Forbidden {
+	return r.JSON403
+}
+
+// GetBody returns the raw response body bytes
+func (r MarkAllNotificationsReadResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r MarkAllNotificationsReadResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r MarkAllNotificationsReadResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r MarkAllNotificationsReadResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type MarkNotificationReadResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON401 the response for an HTTP 401 `application/json` response
+	JSON401 *Unauthorized
+	// JSON403 the response for an HTTP 403 `application/json` response
+	JSON403 *Forbidden
+	// JSON404 the response for an HTTP 404 `application/json` response
+	JSON404 *NotFound
+}
+
+// GetJSON401 returns the response for an HTTP 401 `application/json` response
+func (r MarkNotificationReadResponse) GetJSON401() *Unauthorized {
+	return r.JSON401
+}
+
+// GetJSON403 returns the response for an HTTP 403 `application/json` response
+func (r MarkNotificationReadResponse) GetJSON403() *Forbidden {
+	return r.JSON403
+}
+
+// GetJSON404 returns the response for an HTTP 404 `application/json` response
+func (r MarkNotificationReadResponse) GetJSON404() *NotFound {
+	return r.JSON404
+}
+
+// GetBody returns the raw response body bytes
+func (r MarkNotificationReadResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r MarkNotificationReadResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r MarkNotificationReadResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r MarkNotificationReadResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type ListOperationJobsResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *JobListResponse
+	// JSON401 the response for an HTTP 401 `application/json` response
+	JSON401 *Unauthorized
+	// JSON403 the response for an HTTP 403 `application/json` response
+	JSON403 *Forbidden
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r ListOperationJobsResponse) GetJSON200() *JobListResponse {
+	return r.JSON200
+}
+
+// GetJSON401 returns the response for an HTTP 401 `application/json` response
+func (r ListOperationJobsResponse) GetJSON401() *Unauthorized {
+	return r.JSON401
+}
+
+// GetJSON403 returns the response for an HTTP 403 `application/json` response
+func (r ListOperationJobsResponse) GetJSON403() *Forbidden {
+	return r.JSON403
+}
+
+// GetBody returns the raw response body bytes
+func (r ListOperationJobsResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r ListOperationJobsResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ListOperationJobsResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r ListOperationJobsResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type EnqueueOperationJobResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON201 the response for an HTTP 201 `application/json` response
+	JSON201 *OperationJob
+	// JSON400 the response for an HTTP 400 `application/json` response
+	JSON400 *BadRequest
+	// JSON401 the response for an HTTP 401 `application/json` response
+	JSON401 *Unauthorized
+	// JSON403 the response for an HTTP 403 `application/json` response
+	JSON403 *Forbidden
+}
+
+// GetJSON201 returns the response for an HTTP 201 `application/json` response
+func (r EnqueueOperationJobResponse) GetJSON201() *OperationJob {
+	return r.JSON201
+}
+
+// GetJSON400 returns the response for an HTTP 400 `application/json` response
+func (r EnqueueOperationJobResponse) GetJSON400() *BadRequest {
+	return r.JSON400
+}
+
+// GetJSON401 returns the response for an HTTP 401 `application/json` response
+func (r EnqueueOperationJobResponse) GetJSON401() *Unauthorized {
+	return r.JSON401
+}
+
+// GetJSON403 returns the response for an HTTP 403 `application/json` response
+func (r EnqueueOperationJobResponse) GetJSON403() *Forbidden {
+	return r.JSON403
+}
+
+// GetBody returns the raw response body bytes
+func (r EnqueueOperationJobResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r EnqueueOperationJobResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r EnqueueOperationJobResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r EnqueueOperationJobResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type RetryOperationJobResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON400 the response for an HTTP 400 `application/json` response
+	JSON400 *BadRequest
+	// JSON401 the response for an HTTP 401 `application/json` response
+	JSON401 *Unauthorized
+	// JSON403 the response for an HTTP 403 `application/json` response
+	JSON403 *Forbidden
+	// JSON409 the response for an HTTP 409 `application/json` response
+	JSON409 *Conflict
+}
+
+// GetJSON400 returns the response for an HTTP 400 `application/json` response
+func (r RetryOperationJobResponse) GetJSON400() *BadRequest {
+	return r.JSON400
+}
+
+// GetJSON401 returns the response for an HTTP 401 `application/json` response
+func (r RetryOperationJobResponse) GetJSON401() *Unauthorized {
+	return r.JSON401
+}
+
+// GetJSON403 returns the response for an HTTP 403 `application/json` response
+func (r RetryOperationJobResponse) GetJSON403() *Forbidden {
+	return r.JSON403
+}
+
+// GetJSON409 returns the response for an HTTP 409 `application/json` response
+func (r RetryOperationJobResponse) GetJSON409() *Conflict {
+	return r.JSON409
+}
+
+// GetBody returns the raw response body bytes
+func (r RetryOperationJobResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r RetryOperationJobResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r RetryOperationJobResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r RetryOperationJobResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
@@ -14941,6 +16569,130 @@ func (r CancelPublishingScheduleResponse) ContentType() string {
 	return ""
 }
 
+type ListGlobalSettingsResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *SettingListResponse
+	// JSON401 the response for an HTTP 401 `application/json` response
+	JSON401 *Unauthorized
+	// JSON403 the response for an HTTP 403 `application/json` response
+	JSON403 *Forbidden
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r ListGlobalSettingsResponse) GetJSON200() *SettingListResponse {
+	return r.JSON200
+}
+
+// GetJSON401 returns the response for an HTTP 401 `application/json` response
+func (r ListGlobalSettingsResponse) GetJSON401() *Unauthorized {
+	return r.JSON401
+}
+
+// GetJSON403 returns the response for an HTTP 403 `application/json` response
+func (r ListGlobalSettingsResponse) GetJSON403() *Forbidden {
+	return r.JSON403
+}
+
+// GetBody returns the raw response body bytes
+func (r ListGlobalSettingsResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r ListGlobalSettingsResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ListGlobalSettingsResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r ListGlobalSettingsResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type UpdateGlobalSettingResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *Setting
+	// JSON400 the response for an HTTP 400 `application/json` response
+	JSON400 *BadRequest
+	// JSON401 the response for an HTTP 401 `application/json` response
+	JSON401 *Unauthorized
+	// JSON403 the response for an HTTP 403 `application/json` response
+	JSON403 *Forbidden
+	// JSON409 the response for an HTTP 409 `application/json` response
+	JSON409 *Conflict
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r UpdateGlobalSettingResponse) GetJSON200() *Setting {
+	return r.JSON200
+}
+
+// GetJSON400 returns the response for an HTTP 400 `application/json` response
+func (r UpdateGlobalSettingResponse) GetJSON400() *BadRequest {
+	return r.JSON400
+}
+
+// GetJSON401 returns the response for an HTTP 401 `application/json` response
+func (r UpdateGlobalSettingResponse) GetJSON401() *Unauthorized {
+	return r.JSON401
+}
+
+// GetJSON403 returns the response for an HTTP 403 `application/json` response
+func (r UpdateGlobalSettingResponse) GetJSON403() *Forbidden {
+	return r.JSON403
+}
+
+// GetJSON409 returns the response for an HTTP 409 `application/json` response
+func (r UpdateGlobalSettingResponse) GetJSON409() *Conflict {
+	return r.JSON409
+}
+
+// GetBody returns the raw response body bytes
+func (r UpdateGlobalSettingResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r UpdateGlobalSettingResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r UpdateGlobalSettingResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r UpdateGlobalSettingResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
 type ListAdminUsersResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -15985,6 +17737,84 @@ func (c *ClientWithResponses) UpdateTranslationCatalogWithResponse(ctx context.C
 	return ParseUpdateTranslationCatalogResponse(rsp)
 }
 
+// ExportTranslationCatalogWithResponse Export editable translation overrides as JSON.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /localization/catalog/export (the `ExportTranslationCatalog` operationId).
+func (c *ClientWithResponses) ExportTranslationCatalogWithResponse(ctx context.Context, params *ExportTranslationCatalogParams, reqEditors ...RequestEditorFn) (*ExportTranslationCatalogResponse, error) {
+	rsp, err := c.ExportTranslationCatalog(ctx, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseExportTranslationCatalogResponse(rsp)
+}
+
+// ImportTranslationCatalogWithBodyWithResponse Import editable translation overrides from JSON.
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /localization/catalog/import (the `ImportTranslationCatalog` operationId).
+func (c *ClientWithResponses) ImportTranslationCatalogWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*ImportTranslationCatalogResponse, error) {
+	rsp, err := c.ImportTranslationCatalogWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseImportTranslationCatalogResponse(rsp)
+}
+
+// ImportTranslationCatalogWithResponse Import editable translation overrides from JSON.
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /localization/catalog/import (the `ImportTranslationCatalog` operationId).
+func (c *ClientWithResponses) ImportTranslationCatalogWithResponse(ctx context.Context, body ImportTranslationCatalogJSONRequestBody, reqEditors ...RequestEditorFn) (*ImportTranslationCatalogResponse, error) {
+	rsp, err := c.ImportTranslationCatalog(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseImportTranslationCatalogResponse(rsp)
+}
+
+// GetMyProfileWithResponse Read the authenticated user's profile.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /me/profile (the `GetMyProfile` operationId).
+func (c *ClientWithResponses) GetMyProfileWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetMyProfileResponse, error) {
+	rsp, err := c.GetMyProfile(ctx, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetMyProfileResponse(rsp)
+}
+
+// UpdateMyProfileWithBodyWithResponse Update the authenticated user's profile.
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with PATCH /me/profile (the `UpdateMyProfile` operationId).
+func (c *ClientWithResponses) UpdateMyProfileWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*UpdateMyProfileResponse, error) {
+	rsp, err := c.UpdateMyProfileWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseUpdateMyProfileResponse(rsp)
+}
+
+// UpdateMyProfileWithResponse Update the authenticated user's profile.
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with PATCH /me/profile (the `UpdateMyProfile` operationId).
+func (c *ClientWithResponses) UpdateMyProfileWithResponse(ctx context.Context, body UpdateMyProfileJSONRequestBody, reqEditors ...RequestEditorFn) (*UpdateMyProfileResponse, error) {
+	rsp, err := c.UpdateMyProfile(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseUpdateMyProfileResponse(rsp)
+}
+
 // ListMediaAssetsWithResponse List account-scoped private asset metadata.
 //
 // Returns a wrapper object for the known response body format(s).
@@ -16191,6 +18021,97 @@ func (c *ClientWithResponses) ReorderNavigationMenuWithResponse(ctx context.Cont
 		return nil, err
 	}
 	return ParseReorderNavigationMenuResponse(rsp)
+}
+
+// ListNotificationsWithResponse List the authenticated user's notifications.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /notifications (the `ListNotifications` operationId).
+func (c *ClientWithResponses) ListNotificationsWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*ListNotificationsResponse, error) {
+	rsp, err := c.ListNotifications(ctx, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseListNotificationsResponse(rsp)
+}
+
+// MarkAllNotificationsReadWithResponse Mark all notifications as read.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /notifications/read-all (the `MarkAllNotificationsRead` operationId).
+func (c *ClientWithResponses) MarkAllNotificationsReadWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*MarkAllNotificationsReadResponse, error) {
+	rsp, err := c.MarkAllNotificationsRead(ctx, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseMarkAllNotificationsReadResponse(rsp)
+}
+
+// MarkNotificationReadWithResponse Mark one notification as read.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with PATCH /notifications/{notification_id}/read (the `MarkNotificationRead` operationId).
+func (c *ClientWithResponses) MarkNotificationReadWithResponse(ctx context.Context, notificationId openapi_types.UUID, reqEditors ...RequestEditorFn) (*MarkNotificationReadResponse, error) {
+	rsp, err := c.MarkNotificationRead(ctx, notificationId, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseMarkNotificationReadResponse(rsp)
+}
+
+// ListOperationJobsWithResponse List durable operation jobs.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /operations/jobs (the `ListOperationJobs` operationId).
+func (c *ClientWithResponses) ListOperationJobsWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*ListOperationJobsResponse, error) {
+	rsp, err := c.ListOperationJobs(ctx, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseListOperationJobsResponse(rsp)
+}
+
+// EnqueueOperationJobWithBodyWithResponse Enqueue a durable operation job.
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /operations/jobs (the `EnqueueOperationJob` operationId).
+func (c *ClientWithResponses) EnqueueOperationJobWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*EnqueueOperationJobResponse, error) {
+	rsp, err := c.EnqueueOperationJobWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseEnqueueOperationJobResponse(rsp)
+}
+
+// EnqueueOperationJobWithResponse Enqueue a durable operation job.
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /operations/jobs (the `EnqueueOperationJob` operationId).
+func (c *ClientWithResponses) EnqueueOperationJobWithResponse(ctx context.Context, body EnqueueOperationJobJSONRequestBody, reqEditors ...RequestEditorFn) (*EnqueueOperationJobResponse, error) {
+	rsp, err := c.EnqueueOperationJob(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseEnqueueOperationJobResponse(rsp)
+}
+
+// RetryOperationJobWithResponse Retry a failed operation job.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /operations/jobs/{job_id}/retry (the `RetryOperationJob` operationId).
+func (c *ClientWithResponses) RetryOperationJobWithResponse(ctx context.Context, jobId openapi_types.UUID, reqEditors ...RequestEditorFn) (*RetryOperationJobResponse, error) {
+	rsp, err := c.RetryOperationJob(ctx, jobId, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseRetryOperationJobResponse(rsp)
 }
 
 // ListEnabledModulesWithResponse List the runtime module activation projection.
@@ -16555,6 +18476,45 @@ func (c *ClientWithResponses) CancelPublishingScheduleWithResponse(ctx context.C
 		return nil, err
 	}
 	return ParseCancelPublishingScheduleResponse(rsp)
+}
+
+// ListGlobalSettingsWithResponse List non-secret global settings.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /settings (the `ListGlobalSettings` operationId).
+func (c *ClientWithResponses) ListGlobalSettingsWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*ListGlobalSettingsResponse, error) {
+	rsp, err := c.ListGlobalSettings(ctx, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseListGlobalSettingsResponse(rsp)
+}
+
+// UpdateGlobalSettingWithBodyWithResponse Create or update a non-secret global setting.
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with PUT /settings/{key} (the `UpdateGlobalSetting` operationId).
+func (c *ClientWithResponses) UpdateGlobalSettingWithBodyWithResponse(ctx context.Context, key string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*UpdateGlobalSettingResponse, error) {
+	rsp, err := c.UpdateGlobalSettingWithBody(ctx, key, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseUpdateGlobalSettingResponse(rsp)
+}
+
+// UpdateGlobalSettingWithResponse Create or update a non-secret global setting.
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with PUT /settings/{key} (the `UpdateGlobalSetting` operationId).
+func (c *ClientWithResponses) UpdateGlobalSettingWithResponse(ctx context.Context, key string, body UpdateGlobalSettingJSONRequestBody, reqEditors ...RequestEditorFn) (*UpdateGlobalSettingResponse, error) {
+	rsp, err := c.UpdateGlobalSetting(ctx, key, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseUpdateGlobalSettingResponse(rsp)
 }
 
 // ListAdminUsersWithResponse List users for system administration.
@@ -18827,6 +20787,201 @@ func ParseUpdateTranslationCatalogResponse(rsp *http.Response) (*UpdateTranslati
 	return response, nil
 }
 
+// ParseExportTranslationCatalogResponse parses an HTTP response from a ExportTranslationCatalogWithResponse call
+func ParseExportTranslationCatalogResponse(rsp *http.Response) (*ExportTranslationCatalogResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ExportTranslationCatalogResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest CatalogExport
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest BadRequest
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest Unauthorized
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest Forbidden
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseImportTranslationCatalogResponse parses an HTTP response from a ImportTranslationCatalogWithResponse call
+func ParseImportTranslationCatalogResponse(rsp *http.Response) (*ImportTranslationCatalogResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ImportTranslationCatalogResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest CatalogImportResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest BadRequest
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest Unauthorized
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest Forbidden
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest Conflict
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON409 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetMyProfileResponse parses an HTTP response from a GetMyProfileWithResponse call
+func ParseGetMyProfileResponse(rsp *http.Response) (*GetMyProfileResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetMyProfileResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest UserProfile
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest Unauthorized
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest Forbidden
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseUpdateMyProfileResponse parses an HTTP response from a UpdateMyProfileWithResponse call
+func ParseUpdateMyProfileResponse(rsp *http.Response) (*UpdateMyProfileResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &UpdateMyProfileResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest UserProfile
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest BadRequest
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest Unauthorized
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest Forbidden
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest Conflict
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON409 = &dest
+
+	}
+
+	return response, nil
+}
+
 // ParseListMediaAssetsResponse parses an HTTP response from a ListMediaAssetsWithResponse call
 func ParseListMediaAssetsResponse(rsp *http.Response) (*ListMediaAssetsResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
@@ -19395,6 +21550,262 @@ func ParseReorderNavigationMenuResponse(rsp *http.Response) (*ReorderNavigationM
 			return nil, err
 		}
 		response.JSON422 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseListNotificationsResponse parses an HTTP response from a ListNotificationsWithResponse call
+func ParseListNotificationsResponse(rsp *http.Response) (*ListNotificationsResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ListNotificationsResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest NotificationListResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest Unauthorized
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest Forbidden
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseMarkAllNotificationsReadResponse parses an HTTP response from a MarkAllNotificationsReadWithResponse call
+func ParseMarkAllNotificationsReadResponse(rsp *http.Response) (*MarkAllNotificationsReadResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &MarkAllNotificationsReadResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case rsp.StatusCode == 204:
+		break // No content-type
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest Unauthorized
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest Forbidden
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseMarkNotificationReadResponse parses an HTTP response from a MarkNotificationReadWithResponse call
+func ParseMarkNotificationReadResponse(rsp *http.Response) (*MarkNotificationReadResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &MarkNotificationReadResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case rsp.StatusCode == 204:
+		break // No content-type
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest Unauthorized
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest Forbidden
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseListOperationJobsResponse parses an HTTP response from a ListOperationJobsWithResponse call
+func ParseListOperationJobsResponse(rsp *http.Response) (*ListOperationJobsResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ListOperationJobsResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest JobListResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest Unauthorized
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest Forbidden
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseEnqueueOperationJobResponse parses an HTTP response from a EnqueueOperationJobWithResponse call
+func ParseEnqueueOperationJobResponse(rsp *http.Response) (*EnqueueOperationJobResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &EnqueueOperationJobResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 201:
+		var dest OperationJob
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON201 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest BadRequest
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest Unauthorized
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest Forbidden
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseRetryOperationJobResponse parses an HTTP response from a RetryOperationJobWithResponse call
+func ParseRetryOperationJobResponse(rsp *http.Response) (*RetryOperationJobResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &RetryOperationJobResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case rsp.StatusCode == 204:
+		break // No content-type
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest BadRequest
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest Unauthorized
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest Forbidden
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest Conflict
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON409 = &dest
 
 	}
 
@@ -20579,6 +22990,100 @@ func ParseCancelPublishingScheduleResponse(rsp *http.Response) (*CancelPublishin
 			return nil, err
 		}
 		response.JSON415 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseListGlobalSettingsResponse parses an HTTP response from a ListGlobalSettingsWithResponse call
+func ParseListGlobalSettingsResponse(rsp *http.Response) (*ListGlobalSettingsResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ListGlobalSettingsResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest SettingListResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest Unauthorized
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest Forbidden
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseUpdateGlobalSettingResponse parses an HTTP response from a UpdateGlobalSettingWithResponse call
+func ParseUpdateGlobalSettingResponse(rsp *http.Response) (*UpdateGlobalSettingResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &UpdateGlobalSettingResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest Setting
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest BadRequest
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest Unauthorized
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest Forbidden
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest Conflict
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON409 = &dest
 
 	}
 

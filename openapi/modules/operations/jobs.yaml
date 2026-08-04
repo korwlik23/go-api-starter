@@ -1,0 +1,74 @@
+paths:
+  /operations/jobs:
+    get:
+      tags: [Operations]
+      summary: List durable operation jobs.
+      operationId: listOperationJobs
+      x-surfaces: [admin]
+      x-required-permission: operations.jobs.read.system
+      security: [{SessionCookie: []}]
+      responses:
+        '200':
+          description: Durable jobs.
+          content: {application/json: {schema: {$ref: '#/components/schemas/JobListResponse'}}}
+        '401': {$ref: ../../common/errors.yaml#/components/responses/Unauthorized}
+        '403': {$ref: ../../common/errors.yaml#/components/responses/Forbidden}
+    post:
+      tags: [Operations]
+      summary: Enqueue a durable operation job.
+      operationId: enqueueOperationJob
+      x-surfaces: [admin]
+      x-required-permission: operations.jobs.manage.system
+      security: [{SessionCookie: [], CSRFToken: []}]
+      requestBody:
+        required: true
+        content: {application/json: {schema: {$ref: '#/components/schemas/JobEnqueueRequest'}}}
+      responses:
+        '201':
+          description: Queued job.
+          content: {application/json: {schema: {$ref: '#/components/schemas/OperationJob'}}}
+        '400': {$ref: ../../common/errors.yaml#/components/responses/BadRequest}
+        '401': {$ref: ../../common/errors.yaml#/components/responses/Unauthorized}
+        '403': {$ref: ../../common/errors.yaml#/components/responses/Forbidden}
+  /operations/jobs/{job_id}/retry:
+    post:
+      tags: [Operations]
+      summary: Retry a failed operation job.
+      operationId: retryOperationJob
+      x-surfaces: [admin]
+      x-required-permission: operations.jobs.manage.system
+      security: [{SessionCookie: [], CSRFToken: []}]
+      parameters:
+        - {name: job_id, in: path, required: true, schema: {type: string, format: uuid}}
+      responses:
+        '204': {description: Job requeued.}
+        '400': {$ref: ../../common/errors.yaml#/components/responses/BadRequest}
+        '401': {$ref: ../../common/errors.yaml#/components/responses/Unauthorized}
+        '403': {$ref: ../../common/errors.yaml#/components/responses/Forbidden}
+        '409': {$ref: ../../common/errors.yaml#/components/responses/Conflict}
+components:
+  schemas:
+    JobListResponse:
+      type: object
+      required: [items]
+      properties:
+        items: {type: array, items: {$ref: '#/components/schemas/OperationJob'}}
+    OperationJob:
+      type: object
+      required: [id, name, payload, state, attempts, created_at, updated_at]
+      properties:
+        id: {type: string, format: uuid}
+        name: {type: string}
+        payload: {type: object, additionalProperties: true}
+        state: {type: string, enum: [queued, running, failed, done]}
+        attempts: {type: integer, minimum: 0}
+        last_error: {type: string, nullable: true}
+        created_at: {type: string, format: date-time}
+        updated_at: {type: string, format: date-time}
+    JobEnqueueRequest:
+      type: object
+      additionalProperties: false
+      required: [name, payload]
+      properties:
+        name: {type: string, maxLength: 128}
+        payload: {type: object, additionalProperties: true}

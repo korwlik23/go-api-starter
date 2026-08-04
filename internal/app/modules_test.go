@@ -20,7 +20,9 @@ func TestCoreModuleRegistryIsCanonicalAndDependencyOrdered(t *testing.T) {
 			"audit",
 			"authorization",
 			"localization",
+			"notifications",
 			"operations",
+			"settings",
 		},
 		coreModuleIDs(registry.Ordered()),
 	)
@@ -56,9 +58,18 @@ func TestCoreModuleRegistryOwnsRequiredPermissionCatalog(t *testing.T) {
 		"authorization.role_permissions.grant.system",
 		"identity.users.read.system",
 		"identity.users.manage.system",
+		"identity.profile.read.own",
+		"identity.profile.manage.own",
 		"localization.locales.manage.system",
+		"localization.translations.read.system",
 		"localization.translations.update.system",
 		"operations.foundation.read.system",
+		"operations.jobs.read.system",
+		"operations.jobs.manage.system",
+		"notifications.inbox.read.own",
+		"notifications.inbox.manage.own",
+		"settings.global.read.system",
+		"settings.global.manage.system",
 	}
 	for _, key := range expected {
 		permission, exists := registry.Permission(key)

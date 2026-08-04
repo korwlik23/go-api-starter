@@ -9,6 +9,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	identitygorm "github.com/korwlik23/go-api-starter/internal/modules/identity/adapters/gorm"
+	identityapp "github.com/korwlik23/go-api-starter/internal/modules/identity/application"
 	authapp "github.com/korwlik23/go-api-starter/internal/modules/identity/application/auth"
 	mfaapp "github.com/korwlik23/go-api-starter/internal/modules/identity/application/mfa"
 	sessionapp "github.com/korwlik23/go-api-starter/internal/modules/identity/application/session"
@@ -30,6 +31,7 @@ const (
 
 type identityRuntime struct {
 	handlers     identityhttp.RouteHandlers
+	profile      *identityhttp.ProfileHandler
 	rateLimits   identityhttp.RateLimits
 	authenticate gin.HandlerFunc
 	csrf         gin.HandlerFunc
@@ -72,6 +74,14 @@ func buildIdentityRuntime(
 	if err != nil {
 		return identityRuntime{}, err
 	}
+	profileService, err := identityapp.NewProfileService(repositories.profiles, nil)
+	if err != nil {
+		return identityRuntime{}, err
+	}
+	profileHandler, err := identityhttp.NewProfileHandler(profileService)
+	if err != nil {
+		return identityRuntime{}, err
+	}
 	authenticate, err := platformmiddleware.NewSessionAuthentication(
 		platformmiddleware.SessionAuthenticationConfig{
 			CookieName:            cookie.Name(),
@@ -103,7 +113,7 @@ func buildIdentityRuntime(
 		return identityRuntime{}, err
 	}
 	return identityRuntime{
-		handlers: handlers, rateLimits: rateLimits,
+		handlers: handlers, profile: profileHandler, rateLimits: rateLimits,
 		authenticate: authenticate, csrf: csrf,
 	}, nil
 }
@@ -115,6 +125,7 @@ type identityRepositories struct {
 	attempts  *identitygorm.AuthAttemptRepository
 	mfa       *identitygorm.MFARepository
 	oneTime   *identitygorm.OneTimeTokenRepository
+	profiles  *identitygorm.ProfileRepository
 }
 
 func newIdentityRepositories(db *gormdb.DB) (identityRepositories, error) {
@@ -142,9 +153,13 @@ func newIdentityRepositories(db *gormdb.DB) (identityRepositories, error) {
 	if err != nil {
 		return identityRepositories{}, err
 	}
+	profiles, err := identitygorm.NewProfileRepository(db)
+	if err != nil {
+		return identityRepositories{}, err
+	}
 	return identityRepositories{
 		users: users, passwords: passwords, sessions: sessions,
-		attempts: attempts, mfa: mfa, oneTime: oneTime,
+		attempts: attempts, mfa: mfa, oneTime: oneTime, profiles: profiles,
 	}, nil
 }
 

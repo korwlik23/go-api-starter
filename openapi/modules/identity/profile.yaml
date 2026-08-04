@@ -1,0 +1,55 @@
+paths:
+  /me/profile:
+    get:
+      tags: [Identity]
+      summary: Read the authenticated user's profile.
+      operationId: getMyProfile
+      x-surfaces: [admin]
+      x-required-permission: identity.profile.read.own
+      security: [{SessionCookie: []}]
+      responses:
+        '200':
+          description: Profile.
+          content: {application/json: {schema: {$ref: '#/components/schemas/UserProfile'}}}
+        '401': {$ref: ../../common/errors.yaml#/components/responses/Unauthorized}
+        '403': {$ref: ../../common/errors.yaml#/components/responses/Forbidden}
+    patch:
+      tags: [Identity]
+      summary: Update the authenticated user's profile.
+      operationId: updateMyProfile
+      x-surfaces: [admin]
+      x-required-permission: identity.profile.manage.own
+      security: [{SessionCookie: [], CSRFToken: []}]
+      requestBody:
+        required: true
+        content: {application/json: {schema: {$ref: '#/components/schemas/UserProfileUpdateRequest'}}}
+      responses:
+        '200':
+          description: Updated profile.
+          content: {application/json: {schema: {$ref: '#/components/schemas/UserProfile'}}}
+        '400': {$ref: ../../common/errors.yaml#/components/responses/BadRequest}
+        '401': {$ref: ../../common/errors.yaml#/components/responses/Unauthorized}
+        '403': {$ref: ../../common/errors.yaml#/components/responses/Forbidden}
+        '409': {$ref: ../../common/errors.yaml#/components/responses/Conflict}
+components:
+  schemas:
+    UserProfile:
+      type: object
+      required: [user_id, display_name, timezone, preferred_locale, version, created_at, updated_at]
+      properties:
+        user_id: {type: string, format: uuid}
+        display_name: {type: string, maxLength: 128}
+        timezone: {type: string, maxLength: 64}
+        preferred_locale: {type: string, maxLength: 32}
+        version: {type: integer, minimum: 1}
+        created_at: {type: string, format: date-time}
+        updated_at: {type: string, format: date-time}
+    UserProfileUpdateRequest:
+      type: object
+      additionalProperties: false
+      required: [display_name, timezone, preferred_locale, expected_version]
+      properties:
+        display_name: {type: string, maxLength: 128}
+        timezone: {type: string, maxLength: 64}
+        preferred_locale: {type: string, maxLength: 32}
+        expected_version: {type: integer, minimum: 1}

@@ -14,6 +14,12 @@ func Manifest() modular.Manifest {
 			Method:     "GET",
 			Path:       "/api/v1/operations/modules",
 			Permission: PermissionFoundationReadSystem,
+		}, {
+			Method: "GET", Path: "/api/v1/operations/jobs", Permission: PermissionJobsReadSystem,
+		}, {
+			Method: "POST", Path: "/api/v1/operations/jobs", Permission: PermissionJobsManageSystem,
+		}, {
+			Method: "POST", Path: "/api/v1/operations/jobs/:job_id/retry", Permission: PermissionJobsManageSystem,
 		}},
 		Migrations: modular.SQLMigrations(),
 		Health: []modular.HealthContributor{

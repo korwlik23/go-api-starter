@@ -20,6 +20,8 @@ func Manifest() modular.Manifest {
 			{Method: "PUT", Path: "/api/v1/locales/preferences"},
 			{Method: "GET", Path: "/api/v1/localization/catalog"},
 			{Method: "PUT", Path: "/api/v1/localization/catalog", Permission: PermissionTranslationsUpdateSystem},
+			{Method: "GET", Path: "/api/v1/localization/catalog/export", Permission: PermissionTranslationsReadSystem},
+			{Method: "POST", Path: "/api/v1/localization/catalog/import", Permission: PermissionTranslationsUpdateSystem},
 		},
 		Migrations: modular.SQLMigrations(),
 		Health: []modular.HealthContributor{

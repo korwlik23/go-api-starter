@@ -11,6 +11,7 @@ import (
 	identityapp "github.com/korwlik23/go-api-starter/internal/modules/identity/application"
 	localizationapp "github.com/korwlik23/go-api-starter/internal/modules/localization/application"
 	catalogapp "github.com/korwlik23/go-api-starter/internal/modules/localization/application/catalog"
+	settingsapp "github.com/korwlik23/go-api-starter/internal/modules/settings/application"
 )
 
 var ErrInvalidAuthorizationAuditAdapter = errors.New("invalid authorization audit adapter")
@@ -210,6 +211,22 @@ func (adapter authorizationAuditAdapter) RecordCatalogUpdate(
 	return err
 }
 
+func (adapter authorizationAuditAdapter) RecordSettingChange(
+	ctx context.Context,
+	event settingsapp.SettingAuditEvent,
+) error {
+	if adapter.appender == nil || ctx == nil || event.ActorUserID == "" || event.Key == "" || event.Version < 1 {
+		return ErrInvalidAuthorizationAuditAdapter
+	}
+	_, err := adapter.appender.Execute(ctx, auditapp.AppendCommand{
+		Scope:  auditdomain.ScopeSystem,
+		Actor:  auditdomain.Actor{Type: auditdomain.ActorUser, ID: event.ActorUserID},
+		Action: event.Action, RequestID: event.RequestID,
+		Data: map[string]any{"key": event.Key, "version": event.Version},
+	})
+	return err
+}
+
 var _ authorizationapp.RoleAssignmentAuditor = authorizationAuditAdapter{}
 var _ authorizationapp.GrantRolePermissionAuditor = authorizationAuditAdapter{}
 var _ authorizationapp.RoleManagementAuditor = authorizationAuditAdapter{}
@@ -217,3 +234,4 @@ var _ identityapp.AdminUserAuditor = authorizationAuditAdapter{}
 var _ accountsapp.MembershipAuditor = authorizationAuditAdapter{}
 var _ localizationapp.LocaleManagementAuditor = authorizationAuditAdapter{}
 var _ catalogapp.CatalogAuditor = authorizationAuditAdapter{}
+var _ settingsapp.Auditor = authorizationAuditAdapter{}

@@ -1,0 +1,60 @@
+paths:
+  /settings:
+    get:
+      tags: [Settings]
+      summary: List non-secret global settings.
+      operationId: listGlobalSettings
+      x-surfaces: [admin]
+      x-required-permission: settings.global.read.system
+      security: [{SessionCookie: []}]
+      responses:
+        '200':
+          description: Editable global settings.
+          content: {application/json: {schema: {$ref: '#/components/schemas/SettingListResponse'}}}
+        '401': {$ref: ../../common/errors.yaml#/components/responses/Unauthorized}
+        '403': {$ref: ../../common/errors.yaml#/components/responses/Forbidden}
+  /settings/{key}:
+    put:
+      tags: [Settings]
+      summary: Create or update a non-secret global setting.
+      operationId: updateGlobalSetting
+      x-surfaces: [admin]
+      x-required-permission: settings.global.manage.system
+      security: [{SessionCookie: [], CSRFToken: []}]
+      parameters:
+        - name: key
+          in: path
+          required: true
+          schema: {type: string, pattern: '^[a-z][a-z0-9]*(?:[._-][a-z0-9]+)*$', maxLength: 128}
+      requestBody:
+        required: true
+        content: {application/json: {schema: {$ref: '#/components/schemas/SettingUpdateRequest'}}}
+      responses:
+        '200':
+          description: Saved setting.
+          content: {application/json: {schema: {$ref: '#/components/schemas/Setting'}}}
+        '400': {$ref: ../../common/errors.yaml#/components/responses/BadRequest}
+        '401': {$ref: ../../common/errors.yaml#/components/responses/Unauthorized}
+        '403': {$ref: ../../common/errors.yaml#/components/responses/Forbidden}
+        '409': {$ref: ../../common/errors.yaml#/components/responses/Conflict}
+components:
+  schemas:
+    SettingListResponse:
+      type: object
+      required: [items]
+      properties:
+        items: {type: array, items: {$ref: '#/components/schemas/Setting'}}
+    Setting:
+      type: object
+      required: [key, value, version]
+      properties:
+        key: {type: string}
+        value: {type: string}
+        version: {type: integer, minimum: 1}
+    SettingUpdateRequest:
+      type: object
+      additionalProperties: false
+      required: [value, expected_version]
+      properties:
+        value: {type: string, maxLength: 16384}
+        expected_version: {type: integer, minimum: 0}

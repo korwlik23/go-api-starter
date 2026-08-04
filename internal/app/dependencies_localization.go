@@ -17,10 +17,11 @@ import (
 var errLocalizationComposition = errors.New("app: localization composition failed")
 
 type localizationRuntime struct {
-	locales     *localizationhttp.LocaleHandler
-	management  *localizationhttp.LocaleManagementHandler
-	catalog     *localizationhttp.CatalogHandler
-	preferences *localizationhttp.PreferenceHandler
+	locales      *localizationhttp.LocaleHandler
+	management   *localizationhttp.LocaleManagementHandler
+	catalog      *localizationhttp.CatalogHandler
+	importExport *localizationhttp.ImportExportHandler
+	preferences  *localizationhttp.PreferenceHandler
 }
 
 func buildLocalizationRuntime(
@@ -76,6 +77,12 @@ func buildLocalizationRuntime(
 	if err != nil {
 		return localizationRuntime{}, err
 	}
+	importExportService, err := catalogapp.NewImportExport(
+		authorizer, catalog, catalog, transactions, localizationAuditor,
+	)
+	if err != nil {
+		return localizationRuntime{}, err
+	}
 	readPreferences, err := preferenceapp.NewRead(preferences, locales)
 	if err != nil {
 		return localizationRuntime{}, err
@@ -101,6 +108,10 @@ func buildLocalizationRuntime(
 	if err != nil {
 		return localizationRuntime{}, err
 	}
+	importExportHandler, err := localizationhttp.NewImportExportHandler(importExportService)
+	if err != nil {
+		return localizationRuntime{}, err
+	}
 	preferenceHandler, err := localizationhttp.NewPreferenceHandler(
 		readPreferences,
 		updatePreferences,
@@ -110,6 +121,6 @@ func buildLocalizationRuntime(
 	}
 	return localizationRuntime{
 		locales: localeHandler, management: managementHandler,
-		catalog: catalogHandler, preferences: preferenceHandler,
+		catalog: catalogHandler, importExport: importExportHandler, preferences: preferenceHandler,
 	}, nil
 }

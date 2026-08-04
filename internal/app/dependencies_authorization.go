@@ -65,6 +65,8 @@ type authorizationRuntime struct {
 	membershipManageGuard    gin.HandlerFunc
 	auditEvents              *audithttp.EventHandler
 	auditEventsReadGuard     gin.HandlerFunc
+	profileReadGuard         gin.HandlerFunc
+	profileManageGuard       gin.HandlerFunc
 	systemAuthorizer         systemPermissionAuthorizer
 }
 
@@ -381,6 +383,18 @@ func buildAuthorizationRuntime(
 	if err != nil {
 		return authorizationRuntime{}, err
 	}
+	profileReadGuard, err := newPermissionGuard(
+		resolveAccount, evaluator, identitymodule.PermissionProfileReadOwn, currentPrincipalResourceID,
+	)
+	if err != nil {
+		return authorizationRuntime{}, err
+	}
+	profileManageGuard, err := newPermissionGuard(
+		resolveAccount, evaluator, identitymodule.PermissionProfileManageOwn, currentPrincipalResourceID,
+	)
+	if err != nil {
+		return authorizationRuntime{}, err
+	}
 	return authorizationRuntime{
 		transactions:   transactions,
 		auditor:        auditor,
@@ -404,6 +418,8 @@ func buildAuthorizationRuntime(
 		membershipManageGuard:    membershipManageGuard,
 		auditEvents:              auditEvents,
 		auditEventsReadGuard:     auditEventsReadGuard,
+		profileReadGuard:         profileReadGuard,
+		profileManageGuard:       profileManageGuard,
 		systemAuthorizer:         systemAuthorizer,
 	}, nil
 }

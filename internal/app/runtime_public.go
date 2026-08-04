@@ -72,6 +72,18 @@ func buildPublicRuntime(
 	if err != nil {
 		return fail(err)
 	}
+	settings, err := buildSettingsRuntime(authorization)
+	if err != nil {
+		return fail(err)
+	}
+	notifications, err := buildNotificationsRuntime(authorization)
+	if err != nil {
+		return fail(err)
+	}
+	operationsJobs, err := buildOperationsJobsRuntime(authorization)
+	if err != nil {
+		return fail(err)
+	}
 	cms, err := buildCMSRuntime(db, cfg, authorization)
 	if err != nil {
 		return fail(err)
@@ -179,6 +191,10 @@ func buildPublicRuntime(
 	RegisterIdentityRoutes(router.Group("/api/v1"), identity)
 	RegisterAuthorizationRoutes(router.Group("/api/v1"), authorization, identity)
 	RegisterAdministrationRoutes(router.Group("/api/v1"), authorization, identity)
+	RegisterIdentityProfileRoutes(router.Group("/api/v1"), identity, authorization)
+	RegisterSettingsRoutes(router.Group("/api/v1"), settings, identity)
+	RegisterNotificationsRoutes(router.Group("/api/v1"), notifications, identity)
+	RegisterOperationsJobRoutes(router.Group("/api/v1"), operationsJobs, identity)
 	RegisterCMSRoutes(router.Group("/api/v1"), cms, identity)
 	protectedSystem := router.Group("/api/v1")
 	protectedSystem.Use(identity.authenticate, identity.csrf)
@@ -187,6 +203,7 @@ func buildPublicRuntime(
 		localization.management,
 		localization.catalog,
 		localization.preferences,
+		localization.importExport,
 	)
 	server := httpserver.NewServer(httpserver.ServerConfig{
 		Address: cfg.HTTP.Address, ReadHeaderTimeout: cfg.HTTP.ReadHeaderTimeout,

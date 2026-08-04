@@ -1,0 +1,64 @@
+paths:
+  /localization/catalog/export:
+    get:
+      tags: [Localization]
+      summary: Export editable translation overrides as JSON.
+      operationId: exportTranslationCatalog
+      x-surfaces: [admin]
+      x-required-permission: localization.translations.read.system
+      security: [{SessionCookie: []}]
+      parameters:
+        - {name: locale, in: query, required: true, schema: {type: string}}
+        - {name: category, in: query, required: true, schema: {type: string}}
+      responses:
+        '200':
+          description: Translation export.
+          content: {application/json: {schema: {$ref: '#/components/schemas/CatalogExport'}}}
+        '400': {$ref: ../../common/errors.yaml#/components/responses/BadRequest}
+        '401': {$ref: ../../common/errors.yaml#/components/responses/Unauthorized}
+        '403': {$ref: ../../common/errors.yaml#/components/responses/Forbidden}
+  /localization/catalog/import:
+    post:
+      tags: [Localization]
+      summary: Import editable translation overrides from JSON.
+      operationId: importTranslationCatalog
+      x-surfaces: [admin]
+      x-required-permission: localization.translations.update.system
+      security: [{SessionCookie: [], CSRFToken: []}]
+      requestBody:
+        required: true
+        content: {application/json: {schema: {$ref: '#/components/schemas/CatalogImportRequest'}}}
+      responses:
+        '200':
+          description: Imported catalog version.
+          content: {application/json: {schema: {$ref: '#/components/schemas/CatalogImportResponse'}}}
+        '400': {$ref: ../../common/errors.yaml#/components/responses/BadRequest}
+        '401': {$ref: ../../common/errors.yaml#/components/responses/Unauthorized}
+        '403': {$ref: ../../common/errors.yaml#/components/responses/Forbidden}
+        '409': {$ref: ../../common/errors.yaml#/components/responses/Conflict}
+components:
+  schemas:
+    CatalogExport:
+      type: object
+      required: [locale, category, version, entries]
+      properties:
+        locale: {type: string}
+        category: {type: string}
+        version: {type: integer, minimum: 0}
+        entries: {type: object, additionalProperties: {type: string}}
+    CatalogImportRequest:
+      type: object
+      additionalProperties: false
+      required: [locale, category, expected_version, entries]
+      properties:
+        locale: {type: string}
+        category: {type: string}
+        expected_version: {type: integer, minimum: 0}
+        entries: {type: object, additionalProperties: {type: string}}
+    CatalogImportResponse:
+      type: object
+      required: [locale, category, version]
+      properties:
+        locale: {type: string}
+        category: {type: string}
+        version: {type: integer, minimum: 1}

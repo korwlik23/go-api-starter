@@ -25,6 +25,8 @@ func Manifest() modular.Manifest {
 			{Method: "GET", Path: "/api/v1/users", Permission: PermissionUsersReadSystem},
 			{Method: "GET", Path: "/api/v1/users/:user_id", Permission: PermissionUsersReadSystem},
 			{Method: "PATCH", Path: "/api/v1/users/:user_id/status", Permission: PermissionUsersManageSystem},
+			{Method: "GET", Path: "/api/v1/me/profile", Permission: PermissionProfileReadOwn},
+			{Method: "PATCH", Path: "/api/v1/me/profile", Permission: PermissionProfileManageOwn},
 		},
 		Migrations: modular.SQLMigrations(),
 		Health: []modular.HealthContributor{
