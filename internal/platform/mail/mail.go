@@ -5,6 +5,8 @@ package mail
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"net/mail"
@@ -60,7 +62,8 @@ func (sender *FileSender) Send(ctx context.Context, message Message) error {
 	if err := ctx.Err(); err != nil {
 		return err
 	}
-	filename := fmt.Sprintf("%s-%d.eml", strings.ReplaceAll(strings.TrimSpace(message.To), "@", "_"), time.Now().UTC().UnixNano())
+	recipientHash := sha256.Sum256([]byte(strings.TrimSpace(message.To)))
+	filename := fmt.Sprintf("message-%s-%d.eml", hex.EncodeToString(recipientHash[:8]), time.Now().UTC().UnixNano())
 	path := filepath.Join(sender.Root, filename)
 	contents := "To: " + message.To + "\r\nSubject: " + message.Subject + "\r\n\r\n" + message.Text + "\r\n"
 	if err := os.WriteFile(path, []byte(contents), 0o600); err != nil {
