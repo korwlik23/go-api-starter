@@ -5,6 +5,7 @@ import (
 	"database/sql/driver"
 	"errors"
 	"fmt"
+	"sort"
 	"strings"
 
 	"github.com/korwlik23/go-api-starter/internal/platform/databaseid"
@@ -53,11 +54,7 @@ func (s *store) ensure(
 	if count == 0 {
 		return query.Create(encodedValues).Error
 	}
-	updateQuery, err := s.where(query, where)
-	if err != nil {
-		return err
-	}
-	return updateQuery.Updates(encodedValues).Error
+	return s.update(ctx, table, where, encodedValues)
 }
 
 func (s *store) link(ctx context.Context, table string, values map[string]any) error {
@@ -112,6 +109,63 @@ func (s *store) quoteColumn(column string) string {
 		return "`" + column + "`"
 	}
 	return `"` + column + `"`
+}
+
+func (s *store) quoteTable(table string) string {
+	if s.dialect == "mysql" {
+		return "`" + table + "`"
+	}
+	return `"` + table + `"`
+}
+
+func (s *store) update(
+	ctx context.Context,
+	table string,
+	where map[string]any,
+	values map[string]any,
+) error {
+	encodedWhere, err := s.encodeMap(where)
+	if err != nil {
+		return err
+	}
+	encodedValues, err := s.encodeMap(values)
+	if err != nil {
+		return err
+	}
+	if len(encodedWhere) == 0 || len(encodedValues) == 0 {
+		return ErrInvalidConfig
+	}
+	valueKeys := sortedKeys(encodedValues)
+	whereKeys := sortedKeys(encodedWhere)
+	assignments := make([]string, 0, len(valueKeys))
+	args := make([]any, 0, len(valueKeys)+len(whereKeys))
+	for _, key := range valueKeys {
+		assignments = append(assignments, s.quoteColumn(key)+" = ?")
+		args = append(args, encodedValues[key])
+	}
+	conditions := make([]string, 0, len(whereKeys))
+	for _, key := range whereKeys {
+		value := encodedWhere[key]
+		if value == nil {
+			conditions = append(conditions, s.quoteColumn(key)+" IS NULL")
+			continue
+		}
+		conditions = append(conditions, s.quoteColumn(key)+" = ?")
+		args = append(args, value)
+	}
+	statement := "UPDATE " + s.quoteTable(table) +
+		" SET " + strings.Join(assignments, ", ") +
+		" WHERE " + strings.Join(conditions, " AND ")
+	return s.db.WithContext(ctx).Exec(statement, args...).Error
+}
+
+func sortedKeys(values map[string]any) []string {
+	keys := make([]string, 0, len(values))
+	for key := range values {
+		keys = append(keys, key)
+	}
+	sort.Strings(keys)
+	return keys
 }
 
 func (s *store) encodeMap(values map[string]any) (map[string]any, error) {
