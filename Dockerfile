@@ -11,6 +11,8 @@ RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
     && CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
     go build -trimpath -ldflags="-s -w" -o /out/migrate ./cmd/migrate \
     && CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
+    go build -trimpath -ldflags="-s -w" -o /out/seed ./cmd/seed \
+    && CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
     go build -trimpath -ldflags="-s -w" -o /out/healthcheck ./cmd/healthcheck
 
 FROM scratch
@@ -20,6 +22,7 @@ COPY --from=build /usr/share/zoneinfo /usr/share/zoneinfo
 COPY --from=build --chown=65532:65532 /out/api /app/api
 COPY --from=build --chown=65532:65532 /out/bootstrap /app/bootstrap
 COPY --from=build --chown=65532:65532 /out/migrate /app/migrate
+COPY --from=build --chown=65532:65532 /out/seed /app/seed
 COPY --from=build --chown=65532:65532 /out/healthcheck /app/healthcheck
 
 USER 65532:65532

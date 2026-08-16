@@ -37,6 +37,19 @@ type PasswordPolicy struct {
 	KeyLength   uint32
 }
 
+// DefaultPasswordPolicy is the Argon2id policy shared by runtime bootstrap and
+// local seed tooling. Callers still choose the password; this only centralizes
+// the hashing parameters so credentials cannot silently diverge between CLIs.
+func DefaultPasswordPolicy() PasswordPolicy {
+	return PasswordPolicy{
+		MemoryKiB:   64 * 1024,
+		Iterations:  2,
+		Parallelism: 1,
+		SaltLength:  16,
+		KeyLength:   32,
+	}
+}
+
 type PasswordHasher struct {
 	policy PasswordPolicy
 	random io.Reader

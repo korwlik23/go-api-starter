@@ -66,6 +66,15 @@ type BootstrapCommand struct {
 	AccountSlug     string
 	AccountRoleName string
 	SystemRoleName  string
+	// Optional IDs are used by the local seed runner. Normal bootstrap leaves
+	// them empty and keeps the existing runtime-generated ID behavior.
+	AccountID                  string
+	UserID                     string
+	MembershipID               string
+	AccountRoleID              string
+	SystemRoleID               string
+	MembershipRoleAssignmentID string
+	SystemRoleAssignmentID     string
 }
 
 type BootstrapResult struct {
@@ -233,23 +242,29 @@ func (bootstrap *Bootstrap) newRecord(
 	passwordHash string,
 	permissions []BootstrapPermission,
 ) (BootstrapRecord, error) {
-	accountID, err := bootstrap.dependencies.NewID()
+	accountID, err := optionalOrNewID(command.AccountID, bootstrap.dependencies.NewID)
 	if err != nil {
 		return BootstrapRecord{}, ErrBootstrapFailed
 	}
-	userID, err := bootstrap.dependencies.NewID()
+	userID, err := optionalOrNewID(command.UserID, bootstrap.dependencies.NewID)
 	if err != nil {
 		return BootstrapRecord{}, ErrBootstrapFailed
 	}
-	membershipID, err := bootstrap.dependencies.NewID()
+	membershipID, err := optionalOrNewID(command.MembershipID, bootstrap.dependencies.NewID)
 	if err != nil {
 		return BootstrapRecord{}, ErrBootstrapFailed
 	}
-	membershipRoleAssignmentID, err := bootstrap.dependencies.NewID()
+	membershipRoleAssignmentID, err := optionalOrNewID(
+		command.MembershipRoleAssignmentID,
+		bootstrap.dependencies.NewID,
+	)
 	if err != nil {
 		return BootstrapRecord{}, ErrBootstrapFailed
 	}
-	systemRoleAssignmentID, err := bootstrap.dependencies.NewID()
+	systemRoleAssignmentID, err := optionalOrNewID(
+		command.SystemRoleAssignmentID,
+		bootstrap.dependencies.NewID,
+	)
 	if err != nil {
 		return BootstrapRecord{}, ErrBootstrapFailed
 	}
@@ -263,6 +278,12 @@ func (bootstrap *Bootstrap) newRecord(
 		return BootstrapRecord{}, err
 	}
 	record.PasswordHash = passwordHash
+	if command.AccountRoleID != "" {
+		record.AccountRoleID = command.AccountRoleID
+	}
+	if command.SystemRoleID != "" {
+		record.SystemRoleID = command.SystemRoleID
+	}
 	record.MembershipID = membershipID
 	record.MembershipRoleAssignmentID = membershipRoleAssignmentID
 	record.SystemRoleAssignmentID = systemRoleAssignmentID
@@ -287,6 +308,12 @@ func existingBootstrapRecord(
 	)
 	if err != nil {
 		return BootstrapRecord{}, ErrBootstrapConflict
+	}
+	if command.AccountRoleID != "" {
+		accountRoleID = command.AccountRoleID
+	}
+	if command.SystemRoleID != "" {
+		systemRoleID = command.SystemRoleID
 	}
 	return BootstrapRecord{
 		AccountID:       state.AccountID,
@@ -346,7 +373,29 @@ func validateBootstrapCommand(command BootstrapCommand) (BootstrapCommand, error
 		!validBootstrapDisplayName(command.SystemRoleName) {
 		return BootstrapCommand{}, ErrInvalidBootstrap
 	}
+	for _, value := range []string{
+		command.AccountID,
+		command.UserID,
+		command.MembershipID,
+		command.AccountRoleID,
+		command.SystemRoleID,
+		command.MembershipRoleAssignmentID,
+		command.SystemRoleAssignmentID,
+	} {
+		if value != "" {
+			if _, parseErr := uuid.Parse(value); parseErr != nil {
+				return BootstrapCommand{}, ErrInvalidBootstrap
+			}
+		}
+	}
 	return command, nil
+}
+
+func optionalOrNewID(value string, newID func() (string, error)) (string, error) {
+	if value != "" {
+		return value, nil
+	}
+	return newID()
 }
 
 func validBootstrapDisplayName(value string) bool {

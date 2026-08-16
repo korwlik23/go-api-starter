@@ -95,23 +95,24 @@ func RunBootstrap(
 		return BootstrapResult{}, err
 	}
 	command := BootstrapCommand{
-		Email:           lookupValue(lookup, "BOOTSTRAP_EMAIL"),
-		Password:        lookupValue(lookup, "BOOTSTRAP_PASSWORD"),
-		AccountSlug:     lookupValue(lookup, "BOOTSTRAP_ACCOUNT_SLUG"),
-		AccountRoleName: lookupValue(lookup, "BOOTSTRAP_ACCOUNT_ROLE_NAME"),
-		SystemRoleName:  lookupValue(lookup, "BOOTSTRAP_SYSTEM_ROLE_NAME"),
+		Email:                      lookupValue(lookup, "BOOTSTRAP_EMAIL"),
+		Password:                   lookupValue(lookup, "BOOTSTRAP_PASSWORD"),
+		AccountSlug:                lookupValue(lookup, "BOOTSTRAP_ACCOUNT_SLUG"),
+		AccountRoleName:            lookupValue(lookup, "BOOTSTRAP_ACCOUNT_ROLE_NAME"),
+		SystemRoleName:             lookupValue(lookup, "BOOTSTRAP_SYSTEM_ROLE_NAME"),
+		AccountID:                  lookupValue(lookup, "BOOTSTRAP_ACCOUNT_ID"),
+		UserID:                     lookupValue(lookup, "BOOTSTRAP_USER_ID"),
+		MembershipID:               lookupValue(lookup, "BOOTSTRAP_MEMBERSHIP_ID"),
+		AccountRoleID:              lookupValue(lookup, "BOOTSTRAP_ACCOUNT_ROLE_ID"),
+		SystemRoleID:               lookupValue(lookup, "BOOTSTRAP_SYSTEM_ROLE_ID"),
+		MembershipRoleAssignmentID: lookupValue(lookup, "BOOTSTRAP_MEMBERSHIP_ROLE_ASSIGNMENT_ID"),
+		SystemRoleAssignmentID:     lookupValue(lookup, "BOOTSTRAP_SYSTEM_ROLE_ASSIGNMENT_ID"),
 	}
 	return bootstrap.Execute(ctx, command)
 }
 
 func defaultPasswordPolicy() platformcrypto.PasswordPolicy {
-	return platformcrypto.PasswordPolicy{
-		MemoryKiB:   64 * 1024,
-		Iterations:  2,
-		Parallelism: 1,
-		SaltLength:  16,
-		KeyLength:   32,
-	}
+	return platformcrypto.DefaultPasswordPolicy()
 }
 
 func newRuntimeID() (string, error) {

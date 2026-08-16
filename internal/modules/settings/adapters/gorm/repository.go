@@ -66,7 +66,7 @@ func (repository *Repository) List(ctx context.Context) ([]domain.Setting, error
 		return nil, err
 	}
 	var records []settingRecord
-	if err := db.Order("key ASC").Find(&records).Error; err != nil {
+	if err := db.Order(quotedSettingKey(db) + " ASC").Find(&records).Error; err != nil {
 		return nil, fmt.Errorf("list settings: %w", err)
 	}
 	items := make([]domain.Setting, 0, len(records))
@@ -86,7 +86,7 @@ func (repository *Repository) Find(ctx context.Context, key string) (domain.Sett
 		return domain.Setting{}, err
 	}
 	var record settingRecord
-	if err := db.Where("key = ?", key).First(&record).Error; err != nil {
+	if err := db.Where(quotedSettingKey(db)+" = ?", key).First(&record).Error; err != nil {
 		if errors.Is(err, gormdb.ErrRecordNotFound) {
 			return domain.Setting{}, ports.ErrNotFound
 		}
@@ -111,7 +111,7 @@ func (repository *Repository) Save(ctx context.Context, setting domain.Setting, 
 		}
 		return nil
 	}
-	result := db.Model(&settingRecord{}).Where("key = ? AND version = ?", setting.Key, expectedVersion).Updates(map[string]any{
+	result := db.Model(&settingRecord{}).Where(quotedSettingKey(db)+" = ? AND version = ?", setting.Key, expectedVersion).Updates(map[string]any{
 		"value": setting.Value, "version": setting.Version, "updated_at": now,
 	})
 	if result.Error != nil {
@@ -121,6 +121,13 @@ func (repository *Repository) Save(ctx context.Context, setting domain.Setting, 
 		return domain.ErrVersionConflict
 	}
 	return nil
+}
+
+func quotedSettingKey(db *gormdb.DB) string {
+	if db != nil && db.Dialector.Name() == "mysql" {
+		return "`key`"
+	}
+	return `"key"`
 }
 
 func fromRecord(record settingRecord) (domain.Setting, error) {

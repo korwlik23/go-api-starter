@@ -43,6 +43,35 @@ func TestBootstrapCreatesDynamicPermissionDrivenFoundationOnce(t *testing.T) {
 	require.Equal(t, "bootstrap.foundation.created", auditor.command.Action)
 }
 
+func TestBootstrapUsesOptionalDeterministicIDsForLocalSeed(t *testing.T) {
+	t.Parallel()
+
+	store := &bootstrapStoreFake{state: BootstrapState{Status: BootstrapAbsent}}
+	bootstrap := newBootstrapForTest(t, store, &bootstrapAuditorFake{})
+
+	command := BootstrapCommand{
+		Email:           "owner@example.test",
+		Password:        "correct horse battery staple",
+		AccountSlug:     "personal",
+		AccountRoleName: "Account Manager",
+		SystemRoleName:  "System Manager",
+		AccountID:       "018f1f64-7b2a-7c10-8bf2-3c40d5f67590",
+		UserID:          "018f1f64-7b2a-7c10-8bf2-3c40d5f67591",
+		MembershipID:    "018f1f64-7b2a-7c10-8bf2-3c40d5f67592",
+		AccountRoleID:   "018f1f64-7b2a-7c10-8bf2-3c40d5f67593",
+		SystemRoleID:    "018f1f64-7b2a-7c10-8bf2-3c40d5f67594",
+	}
+	_, err := bootstrap.Execute(context.Background(), command)
+
+	require.NoError(t, err)
+	require.Equal(t, "018f1f64-7b2a-7c10-8bf2-3c40d5f67590", store.record.AccountID)
+	require.Equal(t, "018f1f64-7b2a-7c10-8bf2-3c40d5f67591", store.record.UserID)
+	require.Equal(t, "018f1f64-7b2a-7c10-8bf2-3c40d5f67592", store.record.MembershipID)
+	second, err := bootstrap.Execute(context.Background(), command)
+	require.NoError(t, err)
+	require.False(t, second.Created)
+}
+
 func TestBootstrapRerunVerifiesIDsAndMappingsWithoutAuditing(t *testing.T) {
 	t.Parallel()
 
@@ -119,6 +148,7 @@ func (store *bootstrapStoreFake) Create(
 ) error {
 	store.created = true
 	store.record = record
+	store.state = BootstrapState{Status: BootstrapPresent, AccountID: record.AccountID, UserID: record.UserID}
 	return nil
 }
 
