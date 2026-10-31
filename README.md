@@ -33,7 +33,7 @@ runtime source จาก repository นี้โดยตรง
 
 ## Development prerequisites
 
-- Go `1.26.5`
+- Go `1.26.10`
 - PostgreSQL หรือ dedicated MariaDB/XAMPP test database
 - Docker สำหรับ disposable integration profiles
 
